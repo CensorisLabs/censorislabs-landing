@@ -13,7 +13,7 @@ if (!existsSync(path.join(appRoot, 'android'))) run(['add', 'android'])
 run(['sync', 'android'])
 
 const androidRoot = path.join(appRoot, 'android')
-const signedRelease = existsSync(path.join(androidRoot, 'app', 'release-keystore.jks')) && existsSync(path.join(androidRoot, 'keystore.properties'))
+const signedRelease = existsSync(path.join(androidRoot, 'app', 'release-keystore.p12')) && existsSync(path.join(androidRoot, 'keystore.properties'))
 const task = signedRelease ? 'assembleRelease' : 'assembleDebug'
 const gradle = path.join(androidRoot, process.platform === 'win32' ? 'gradlew.bat' : 'gradlew')
 if (process.platform === 'win32') {

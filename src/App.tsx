@@ -1,15 +1,32 @@
-import { useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 
 import Ecosystem from './components/Ecosystem'
+import Apps from './components/Apps'
 import Footer from './components/Footer'
-import Hero from './components/Hero'
 import Nav from './components/Nav'
 import Sovereignty from './components/Sovereignty'
 import TechnicalLedger from './components/TechnicalLedger'
 import { LegalDialog, LegalSection, type LegalDocId } from './components/Legal'
 
+const Hero = lazy(() => import('./components/Hero'))
+
 export default function App() {
   const [legalDoc, setLegalDoc] = useState<LegalDocId | null>(null)
+  const [route, setRoute] = useState(() => window.location.hash)
+
+  useEffect(() => {
+    const syncRoute = () => { setRoute(window.location.hash); window.scrollTo(0, 0) }
+    window.addEventListener('hashchange', syncRoute)
+    return () => window.removeEventListener('hashchange', syncRoute)
+  }, [])
+
+  useEffect(() => {
+    const pageTitle = route.startsWith('#/apps/') ? 'App details' : route === '#/apps' ? 'Apps' : null
+    document.title = pageTitle ? `${pageTitle} · CensorisLabs` : 'CensorisLabs — Independent Software House'
+  }, [route])
+
+  const isAppPage = route === '#/apps' || route.startsWith('#/apps/')
+  const appId = isAppPage ? route.split('/')[2] : undefined
 
   return (
     <>
@@ -20,11 +37,16 @@ export default function App() {
       <Nav />
 
       <main id="main">
-        <Hero />
-        <Ecosystem />
-        <TechnicalLedger />
-        <Sovereignty />
-        <LegalSection onOpen={setLegalDoc} />
+        {isAppPage ? <Apps appId={appId} /> : <>
+          <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
+            <Hero />
+          </Suspense>
+          <Ecosystem />
+          <Apps />
+          <TechnicalLedger />
+          <Sovereignty />
+          <LegalSection onOpen={setLegalDoc} />
+        </>}
       </main>
 
       <Footer onOpenLegal={setLegalDoc} />

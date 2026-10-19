@@ -1,14 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const LINKS = [
   { href: '#ecosystem', label: 'Ecosystem' },
+  { href: '#/apps', label: 'Apps' },
   { href: '#products', label: 'Products' },
   { href: '#sovereignty', label: 'Sovereignty' },
   { href: '#legal', label: 'Legal' },
 ]
 
+function getSavedTheme() {
+  const saved = localStorage.getItem('censorislabs-site-theme')
+  if (saved === 'imperial') return 'obsidian'
+  if (saved === 'violet') return 'amethyst'
+  return saved || 'obsidian'
+}
+
 export default function Nav() {
   const [open, setOpen] = useState(false)
+  const [theme, setTheme] = useState(getSavedTheme)
+  const [lowPerformance, setLowPerformance] = useState(() => localStorage.getItem('censorislabs-site-performance') === 'low')
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document.documentElement.dataset.performance = lowPerformance ? 'low' : 'full'
+    localStorage.setItem('censorislabs-site-theme', theme)
+    localStorage.setItem('censorislabs-site-performance', lowPerformance ? 'low' : 'full')
+  }, [theme, lowPerformance])
 
   return (
     <header className="nav">
@@ -32,9 +49,18 @@ export default function Nav() {
           </ul>
         </nav>
 
-        <a className="btn btn--outline nav__cta" href="#ecosystem">
-          Launch Censoris (Local v0.1)
+        <a className="btn btn--outline nav__cta" href="#/apps">
+          Explore the app suite
         </a>
+
+        <details className="nav__appearance">
+          <summary>Appearance</summary>
+          <div className="nav__appearance-panel">
+            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Obsidian</option><option value="ocean">Ocean</option><option value="amethyst">Amethyst</option><option value="ember">Ember</option></select></label>
+            <label className="nav__performance"><input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode</label>
+            <small>Reduces 3D, blur, shadows and motion.</small>
+          </div>
+        </details>
 
         <button
           type="button"
@@ -59,10 +85,18 @@ export default function Nav() {
               </li>
             ))}
           </ul>
-          <a className="btn btn--primary" href="#ecosystem" onClick={() => setOpen(false)}>
-            Launch Censoris (Local v0.1)
+          <a className="btn btn--primary" href="#/apps" onClick={() => setOpen(false)}>
+            Explore the app suite
           </a>
         </nav>
+        <details className="nav__mobile-appearance">
+          <summary>Appearance</summary>
+          <div className="nav__appearance-panel nav__appearance-panel--mobile">
+            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Obsidian</option><option value="ocean">Ocean</option><option value="amethyst">Amethyst</option><option value="ember">Ember</option></select></label>
+            <label className="nav__performance"><input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode</label>
+            <small>Reduces 3D, blur, shadows and motion.</small>
+          </div>
+        </details>
       </div>
     </header>
   )

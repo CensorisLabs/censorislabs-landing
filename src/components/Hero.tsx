@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import HeroFallback from './HeroFallback'
 
 // Three.js is heavy; load the 3D backdrop after the copy has painted. The SVG
@@ -6,11 +6,16 @@ import HeroFallback from './HeroFallback'
 const Monolith = lazy(() => import('./Monolith'))
 
 export default function Hero() {
+  const [lowMode, setLowMode] = useState(() => typeof document !== 'undefined' && document.documentElement.dataset.performance === 'low')
+  useEffect(() => {
+    const observer = new MutationObserver(() => setLowMode(document.documentElement.dataset.performance === 'low'))
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-performance'] })
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <section className="hero section--flush" id="top">
-      <Suspense fallback={<HeroFallback />}>
-        <Monolith />
-      </Suspense>
+      {lowMode ? <HeroFallback /> : <Suspense fallback={<HeroFallback />}><Monolith /></Suspense>}
 
       <div className="hero__inner">
         <div className="hero__copy">

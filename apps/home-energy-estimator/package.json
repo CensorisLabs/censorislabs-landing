@@ -1,0 +1,43 @@
+{
+  "name": "censoris-home-energy-estimator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "android:add": "cap add android",
+    "android:sync": "cap sync android",
+    "android:build": "npm run build && node ../scripts/build-android.cjs",
+    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "electron": "^37.2.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "electron-builder": "^26.0.12",
+    "vite": "^7.0.6"
+  },
+  "build": {
+    "appId": "in.censorislabs.homeenergy",
+    "productName": "Censoris Home Energy Estimator",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "compression": "maximum"
+  }
+}

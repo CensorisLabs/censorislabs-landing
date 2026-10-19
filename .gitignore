@@ -11,6 +11,15 @@ node_modules
 dist
 dist-ssr
 *.local
+release/
+apps/*/android/
+apps/*/release/
+apps/*/node_modules/
+**/release-keystore.jks
+**/keystore.properties
+**/private-license-key.jwk.json
+**/.env
+**/.env.*
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +31,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+apps/arthasetu/vite.config.js
+apps/arthasetu/vite.config.d.ts
+apps/*/tsconfig*.tsbuildinfo

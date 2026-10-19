@@ -178,6 +178,88 @@ p {
 }
 
 /* ------------------------------------------------------------
+   CensorisLabs app directory and shared suite plans
+   ------------------------------------------------------------ */
+.suite-directory__head,
+.suite-pricing-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 34px;
+}
+
+.hero-loading { min-height: min(76vh, 760px); }
+
+.suite-directory__head .section-lede,
+.suite-pricing-head > p {
+  max-width: 52ch;
+  color: var(--palladium);
+}
+
+.suite-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.suite-card,
+.suite-feature-card,
+.suite-plan,
+.suite-download-card {
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(145deg, rgba(212, 175, 55, 0.035), transparent 52%), var(--surface);
+  padding: 22px;
+}
+
+.suite-card { min-height: 245px; display: flex; flex-direction: column; }
+.suite-card__top,
+.suite-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.suite-card__kind { color: var(--bronze); font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.suite-card__badge { border: 1px solid var(--line); padding: 5px 8px; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+.suite-card h3 { margin-top: 24px; font-size: 23px; color: var(--marble); }
+.suite-card p { margin-top: 12px; color: var(--palladium); font-size: 13px; line-height: 1.65; }
+.suite-card__link { display: flex; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 22px; color: var(--gold); font-size: 12px; }
+.suite-card__link:hover,.suite-back:hover { color: #f0d15a; }
+.suite-page { min-height: 72vh; }
+.suite-back { display: inline-block; margin-bottom: 28px; color: var(--bronze); font: 12px var(--mono); }
+.suite-page-title { margin-top: 18px; font-size: clamp(38px, 6vw, 68px); }
+.suite-lede { max-width: 70ch; margin-top: 18px; color: var(--palladium); font-size: 17px; }
+.suite-feature-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 38px; }
+.suite-feature-card h2,.suite-download-card h2 { margin: 0 0 16px; font-size: 22px; }
+.suite-feature-card .eyebrow { margin-bottom: 14px; }
+.suite-feature-card ul { display: grid; gap: 11px; padding-left: 18px; margin: 0; color: var(--palladium); font-size: 13px; }
+.suite-feature-card li::marker { color: var(--gold); }
+.suite-feature-card--pro { border-color: rgba(212,175,55,.3); }
+.suite-pricing-head { margin-top: 60px; margin-bottom: 20px; align-items: end; }
+.suite-pricing-head h2 { font-size: 26px; }
+.suite-pricing-head .eyebrow { margin-bottom: 12px; }
+.suite-pricing { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.suite-plan { display: grid; gap: 9px; }
+.suite-plan h4 { margin: 0; font: 11px var(--mono); color: var(--palladium); }
+.suite-plan strong { color: var(--gold); font: 600 17px var(--sans); }
+.suite-plan span { color: var(--muted); font-size: 11px; }
+.suite-checkout-note { margin-top: 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.suite-download-card { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 40px; }
+.suite-download-card .eyebrow { margin-bottom: 12px; }
+.suite-download-card p:not(.eyebrow) { margin-top: 10px; max-width: 58ch; color: var(--palladium); font-size: 13px; }
+.suite-downloads { display: flex; gap: 10px; }
+
+@media (max-width: 900px) {
+  .suite-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .suite-directory__head,.suite-pricing-head { align-items: start; flex-direction: column; gap: 14px; }
+  .suite-pricing { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+@media (max-width: 600px) {
+  .suite-grid,.suite-feature-columns { grid-template-columns: 1fr; }
+  .suite-card { min-height: 220px; }
+  .suite-download-card,.suite-downloads { align-items: stretch; flex-direction: column; }
+  .suite-download-card .btn { width: 100%; }
+  .suite-pricing { grid-template-columns: 1fr 1fr; }
+}
+
+/* ------------------------------------------------------------
    Shared layout
    ------------------------------------------------------------ */
 

@@ -1,0 +1,33 @@
+.checkout-backdrop{z-index:40}
+.checkout-modal{width:min(760px,calc(100vw - 28px));max-height:min(90vh,860px);overflow:auto;padding:30px}
+.checkout-modal h2{margin:7px 0 5px;font:600 27px 'Playfair Display',serif}
+.checkout-price{margin:0 0 18px;font:600 20px 'DM Mono',monospace;color:#1f4435}
+.checkout-price span{font:400 10px sans-serif;color:#78877e}
+.checkout-start{display:grid;gap:14px}
+.checkout-start label,.utr-form label,.license-token-copy label{display:grid;gap:6px;color:#67776d;font-size:11px}
+.checkout-start input,.utr-form input,.license-token-copy input{width:100%;padding:12px;border:1px solid #dce7dd;border-radius:8px;background:#fff;color:#23352a;font:13px 'DM Mono',monospace}
+.checkout-start .add-button{width:100%;min-height:44px}
+.checkout-instructions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 15px}
+.checkout-instructions p{max-width:480px;margin:0;color:#718077;font-size:11px;line-height:1.5}
+.checkout-clock{flex:none;padding:8px 11px;border-radius:7px;background:#fff6e8;color:#926128;font:600 12px 'DM Mono',monospace}
+.checkout-payment-layout{display:grid;grid-template-columns:minmax(230px,.9fr) 1.1fr;gap:20px;align-items:center}
+.checkout-qr{display:grid;justify-items:center;gap:10px;padding:16px;background:#fff;border:1px solid #e2ebe2;border-radius:12px;box-shadow:0 12px 30px rgba(21,51,38,.07)}
+.checkout-qr svg{max-width:100%;height:auto}
+.checkout-qr small,.checkout-steps small{color:#78877e;font-size:10px;line-height:1.5;text-align:center}
+.checkout-steps{display:grid;justify-items:start;gap:10px}
+.checkout-steps>b{font:600 16px 'Playfair Display',serif}
+.checkout-steps p{margin:0;color:#748278;font-size:11px;line-height:1.6}
+.checkout-steps .add-button{width:100%;min-height:42px}
+.checkout-steps .text-button{padding:4px 0}
+.checkout-steps small{text-align:left}
+.utr-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:18px;padding:14px;border:1px solid #e1e9e1;border-radius:9px;background:rgba(240,247,241,.68)}
+.utr-form input{text-align:center;letter-spacing:3px}
+.utr-form .secondary{min-height:42px}
+.license-token-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin-top:12px}
+.license-token-copy input{font-size:9px;letter-spacing:0}
+.checkout-success{display:grid;justify-items:center;gap:12px;padding:18px 8px;text-align:center}
+.checkout-success p{max-width:440px;color:#718077;font-size:13px;line-height:1.6}
+.checkout-success .add-button{min-height:43px;padding:0 24px}
+.success-check{display:grid;place-items:center;width:68px;height:68px;border-radius:50%;background:linear-gradient(145deg,#e4f8eb,#c9efd8);color:#168356;font-size:35px;box-shadow:0 0 0 9px rgba(46,155,120,.08);animation:success-pop .4s cubic-bezier(.16,1,.3,1) both}
+@keyframes success-pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@media(max-width:620px){.checkout-modal{padding:24px 18px}.checkout-payment-layout{grid-template-columns:1fr}.checkout-qr{width:min(100%,290px);justify-self:center}.checkout-instructions{align-items:flex-start;flex-direction:column}.utr-form{grid-template-columns:1fr}.license-token-copy{grid-template-columns:1fr}.checkout-price span{display:block;margin-top:5px}}

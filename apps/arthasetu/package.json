@@ -1,0 +1,53 @@
+{
+  "name": "arthasetu",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "android:add": "cap add android",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android",
+    "licenses:generate": "node scripts/generate-license-keys.cjs",
+    "android:build": "npm run build && node ../scripts/build-android.cjs",
+    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/browser": "^7.0.5",
+    "@capacitor/core": "^7.4.3",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.7.0",
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.6"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "in.arthasetu.desktop",
+    "productName": "ArthaSetu",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "compression": "maximum"
+  }
+}

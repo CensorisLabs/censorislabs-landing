@@ -1,0 +1,136 @@
+name: Build and publish app installers
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Android · ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        app:
+          - arthasetu
+          - calorie-calculator
+          - pc-part-picker
+          - indian-banking-brief
+          - home-energy-estimator
+          - muslim-companion
+          - social-feed
+          - archive-explorer
+          - offline-arcade
+          - movie-guide
+          - war-watch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install app dependencies
+        working-directory: apps/${{ matrix.app }}
+        run: npm install --no-audit --no-fund
+      - name: Configure signed Android release
+        working-directory: apps/${{ matrix.app }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node ../scripts/configure-android-signing.cjs
+      - name: Build APK
+        working-directory: apps/${{ matrix.app }}
+        env:
+          VITE_LICENSE_PUBLIC_KEY: ${{ secrets.LICENSE_PUBLIC_KEY }}
+          VITE_TMDB_COMMERCIAL_LICENSE: ${{ secrets.TMDB_COMMERCIAL_LICENSE }}
+        run: npm run android:build
+      - name: Prepare APK release asset
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          cp "apps/${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk" "release-assets/${{ matrix.app }}-android.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.app }}-android
+          path: release-assets/${{ matrix.app }}-android.apk
+          if-no-files-found: error
+
+  windows:
+    name: Windows · ${{ matrix.app }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        app:
+          - arthasetu
+          - calorie-calculator
+          - pc-part-picker
+          - indian-banking-brief
+          - home-energy-estimator
+          - muslim-companion
+          - social-feed
+          - archive-explorer
+          - offline-arcade
+          - movie-guide
+          - war-watch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install app dependencies
+        working-directory: apps/${{ matrix.app }}
+        run: npm install --no-audit --no-fund
+      - name: Build Windows app
+        working-directory: apps/${{ matrix.app }}
+        env:
+          VITE_LICENSE_PUBLIC_KEY: ${{ secrets.LICENSE_PUBLIC_KEY }}
+          VITE_TMDB_COMMERCIAL_LICENSE: ${{ secrets.TMDB_COMMERCIAL_LICENSE }}
+        run: npm run windows:build
+      - name: Prepare EXE release asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release-assets | Out-Null
+          $exe = Get-ChildItem "apps/${{ matrix.app }}/release" -Filter *.exe | Select-Object -First 1
+          if (-not $exe) { throw "No EXE was created for ${{ matrix.app }}" }
+          Copy-Item -LiteralPath $exe.FullName -Destination "release-assets/${{ matrix.app }}-windows.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.app }}-windows
+          path: release-assets/${{ matrix.app }}-windows.exe
+          if-no-files-found: error
+
+  publish:
+    name: Verify size and publish release
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installer-*
+          path: release-assets
+          merge-multiple: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enforce 100 MB installer limit
+        run: node apps/scripts/check-artifact-size.cjs release-assets
+      - name: Create GitHub release and upload installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --title "CensorisLabs apps $RELEASE_TAG" --notes "Windows EXE and signed Android APK downloads for the CensorisLabs app suite."
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber

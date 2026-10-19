@@ -1,0 +1,73 @@
+{
+  "common": {
+    "appName": "Censoris",
+    "tagline": "Your money, tracked simply",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "save": "Save",
+    "skip": "Skip",
+    "ok": "OK",
+    "error": "Something went wrong",
+    "notTaxAdvice": "Censoris is not tax or financial advice."
+  },
+  "onboarding": {
+    "welcomeTitle": "Welcome to Censoris",
+    "welcomeBody": "Track expenses, income and savings — fully offline, on your phone. No account needed.",
+    "languageTitle": "Choose your language",
+    "balancesTitle": "Opening balances",
+    "balancesBody": "How much cash and bank balance do you have today? You can change these later.",
+    "cashBalance": "Cash at home",
+    "bankBalance": "Bank and UPI",
+    "cityTierTitle": "Where do you live?",
+    "cityTierBody": "This only changes the rough budget suggestions we show. You can change it later.",
+    "metro": "Metro city",
+    "tier2": "Tier-2 city",
+    "tier3": "Tier-3 city or village",
+    "cityTierNote": "Budget suggestions are a rough guide, not a fact.",
+    "lockTitle": "Lock your app",
+    "lockBody": "Protect your financial data with a PIN or your fingerprint. You can skip this and enable it later in Settings.",
+    "useBiometric": "Use fingerprint or face",
+    "usePin": "Use a PIN",
+    "skipLock": "Skip for now",
+    "createPin": "Create a 4-digit PIN",
+    "confirmPin": "Confirm your PIN",
+    "pinMismatch": "The PINs did not match. Try again.",
+    "pinTooShort": "Enter all 4 digits.",
+    "allDoneTitle": "You are all set",
+    "allDoneBody": "Add your first expense from the home screen whenever you are ready."
+  },
+  "lock": {
+    "enterPin": "Enter your PIN",
+    "wrongPin": "Wrong PIN. Try again.",
+    "biometricPrompt": "Unlock Censoris",
+    "biometricFailed": "Could not verify. Enter your PIN instead.",
+    "forgotPinHint": "If you forget your PIN, you will need to clear the app's data to get back in. Your data stays on this phone."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeSystem": "Match phone",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "numberFormat": "Number format",
+    "numberFormatFull": "Full (₹12,34,567)",
+    "numberFormatCompact": "Compact (₹12.3 L)",
+    "security": "Security",
+    "appLock": "App lock",
+    "lockAfter": "Lock after",
+    "lockAfterMinutes_one": "{{count}} minute",
+    "lockAfterMinutes_other": "{{count}} minutes",
+    "about": "About",
+    "version": "Version {{version}}"
+  },
+  "home": {
+    "title": "Censoris",
+    "welcomeBack": "Welcome back",
+    "comingSoonBody": "Your monthly ledger will appear here in the next phase."
+  }
+}

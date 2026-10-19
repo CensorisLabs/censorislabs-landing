@@ -1,0 +1,73 @@
+{
+  "common": {
+    "appName": "सेंसोरिस",
+    "tagline": "आपके पैसे का सरल हिसाब",
+    "continue": "आगे बढ़ें",
+    "cancel": "रद्द करें",
+    "back": "पीछे",
+    "next": "अगला",
+    "done": "हो गया",
+    "save": "सहेजें",
+    "skip": "छोड़ें",
+    "ok": "ठीक है",
+    "error": "कुछ गड़बड़ हो गई",
+    "notTaxAdvice": "सेंसोरिस कर या वित्तीय सलाह नहीं है।"
+  },
+  "onboarding": {
+    "welcomeTitle": "सेंसोरिस में आपका स्वागत है",
+    "welcomeBody": "खर्च, आमदनी और बचत का हिसाब — पूरी तरह ऑफ़लाइन, आपके फ़ोन पर। किसी खाते की ज़रूरत नहीं।",
+    "languageTitle": "अपनी भाषा चुनें",
+    "balancesTitle": "शुरुआती बैलेंस",
+    "balancesBody": "आज आपके पास कितनी नकदी और बैंक बैलेंस है? बाद में भी बदल सकते हैं।",
+    "cashBalance": "घर पर नकद",
+    "bankBalance": "बैंक और UPI",
+    "cityTierTitle": "आप कहाँ रहते हैं?",
+    "cityTierBody": "इससे सिर्फ़ बजट के सुझाव बदलते हैं। बाद में भी बदल सकते हैं।",
+    "metro": "महानगर",
+    "tier2": "टियर-2 शहर",
+    "tier3": "टियर-3 शहर या गाँव",
+    "cityTierNote": "बजट के सुझाव एक मोटा अनुमान हैं, कोई तथ्य नहीं।",
+    "lockTitle": "ऐप को लॉक करें",
+    "lockBody": "PIN या फ़िंगरप्रिंट से अपने वित्तीय डेटा की सुरक्षा करें। अभी छोड़कर बाद में सेटिंग्स से भी चालू कर सकते हैं।",
+    "useBiometric": "फ़िंगरप्रिंट या चेहरा इस्तेमाल करें",
+    "usePin": "PIN इस्तेमाल करें",
+    "skipLock": "अभी छोड़ें",
+    "createPin": "चार अंकों का PIN बनाएँ",
+    "confirmPin": "PIN दोबारा डालें",
+    "pinMismatch": "PIN मेल नहीं खाए। फिर कोशिश करें।",
+    "pinTooShort": "चारों अंक डालें।",
+    "allDoneTitle": "सब तैयार है",
+    "allDoneBody": "जब चाहें, होम स्क्रीन से पहला खर्च जोड़ें।"
+  },
+  "lock": {
+    "enterPin": "अपना PIN डालें",
+    "wrongPin": "ग़लत PIN। फिर कोशिश करें।",
+    "biometricPrompt": "सेंसोरिस खोलें",
+    "biometricFailed": "सत्यापन नहीं हो सका। PIN डालें।",
+    "forgotPinHint": "अगर आप PIN भूल जाते हैं, तो वापस अंदर जाने के लिए ऐप का डेटा साफ़ करना होगा। आपका डेटा इसी फ़ोन पर रहता है।"
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "language": "भाषा",
+    "appearance": "दिखावट",
+    "theme": "थीम",
+    "themeSystem": "फ़ोन जैसा",
+    "themeLight": "हल्का",
+    "themeDark": "गहरा",
+    "numberFormat": "संख्या प्रारूप",
+    "numberFormatFull": "पूरा (₹12,34,567)",
+    "numberFormatCompact": "छोटा (₹12.3 L)",
+    "security": "सुरक्षा",
+    "appLock": "ऐप लॉक",
+    "lockAfter": "लॉक करें",
+    "lockAfterMinutes_one": "{{count}} मिनट बाद",
+    "lockAfterMinutes_other": "{{count}} मिनट बाद",
+    "about": "जानकारी",
+    "version": "संस्करण {{version}}"
+  },
+  "home": {
+    "title": "सेंसोरिस",
+    "welcomeBack": "फिर से स्वागत है",
+    "comingSoonBody": "आपका मासिक लेजर अगले चरण में यहाँ दिखेगा।"
+  }
+}

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 
 import Ecosystem from './components/Ecosystem'
 import Apps from './components/Apps'
+import About from './components/About'
 import Footer from './components/Footer'
 import Nav from './components/Nav'
 import Sovereignty from './components/Sovereignty'
@@ -21,10 +22,11 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const pageTitle = route.startsWith('#/apps/') ? 'App details' : route === '#/apps' ? 'Apps' : null
+    const pageTitle = route === '#/about' ? 'About me' : route.startsWith('#/apps/') ? 'App details' : route === '#/apps' ? 'Apps' : null
     document.title = pageTitle ? `${pageTitle} · CensorisLabs` : 'CensorisLabs — Independent Software House'
   }, [route])
 
+  const isAboutPage = route === '#/about'
   const isAppPage = route === '#/apps' || route.startsWith('#/apps/')
   const appId = isAppPage ? route.split('/')[2] : undefined
 
@@ -37,7 +39,7 @@ export default function App() {
       <Nav />
 
       <main id="main">
-        {isAppPage ? <Apps appId={appId} /> : <>
+        {isAboutPage ? <About /> : isAppPage ? <Apps appId={appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>

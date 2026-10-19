@@ -13,7 +13,7 @@ type Product = {
 type ReleaseAsset = { name: string; size: number; browser_download_url: string }
 type Release = { tag_name: string; assets: ReleaseAsset[] }
 
-const PRODUCTS: Product[] = [
+export const PRODUCTS: Product[] = [
   { id: 'arthasetu', name: 'ArthaSetu', kind: 'Personal finance · India', description: 'A private money workspace for Indian households: transactions, budgets, tax estimates, investments, and long-term plans.', free: ['Manual ledger and search', '50/30/20 budget', 'Up to two accounts', 'Basic tax estimate and JSON backup'], pro: ['XIRR and portfolio analysis', 'Loan payoff, tax comparison and FIRE tools', 'Encrypted backup and more accounts', 'Recurring bill tracking'] },
   { id: 'calorie-calculator', name: 'Calorie Calculator', kind: 'Health · Nutrition estimates', description: 'Estimate daily energy needs, BMI, and a simple macro split from your own profile and activity level.', free: ['Mifflin–St Jeor estimate', 'Activity and goal adjustment', 'BMI and macro estimates', 'No account or cloud profile'], pro: ['Private meal log', 'Multiple profiles', 'Seven-day nutrition trends', 'Exportable summaries'] },
   { id: 'pc-part-picker', name: 'PC Part Picker', kind: 'Hardware · Build planning', description: 'Plan a PC build with socket, memory, case, and power checks. Enter local shop prices to compare options.', free: ['Core component selection', 'Basic compatibility checks', 'Estimated power draw', 'Local price entry'], pro: ['Saved build library', 'Side-by-side comparisons', 'Price history and alerts', 'Shareable parts reports'] },

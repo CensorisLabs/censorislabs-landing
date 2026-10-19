@@ -1,0 +1,54 @@
+:root{--bg:#EEF1F3;--surface:#FFFFFF;--ink:#1E2227;--muted:#59616B;--line:#CBD2D8;--primary:#5B1F4E;--on-primary:#F6EEF4;--accent:#8E5B22;--ok:#2F6B62;color-scheme:light dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181C;--surface:#1F2227;--ink:#E8EAED;--muted:#A3AAB3;--line:#343942;--primary:#8A3A78;--on-primary:#FFFFFF;--accent:#D9A25F;--ok:#6FB8AC}}
+:root[data-theme="dark"]{--bg:#16181C;--surface:#1F2227;--ink:#E8EAED;--muted:#A3AAB3;--line:#343942;--primary:#8A3A78;--on-primary:#FFFFFF;--accent:#D9A25F;--ok:#6FB8AC}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,h3,.mark{font-family:Cinzel,"Trajan Pro","Times New Roman",serif;font-weight:600;letter-spacing:.02em;line-height:1.2;margin:0}
+p{margin:0}
+a{color:inherit}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 1.25rem}
+header .wrap{display:flex;justify-content:space-between;align-items:center;padding-block:1.1rem}
+.mark{font-size:1.2rem;text-decoration:none}
+nav a{margin-left:1.4rem;color:var(--muted);text-decoration:none}
+nav a:hover,nav a[aria-current]{color:var(--ink)}
+nav a[aria-current]{border-bottom:2px solid var(--accent)}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:3rem;align-items:center;padding-block:4rem 4.5rem}
+h1{font-size:clamp(2.1rem,5vw,3.5rem);margin-bottom:1.2rem}
+.lead{font-size:1.15rem;color:var(--muted);max-width:34rem;margin-bottom:1.8rem}
+.btn{display:inline-block;padding:.8rem 1.3rem;border-radius:2px;text-decoration:none;font-weight:600;margin:0 .6rem .6rem 0}
+.btn.p{background:var(--primary);color:var(--on-primary)}
+.btn.s{border:1px solid var(--ink)}
+.ledger{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--primary);padding:1.4rem 1.5rem;font-variant-numeric:tabular-nums}
+.ledger h2{font-size:1rem;margin-bottom:1rem;display:flex;justify-content:space-between;gap:1rem}
+.ledger h2 span{font-family:Inter,sans-serif;font-weight:400;font-size:.85rem;color:var(--muted);letter-spacing:0}
+.row{display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;border-top:1px solid var(--line)}
+.row.big{font-weight:600;font-size:1.1rem}
+.row small{color:var(--muted);font-size:.9rem}
+.ok{color:var(--ok)}
+section{padding-block:3.5rem;border-top:1px solid var(--line)}
+h2.t{font-size:1.9rem;margin-bottom:.6rem}
+.sub{color:var(--muted);max-width:40rem;margin-bottom:2.2rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem 2.5rem}
+.prod{border-top:2px solid var(--primary);padding-top:1rem}
+.prod h3{font-size:1.5rem;margin-bottom:.3rem}
+.status{font-size:.95rem;color:var(--ok);font-weight:600;margin-bottom:.6rem}
+.prod p:last-child,.f p{color:var(--muted)}
+.f{border-top:1px solid var(--line);padding-top:.9rem}
+.f h3{font-size:1.05rem;margin-bottom:.4rem}
+.f p{font-size:.97rem}
+.langs{display:flex;flex-wrap:wrap;gap:.6rem 1.8rem;font-size:1.3rem;margin-top:1.2rem}
+.notice{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--surface);padding:1rem 1.2rem;max-width:44rem}
+.page{padding-block:3.5rem 1rem}
+.page h1{font-size:clamp(2rem,4.5vw,3rem)}
+ol.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;gap:1.4rem;max-width:44rem}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:3rem 1fr;gap:1rem;border-top:1px solid var(--line);padding-top:1rem}
+ol.steps li::before{content:counter(s,upper-roman);font-family:Cinzel,"Times New Roman",serif;font-weight:600;font-size:1.2rem;color:var(--accent)}
+ol.steps h3{font-size:1.05rem;margin-bottom:.3rem}
+ol.steps p{color:var(--muted)}
+footer{border-top:1px solid var(--line);padding-block:2rem 2.5rem;color:var(--muted);font-size:.92rem}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem}
+@media (max-width:820px){.hero,.two,.three{grid-template-columns:1fr}.hero{padding-block:2.5rem 3rem}nav a{margin-left:1rem}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}

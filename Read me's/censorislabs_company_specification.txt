@@ -1,0 +1,148 @@
+===============================================================================
+                       CENSORISLABS - MASTER SPECIFICATION DOCUMENT
+===============================================================================
+
+-------------------------------------------------------------------------------
+1. COMPANY IDENTITY & STRUCTURE
+-------------------------------------------------------------------------------
+Parent Entity Name: CensorisLabs
+Brand Vibe: Classical Roman/Greek authority combined with modern software craftsmanship.
+GitHub Organization Slug: censorislabs (github.com/censorislabs)
+
+Product Ecosystem:
+  1. Censoris (censorislabs/censoris)
+     - Core Personal Finance & Expense Tracker for the Indian Market.
+     - Offline-first architecture, highly secure, zero-cloud data leak.
+  2. Vesper (censorislabs/vesper)
+     - Developer & Technical Software Tooling Suite.
+
+Target Domain Options for CensorisLabs Website:
+  - censorislabs.io
+  - censorislabs.com
+  - censorislabs.in
+  - censoris.ai
+
+-------------------------------------------------------------------------------
+2. PRODUCT 1: CENSORIS (FINANCE TRACKER FOR INDIA)
+-------------------------------------------------------------------------------
+Core Concept:
+  An offline-first, highly localized monthly expense, income, and tax tracking 
+  application optimized for Indian users on Mobile (Android/iOS) and Desktop (Windows/macOS).
+
+Tech Stack & Architecture:
+  - Framework: React Native with Expo (or Flutter) with Tailwind CSS / NativeWind.
+  - Database: Offline-first SQLite / WatermelonDB / MMKV. Encrypted local JSON import/export.
+  - Platform Support: Cross-platform single codebase targeting Android APK, iOS, Windows .exe/MSIX.
+
+Key Functional Modules:
+  1. Dashboard & Cash Flow Overview:
+     - Real-time balances (Income, Expenses, Net Savings) in Indian numbering format.
+     - Cash vs. Digital spending ratio charts.
+  2. Transaction Entry & SMS Parser:
+     - Manual Quick-Add for common cash payments (Chai, Auto, Groceries, Street Food).
+     - Automated offline SMS parser regex to import bank/UPI alerts (SBI, HDFC, ICICI, GPay, PhonePe, Paytm).
+     - Daily cash balance reconciliation ledger.
+  3. Indian Category Taxonomy:
+     - Pre-configured Expense Categories: Groceries, Mobile/DTH Recharge, Fuel/Transport, 
+       Medical/Pharmacy, Education/Tuition, Domestic Help (Maid/Cook/Driver), Festival Expenses, 
+       Gold/Jewelry Savings, Rent, Utilities, Insurance.
+     - Pre-configured Income Categories: Salary, Business Income, Rental Income, Agricultural Income, Dividends.
+  4. Bill Payment Reminders & Utilities:
+     - Reminders for electricity boards (BESCOM, MSEDCL, TANGEDCO, etc.), house rent, mobile recharge, EMIs.
+  5. Group Expense Splitting:
+     - Who-owes-whom debt settlement calculation for roommates, families, and trips.
+     - Automated UPI deep-link QR generation for instant payback.
+  6. GST Invoice Management & Tax Categorization:
+     - Photo upload/camera capture for GST invoices with OCR extraction (GSTIN, vendor, total).
+     - Tag expenses into Section 80C (PPF, ELSS, Insurance), Section 80D (Medical), and Freelance/Business deductions.
+     - Tax Season Report Generator formatted for July-August Indian financial filing.
+  7. Festival Budget Planner:
+     - Dedicated planner for spending spikes during Diwali, Durga Puja, Onam, Pongal, and Eid.
+     - Festival-specific gifting and shopping lists.
+  8. Savings Goal Tracking (Indian Instruments):
+     - Goals linked to PPF, Recurring Deposits (RD), Fixed Deposits (FD), SIP Mutual Funds, and Sukanya Samriddhi Yojana (SSY).
+  9. Multi-Language Localization:
+     - Full UI toggles for English, Hindi (हिन्दी), Tamil (தமிழ்), Telugu (తెలుగు), Bengali (বাংলা), Marathi (मराठी), Gujarati (ગુજરાતી), and Kannada (ಕನ್ನಡ).
+
+-------------------------------------------------------------------------------
+3. EMBEDDED UTILITIES SPECIFICATION
+-------------------------------------------------------------------------------
+Utility 1: Indian Currency Formatter (Lakhs/Crores)
+---------------------------------------------------
+export function formatIndianCurrency(amount: number): string {
+  if (isNaN(amount)) return '₹0.00';
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+Utility 2: UPI SMS Transaction Parser
+--------------------------------------
+export interface ParsedTransaction {
+  amount: number;
+  type: 'DEBIT' | 'CREDIT';
+  merchant: string;
+  referenceId?: string;
+  rawSms: string;
+}
+
+export function parseUPISms(smsBody: string): ParsedTransaction | null {
+  if (!smsBody || typeof smsBody !== 'string') return null;
+
+  const amountRegex = /(?:Rs\.?|INR|₹)\s*([0-9,]+\.?[0-9]*)/i;
+  const amountMatch = smsBody.match(amountRegex);
+  if (!amountMatch) return null;
+
+  const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+  if (isNaN(amount) || amount <= 0) return null;
+
+  const isCredit = /(?:credited|received|added|deposited|cashback|refund)/i.test(smsBody);
+  const type: 'DEBIT' | 'CREDIT' = isCredit ? 'CREDIT' : 'DEBIT';
+
+  let merchant = 'Unknown Merchant';
+  const merchantMatch = smsBody.match(/(?:to|at|from|VPA)\s+([A-Za-z0-9@\.\-_]+(?:\s+[A-Za-z0-9@\.\-_]+)?)/i);
+  if (merchantMatch && merchantMatch[1]) {
+    merchant = merchantMatch[1].trim().replace(/\b(on|ref|upi|via|A\/c)\b/gi, '').trim();
+  }
+
+  const refMatch = smsBody.match(/(?:Ref|UPI Ref|UTR|IMPS|Txn)(?:\s*No\.?)?[:\s]*([0-9a-zA-Z]+)/i);
+  const referenceId = refMatch ? refMatch[1] : undefined;
+
+  return { amount, type, merchant, referenceId, rawSms: smsBody };
+}
+
+-------------------------------------------------------------------------------
+4. MONETIZATION MODEL
+-------------------------------------------------------------------------------
+1. Freemium Tier ("Censoris Pro"):
+   - Basic tracking: 100% Free.
+   - Pro Subscription (₹99/mo or ₹699/yr): Multi-device encrypted backup, GST/Tax export reports, unlimited group splits.
+2. Financial Product Distribution (Affiliate / Direct):
+   - Goal-linked SIPs, Digital Gold, and Fixed Deposit referrals.
+   - Insurance leads (Health/Term) triggered during tax evaluation.
+3. B2B / Freelancer Invoicing:
+   - GST invoice generation for freelancers at ₹149/mo.
+
+-------------------------------------------------------------------------------
+5. OFFICIAL SETUP & DISTRIBUTION ROADMAP
+-------------------------------------------------------------------------------
+Stage 1: GitHub Organization ($0)
+  - Create free organization: censorislabs
+  - Invite personal GitHub account as Owner
+  - Transfer/create repositories: censorislabs/censoris and censorislabs/vesper
+
+Stage 2: Official Business Registration (India) ($0 Start)
+  - Register CensorisLabs via MSME Udyam Portal (udyamregistration.gov.in) for 100% free legal recognition.
+  - Use Udyam Certificate to open a business bank account.
+
+Stage 3: Website & App Distribution
+  - Official Landing Page: Free hosting on Vercel / GitHub Pages.
+  - Windows Desktop (.exe): Microsoft Partner Center Store listing ($0 fee).
+  - Android (.apk): Direct download from CensorisLabs website ($0) or Google Play Store ($25 fee).
+
+===============================================================================
+                       END OF MASTER SPECIFICATION
+===============================================================================

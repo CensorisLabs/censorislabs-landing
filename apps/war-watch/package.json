@@ -8,17 +8,18 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "android:build": "npm run build && node ../scripts/build-android.cjs",
-    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false"
+    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false --publish never"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/core": "^7.4.3",
-    "electron": "^37.2.6"
+    "@capacitor/core": "^7.4.3"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.4.3",
     "electron-builder": "^26.0.12",
-    "vite": "^7.0.6"
+    "vite": "^7.0.6",
+    "electron": "^37.2.6",
+    "typescript": "^5.8.3",
+    "@capacitor/android": "^7.4.3"
   },
   "build": {
     "appId": "in.censorislabs.warwatch",

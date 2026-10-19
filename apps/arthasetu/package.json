@@ -12,7 +12,7 @@
     "android:open": "cap open android",
     "licenses:generate": "node scripts/generate-license-keys.cjs",
     "android:build": "npm run build && node ../scripts/build-android.cjs",
-    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false"
+    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false --publish never"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",

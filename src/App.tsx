@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 
 import Ecosystem from './components/Ecosystem'
 import Apps from './components/Apps'
@@ -54,6 +55,8 @@ export default function App() {
       <Footer onOpenLegal={setLegalDoc} />
 
       <LegalDialog doc={legalDoc} onClose={() => setLegalDoc(null)} />
+
+      <Analytics />
     </>
   )
 }

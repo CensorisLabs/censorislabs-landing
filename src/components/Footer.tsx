@@ -17,8 +17,8 @@ export default function Footer({ onOpenLegal }: FooterProps) {
               <span className="brand__name">CENSORISLABS</span>
             </a>
             <p>
-              An independent software house building local-first systems with
-              classical restraint and modern engineering discipline.
+              An independent software house building local-first systems for
+              people who would rather own their data than rent it back.
             </p>
           </div>
 
@@ -30,7 +30,7 @@ export default function Footer({ onOpenLegal }: FooterProps) {
                   <a href="#ecosystem">Censoris</a>
                 </li>
                 <li>
-                  <a href="#ecosystem">Vesper</a>
+                  <a href="https://github.com/chudling445/vesper" target="_blank" rel="noreferrer noopener">Vesper</a>
                 </li>
                 <li>
                   <a href="#products">Specifications</a>
@@ -43,6 +43,9 @@ export default function Footer({ onOpenLegal }: FooterProps) {
               <ul>
                 <li>
                   <a href="#/about">About me</a>
+                </li>
+                <li>
+                  <a href="#/reviews">Reviews</a>
                 </li>
                 <li>
                   <a href="#sovereignty">Sovereignty</a>

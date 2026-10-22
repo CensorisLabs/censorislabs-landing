@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 const LINKS = [
   { href: '#ecosystem', label: 'Ecosystem' },
   { href: '#/apps', label: 'Apps' },
+  { href: '#/reviews', label: 'Reviews' },
   { href: '#/about', label: 'About me' },
   { href: '#products', label: 'Products' },
   { href: '#sovereignty', label: 'Sovereignty' },
@@ -57,7 +58,7 @@ export default function Nav() {
         <details className="nav__appearance">
           <summary>Appearance</summary>
           <div className="nav__appearance-panel">
-            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Obsidian</option><option value="ocean">Ocean</option><option value="amethyst">Amethyst</option><option value="ember">Ember</option></select></label>
+            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Neon</option><option value="amethyst">Violet</option><option value="ocean">Cyan</option><option value="ember">Ember</option></select></label>
             <label className="nav__performance"><input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode</label>
             <small>Reduces 3D, blur, shadows and motion.</small>
           </div>
@@ -93,7 +94,7 @@ export default function Nav() {
         <details className="nav__mobile-appearance">
           <summary>Appearance</summary>
           <div className="nav__appearance-panel nav__appearance-panel--mobile">
-            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Obsidian</option><option value="ocean">Ocean</option><option value="amethyst">Amethyst</option><option value="ember">Ember</option></select></label>
+            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Neon</option><option value="amethyst">Violet</option><option value="ocean">Cyan</option><option value="ember">Ember</option></select></label>
             <label className="nav__performance"><input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode</label>
             <small>Reduces 3D, blur, shadows and motion.</small>
           </div>

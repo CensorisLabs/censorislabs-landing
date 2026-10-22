@@ -5,7 +5,20 @@
  * owner supplies real .exe/.apk URLs before launch; we do not ship dead
  * links that pretend a binary is available.
  */
+import type { MouseEvent } from 'react'
+
 const GH = 'https://github.com/censorislabs'
+const VESPER_REPO = 'https://github.com/chudling445/vesper'
+
+/** Scrolls to the app directory on this page, independent of the hash router. */
+function openAppSuite(event: MouseEvent<HTMLAnchorElement>) {
+  const target = document.getElementById('apps')
+  if (!target) return
+  event.preventDefault()
+  const top = target.getBoundingClientRect().top + window.scrollY - 96
+  window.scrollTo({ top, behavior: 'smooth' })
+  window.history.replaceState(null, '', '#apps')
+}
 
 export default function Ecosystem() {
   return (
@@ -27,7 +40,13 @@ export default function Ecosystem() {
 
         <div className="product-grid">
           {/* Censoris */}
-          <article className="product" aria-labelledby="censoris-title">
+          <article className="product product--apps" aria-labelledby="censoris-title">
+            <a
+              className="product__open"
+              href="#apps"
+              aria-label="Open the CensorisLabs app suite"
+              onClick={openAppSuite}
+            />
             <div className="product__head">
               <div>
                 <h3 className="product__name" id="censoris-title">
@@ -44,6 +63,17 @@ export default function Ecosystem() {
               savings schemes. Fully usable in airplane mode, on a low-end
               phone, with no account.
             </p>
+
+            <p className="product__suite-copy">
+              Censoris is one window onto a larger suite: ArthaSetu for money, Nur
+              Companion for daily practice, PC Part Picker for builds, Where to Watch,
+              Offline Arcade and more — ten apps sharing one offline engine and the same
+              refusal to profile you.
+            </p>
+
+            <a className="product__suite-link" href="#apps" data-cursor="APPS" onClick={openAppSuite}>
+              Open the app suite <span aria-hidden="true">→</span>
+            </a>
 
             <ul className="spec-list">
               <li>100% local-first engine on encrypted on-device SQLite</li>
@@ -115,7 +145,7 @@ export default function Ecosystem() {
             <div className="product__actions">
               <a
                 className="btn btn--ghost"
-                href={GH}
+                href={VESPER_REPO}
                 target="_blank"
                 rel="noreferrer noopener"
               >

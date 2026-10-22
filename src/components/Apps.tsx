@@ -30,7 +30,7 @@ export const PRODUCTS: Product[] = [
 const MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 
 function ProductCard({ product }: { product: Product }) {
-  return <article className="suite-card"><div className="suite-card__top"><span className="suite-card__kind">{product.kind}</span><span className="suite-card__badge">Installers via releases</span></div><h3>{product.name}</h3><p>{product.description}</p><a className="suite-card__link" href={`#/apps/${product.id}`}>View app and downloads <span aria-hidden="true">↗</span></a></article>
+  return <article className="suite-card"><div className="suite-card__top"><span className="suite-card__kind">{product.kind}</span><span className="suite-card__badge">Release builds</span></div><h3>{product.name}</h3><p>{product.description}</p><a className="suite-card__link" href={`#/apps/${product.id}`}>View app and downloads <span aria-hidden="true">↗</span></a></article>
 }
 
 function Pricing({ discount = 0 }: { discount?: number }) {

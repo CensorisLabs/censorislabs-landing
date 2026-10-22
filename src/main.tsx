@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client'
 
 import './index.css'
 import './site-polish.css'
+import './motion.css'
 import App from './App.tsx'
 
 const savedSiteTheme = localStorage.getItem('censorislabs-site-theme')

@@ -34,3 +34,4 @@ apps/*/node_modules/
 apps/arthasetu/vite.config.js
 apps/arthasetu/vite.config.d.ts
 apps/*/tsconfig*.tsbuildinfo
+*.tsbuildinfo

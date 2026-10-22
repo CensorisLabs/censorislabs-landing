@@ -244,6 +244,16 @@ p {
 .suite-download-card .eyebrow { margin-bottom: 12px; }
 .suite-download-card p:not(.eyebrow) { margin-top: 10px; max-width: 58ch; color: var(--palladium); font-size: 13px; }
 .suite-downloads { display: flex; gap: 10px; }
+.suite-warning { margin-top: 40px; padding-top: 36px; border-top: 1px solid var(--line-soft); }
+.suite-warning .eyebrow { margin-bottom: 12px; }
+.suite-warning > h2 { margin: 0 0 14px; font-size: 26px; }
+.suite-warning__lede { max-width: 72ch; color: var(--palladium); font-size: 14px; line-height: 1.7; }
+.suite-warning .suite-feature-columns { margin-top: 24px; }
+.suite-warning .suite-feature-card h3 { margin: 0 0 12px; font-size: 19px; color: var(--marble); }
+.suite-warning .suite-feature-card > p:not(.eyebrow) { margin: 0 0 16px; color: var(--palladium); font-size: 13px; line-height: 1.65; }
+.suite-feature-card ol { display: grid; gap: 11px; padding-left: 20px; margin: 0; color: var(--palladium); font-size: 13px; }
+.suite-feature-card ol li::marker { color: var(--gold); font-family: var(--mono); }
+.suite-feature-card li b { color: var(--marble); font-weight: 600; }
 
 @media (max-width: 900px) {
   .suite-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -257,6 +267,9 @@ p {
   .suite-download-card,.suite-downloads { align-items: stretch; flex-direction: column; }
   .suite-download-card .btn { width: 100%; }
   .suite-pricing { grid-template-columns: 1fr 1fr; }
+  .suite-warning > h2 { font-size: 22px; }
+  .suite-warning__lede { font-size: 13px; }
+  .suite-warning .suite-feature-card h3 { font-size: 17px; }
 }
 
 /* ------------------------------------------------------------

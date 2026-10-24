@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react'
 
 import Ecosystem from './components/Ecosystem'
 import Apps from './components/Apps'
+import GamePage from './components/GamePage'
 import About from './components/About'
 import Cursor from './components/Cursor'
 import Footer from './components/Footer'
@@ -16,6 +17,7 @@ import { initReveals, initScrollDrift, initTilt } from './lib/effects'
 const Hero = lazy(() => import('./components/Hero'))
 
 const TITLES: Record<string, string> = {
+  '#/game': 'Chronicle Frontier',
   '#/about': 'About me',
   '#/apps': 'Apps',
   '#/reviews': 'Reviews & comments',
@@ -58,6 +60,7 @@ export default function App() {
     return () => cleanups.forEach((cleanup) => cleanup())
   }, [route])
 
+  const isGamePage = route === '#/game'
   const isAboutPage = route === '#/about'
   const isReviewsPage = route === '#/reviews'
   const isRequestPage = route === '#/request'
@@ -70,11 +73,11 @@ export default function App() {
         Skip to content
       </a>
 
-      <Cursor />
-      <Nav />
+      {!isGamePage && <Cursor />}
+      {!isGamePage && <Nav />}
 
       <main id="main">
-        {isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isAppPage ? <Apps appId={appId} /> : <>
+        {isGamePage ? <GamePage /> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isAppPage ? <Apps appId={appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>
@@ -86,11 +89,11 @@ export default function App() {
         </>}
       </main>
 
-      <Footer onOpenLegal={setLegalDoc} />
+      {!isGamePage && <Footer onOpenLegal={setLegalDoc} />}
 
-      <LegalDialog doc={legalDoc} onClose={() => setLegalDoc(null)} />
-      <div className="page-frame" aria-hidden="true" />
-      <div className="grain" aria-hidden="true" />
+      {!isGamePage && <LegalDialog doc={legalDoc} onClose={() => setLegalDoc(null)} />}
+      {!isGamePage && <div className="page-frame" aria-hidden="true" />}
+      {!isGamePage && <div className="grain" aria-hidden="true" />}
     </>
   )
 }

@@ -1,0 +1,57 @@
+import { defaultInventory, OPERATOR_SKINS, operatorSkinForLevel, type SkinItem, type WeaponId } from '../game/fps'
+
+export type Locale = 'en' | 'zh-CN'
+export type Quality = 'low' | 'medium' | 'high'
+export type ScoreEntry = { name: string; score: number; seconds: number; at: number }
+export type PlayerStats = { kills: number; headshots: number; deaths: number; matches: number; wins: number; shots: number; hits: number }
+export type SaveData = {
+  version: 1
+  locale: Locale | ''
+  musicVolume: number
+  sfxVolume: number
+  muted: boolean
+  sensitivity: number
+  invertY: boolean
+  quality: Quality
+  reducedMotion: boolean
+  tutorialDone: boolean
+  playerName: string
+  leaderboard: ScoreEntry[]
+  xp: number
+  level: number
+  operatorSkinId: string
+  credits: number
+  inventory: SkinItem[]
+  equipped: Partial<Record<WeaponId, string>>
+  stats: PlayerStats
+}
+
+export const SAVE_KEY = 'chroniclefrontier.save'
+export const LEADERBOARD_SIZE = 10
+export function xpForLevel(level: number): number { return 500 + (Math.max(1, level) - 1) * 175 }
+export function defaultSave(): SaveData {
+  const inventory = defaultInventory()
+  return { version: 1, locale: '', musicVolume: 0.7, sfxVolume: 0.8, muted: false, sensitivity: 1, invertY: false, quality: 'high', reducedMotion: false, tutorialDone: false, playerName: 'RAVEN', leaderboard: [], xp: 0, level: 1, operatorSkinId: OPERATOR_SKINS[0]!.id, credits: 420, inventory, equipped: { glock: inventory[0]?.id, deagle: inventory[0]?.id }, stats: { kills: 0, headshots: 0, deaths: 0, matches: 0, wins: 0, shots: 0, hits: 0 } }
+}
+const clamp01 = (v: unknown, fallback: number) => typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback
+function validInventory(value: unknown, fallback: SkinItem[]): SkinItem[] { return Array.isArray(value) ? value.filter(item => !!item && typeof item === 'object' && typeof (item as SkinItem).id === 'string' && typeof (item as SkinItem).weapon === 'string' && typeof (item as SkinItem).name === 'string').slice(0, 200) as SkinItem[] : fallback }
+function validStats(value: unknown, fallback: PlayerStats): PlayerStats { const v = value && typeof value === 'object' ? value as Record<string, unknown> : {}; const n = (key: keyof PlayerStats) => typeof v[key] === 'number' && Number.isFinite(v[key]) ? Math.max(0, Math.floor(v[key] as number)) : fallback[key]; return { kills: n('kills'), headshots: n('headshots'), deaths: n('deaths'), matches: n('matches'), wins: n('wins'), shots: n('shots'), hits: n('hits') } }
+
+export function parseSave(raw: string | null): SaveData {
+  const base = defaultSave(); if (!raw) return base
+  let data: Record<string, unknown>
+  try { const parsed = JSON.parse(raw); if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return base; data = parsed as Record<string, unknown> } catch { return base }
+  if (data.version !== 1) return base
+  const board = Array.isArray(data.leaderboard) ? data.leaderboard : []
+  const inventory = validInventory(data.inventory, base.inventory)
+  const equipped = data.equipped && typeof data.equipped === 'object' ? data.equipped as Partial<Record<WeaponId, string>> : base.equipped
+  const level = typeof data.level === 'number' && Number.isFinite(data.level) ? Math.max(1, Math.min(50, Math.floor(data.level))) : base.level
+  const selectedOperator = OPERATOR_SKINS.find(skin => skin.id === data.operatorSkinId && skin.level <= level) ?? operatorSkinForLevel(level)
+  return { ...base, locale: data.locale === 'en' || data.locale === 'zh-CN' ? data.locale : '', musicVolume: clamp01(data.musicVolume, base.musicVolume), sfxVolume: clamp01(data.sfxVolume, base.sfxVolume), muted: data.muted === true, sensitivity: typeof data.sensitivity === 'number' && data.sensitivity >= 0.2 && data.sensitivity <= 3 ? data.sensitivity : base.sensitivity, invertY: data.invertY === true, quality: data.quality === 'low' || data.quality === 'medium' || data.quality === 'high' ? data.quality : base.quality, reducedMotion: data.reducedMotion === true, tutorialDone: data.tutorialDone === true, playerName: typeof data.playerName === 'string' && data.playerName.trim() ? data.playerName.trim().slice(0, 16) : base.playerName, leaderboard: board.filter((e): e is ScoreEntry => !!e && typeof e === 'object' && typeof (e as ScoreEntry).name === 'string' && Number.isFinite((e as ScoreEntry).score)).map(e => ({ name: e.name.slice(0, 16), score: Math.max(0, Math.floor(e.score)), seconds: Number.isFinite(e.seconds) ? e.seconds : 0, at: Number.isFinite(e.at) ? e.at : 0 })).slice(0, LEADERBOARD_SIZE), xp: typeof data.xp === 'number' && Number.isFinite(data.xp) ? Math.max(0, Math.floor(data.xp)) : base.xp, level, operatorSkinId: selectedOperator.id, credits: typeof data.credits === 'number' && Number.isFinite(data.credits) ? Math.max(0, Math.floor(data.credits)) : base.credits, inventory, equipped, stats: validStats(data.stats, base.stats) }
+}
+export function insertScore(board: ScoreEntry[], entry: ScoreEntry): { board: ScoreEntry[]; rank: number } { const next = [...board, entry].sort((a, b) => b.score - a.score || a.seconds - b.seconds || a.at - b.at).slice(0, LEADERBOARD_SIZE); return { board: next, rank: next.indexOf(entry) } }
+export class SaveStore {
+  data: SaveData
+  constructor(private readonly storage: Pick<Storage, 'getItem' | 'setItem'> | undefined = globalThis.localStorage) { let raw: string | null = null; try { raw = this.storage?.getItem(SAVE_KEY) ?? null } catch { raw = null }; this.data = parseSave(raw) }
+  update(patch: Partial<SaveData>): void { this.data = { ...this.data, ...patch }; try { this.storage?.setItem(SAVE_KEY, JSON.stringify(this.data)) } catch { /* keep in memory */ } }
+}

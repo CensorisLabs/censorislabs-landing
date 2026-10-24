@@ -209,10 +209,14 @@ export class Game {
       const [cx, cy, cz] = chunkKey.split(',').map(Number)
       if (![cx, cy, cz].every(Number.isFinite) || !Array.isArray(cells)) continue
       for (const entry of cells) {
+        if (rawBlocks.length >= 30000) break
         if (!Array.isArray(entry) || entry.length < 2 || !entry.every(Number.isFinite)) continue
-        const [index, texture] = entry
-        if (index! < 0 || index! >= 4096 || rawBlocks.length >= 16000) continue
-        rawBlocks.push({ x: cx! * 16 + index! % 16, y: cy! * 16 + Math.floor(index! / 256), z: cz! * 16 + Math.floor(index! / 16) % 16, texture: texture! })
+        const [start, texture, runLength = 1] = entry
+        if (!Number.isInteger(start) || !Number.isInteger(texture) || !Number.isInteger(runLength) || start < 0 || start >= 4096 || runLength < 1) continue
+        const end = Math.min(start + runLength, 4096)
+        for (let index = start; index < end && rawBlocks.length < 30000; index += 1) {
+          rawBlocks.push({ x: cx! * 16 + index % 16, y: cy! * 16 + Math.floor(index / 256), z: cz! * 16 + Math.floor(index / 16) % 16, texture: texture! })
+        }
       }
     }
     if (!rawBlocks.length) { this.buildFallbackArena(terrain); return }

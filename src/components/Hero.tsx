@@ -3,12 +3,27 @@ import HeroFallback from './HeroFallback'
 
 const HeroScene = lazy(() => import('./HeroScene'))
 
+/** Night skyline: x, y, width, height — every tower meets the street at y 330. */
+const CITY: Array<[number, number, number, number]> = [
+  [40, 182, 60, 148],
+  [102, 214, 46, 116],
+  [150, 152, 56, 178],
+  [208, 198, 44, 132],
+  [254, 126, 62, 204],
+  [318, 172, 50, 158],
+  [370, 222, 42, 108],
+  [414, 150, 58, 180],
+  [474, 196, 44, 134],
+  [520, 132, 60, 198],
+  [582, 186, 44, 144],
+]
+
 const KEYCARDS = [
-  { name: 'ArthaSetu', kind: 'FINANCE', tone: 'rose' },
-  { name: 'Nur', kind: 'DAILY', tone: 'teal' },
-  { name: 'Picker', kind: 'HARDWARE', tone: 'blue' },
-  { name: 'Arcade', kind: 'GAMES', tone: 'violet' },
-  { name: 'Watch', kind: 'FILM', tone: 'amber' },
+  { name: 'ARTHA', kind: 'FINANCE', color: '#ff4d6d', tilt: -4 },
+  { name: 'NUR', kind: 'DAILY', color: '#2dd4bf', tilt: 2.5 },
+  { name: 'PICKER', kind: 'HARDWARE', color: '#4f8bff', tilt: -1.5 },
+  { name: 'ARCADE', kind: 'GAMES', color: '#a855f7', tilt: 3 },
+  { name: 'WATCH', kind: 'FILM', color: '#f5b23e', tilt: -2.5 },
 ]
 
 const SCREEN_LINES = [
@@ -18,17 +33,35 @@ const SCREEN_LINES = [
   'Offline Arcade — games',
 ]
 
-const CITY = [
-  [8, 96, 44, 164],
-  [58, 60, 38, 200],
-  [102, 128, 30, 132],
-  [138, 82, 46, 178],
-  [190, 40, 34, 220],
-  [230, 100, 42, 160],
-  [278, 66, 38, 194],
-  [322, 118, 30, 142],
-  [358, 88, 40, 172],
-]
+function Palm({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`} fill="#140d1e">
+      <path d="M-5 0 C -12 -34 -4 -70 8 -96 L 18 -92 C 6 -68 1 -34 5 0 Z" />
+      <path d="M14 -96 C -8 -112 -34 -112 -50 -101 C -28 -103 -6 -94 12 -85 Z" />
+      <path d="M14 -96 C 34 -116 60 -114 72 -101 C 52 -103 30 -95 14 -85 Z" />
+      <path d="M15 -99 C 0 -124 -18 -135 -34 -133 C -14 -127 2 -112 13 -96 Z" />
+      <path d="M16 -99 C 34 -122 52 -129 66 -125 C 46 -119 30 -108 17 -95 Z" />
+      <path d="M13 -93 C 7 -76 1 -68 -8 -63 C 1 -60 9 -71 17 -84 Z" />
+    </g>
+  )
+}
+
+function Diamond({ x, y, size = 14 }: { x: number; y: number; size?: number }) {
+  const half = size / 2
+  return (
+    <g transform={`translate(${x} ${y}) rotate(45)`}>
+      <rect
+        x={-half}
+        y={-half}
+        width={size}
+        height={size}
+        rx={1}
+        fill="#ff5c8a"
+        filter="url(#hero-glow)"
+      />
+    </g>
+  )
+}
 
 export default function Hero() {
   const [lowMode, setLowMode] = useState(
@@ -47,113 +80,295 @@ export default function Hero() {
     <section className="hero section--flush" id="top">
       <div className="hero__stage">
         <div className="room" aria-hidden="true">
-          <div className="room__wall" />
-          <div className="room__seam room__seam--v" />
-          <div className="room__seam room__seam--h" />
+          <svg
+            className="room__art"
+            viewBox="0 0 1200 840"
+            preserveAspectRatio="xMidYMid slice"
+            role="presentation"
+          >
+            <defs>
+              <linearGradient id="hero-wall" x1="0" y1="0" x2="0.4" y2="1">
+                <stop offset="0%" stopColor="#312440" />
+                <stop offset="46%" stopColor="#201728" />
+                <stop offset="100%" stopColor="#0c0812" />
+              </linearGradient>
+              <linearGradient id="hero-sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#2a1b3d" />
+                <stop offset="38%" stopColor="#543361" />
+                <stop offset="74%" stopColor="#a06a8b" />
+                <stop offset="100%" stopColor="#e5afb6" />
+              </linearGradient>
+              <linearGradient id="hero-tower" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#4b3059" />
+                <stop offset="100%" stopColor="#241730" />
+              </linearGradient>
+              <radialGradient id="hero-haze" cx="0.5" cy="1" r="0.75">
+                <stop offset="0%" stopColor="#ffc9d3" stopOpacity="0.75" />
+                <stop offset="100%" stopColor="#ffc9d3" stopOpacity="0" />
+              </radialGradient>
+              <linearGradient id="hero-desk" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#2a1e36" />
+                <stop offset="34%" stopColor="#1a1224" />
+                <stop offset="100%" stopColor="#0a0710" />
+              </linearGradient>
+              <linearGradient id="hero-screen" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#2b1a3c" />
+                <stop offset="70%" stopColor="#171021" />
+                <stop offset="100%" stopColor="#120c1a" />
+              </linearGradient>
+              <pattern id="hero-lit" width="8" height="11" patternUnits="userSpaceOnUse">
+                <rect width="3" height="4" x="1.2" y="1.8" fill="#ffd9ab" opacity="0.92" />
+                <rect width="3" height="4" x="5" y="6.4" fill="#ffb387" opacity="0.7" />
+                <rect width="3" height="4" x="1.2" y="6.4" fill="#ffe9c4" opacity="0.45" />
+              </pattern>
+              <pattern id="hero-peg" width="13" height="13" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1.3" fill="rgba(255,255,255,0.16)" />
+              </pattern>
+              <filter id="hero-glow" x="-120%" y="-120%" width="340%" height="340%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <clipPath id="hero-window-clip">
+                <rect x="24" y="26" width="630" height="300" rx="8" />
+              </clipPath>
+            </defs>
 
-          <div className="room__window">
-            <div className="window__sky" />
-            <svg className="window__city" viewBox="0 0 406 260" preserveAspectRatio="xMidYMax slice">
-              <defs>
-                <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#4a3059" />
-                  <stop offset="100%" stopColor="#22162e" />
-                </linearGradient>
-                <pattern id="lit" width="9" height="13" patternUnits="userSpaceOnUse">
-                  <rect width="3.4" height="4.6" x="1.6" y="2.4" fill="#ffd8a8" opacity="0.75" />
-                  <rect width="3.4" height="4.6" x="5.4" y="7.6" fill="#ffb3c7" opacity="0.45" />
-                </pattern>
-              </defs>
+            <rect width="1200" height="840" fill="url(#hero-wall)" />
+            <g stroke="rgba(255,255,255,0.06)" strokeWidth="1.5">
+              <line x1="676" y1="0" x2="676" y2="840" />
+              <line x1="1152" y1="0" x2="1152" y2="840" />
+              <line x1="676" y1="352" x2="1200" y2="352" />
+            </g>
+
+            {/* Window onto the night city */}
+            <g clipPath="url(#hero-window-clip)">
+              <rect x="24" y="26" width="630" height="300" fill="url(#hero-sky)" />
               {CITY.map(([x, y, w, h]) => (
                 <g key={`${x}-${y}`}>
-                  <rect x={x} y={y} width={w} height={h} fill="url(#tower)" />
-                  <rect x={x} y={y} width={w} height={h} fill="url(#lit)" opacity="0.85" />
+                  <rect x={x} y={y} width={w} height={h} fill="url(#hero-tower)" />
+                  <rect x={x + 3} y={y + 5} width={w - 6} height={h - 8} fill="url(#hero-lit)" />
                 </g>
               ))}
-              <g fill="#140d1d" opacity="0.95">
-                <path d="M28 260c0-26 6-38 12-44 1 14 2 26 1 44zM40 260c0-22 8-34 14-40 2 12 3 24 2 40z" />
-                <path d="M352 260c0-26 6-38 12-44 1 14 2 26 1 44zM364 260c0-22 8-34 14-40 2 12 3 24 2 40z" />
+              <ellipse cx="340" cy="332" rx="340" ry="70" fill="url(#hero-haze)" opacity="0.55" />
+              <Palm x={118} y={334} scale={0.95} />
+              <Palm x={352} y={334} scale={0.68} />
+              <Palm x={566} y={334} scale={0.86} />
+              <g fill="#140d1e">
+                <rect x="278" y="74" width="4" height="20" />
+                <rect x="544" y="76" width="3" height="20" />
+                <rect x="176" y="104" width="3" height="16" />
               </g>
-            </svg>
-            <div className="window__haze" />
-            <div className="window__sheen" />
-          </div>
-
-          <div className="room__pegboard">
-            <div className="pegboard__rail" />
-            <div className="pegboard__cards">
-              {KEYCARDS.map((card) => (
-                <div className={`keycard keycard--${card.tone}`} key={card.name}>
-                  <span className="keycard__pin" />
-                  <span className="keycard__tab">{card.kind}</span>
-                  <span className="keycard__name">{card.name}</span>
-                  <span className="keycard__bars" />
-                </div>
-              ))}
-            </div>
-            <svg className="pegboard__keys" viewBox="0 0 90 120">
-              <g stroke="#cbb9e2" strokeWidth="2" fill="none" opacity="0.7">
-                <path d="M14 6v26M14 32a7 7 0 1 0 0.01 0" />
-                <path d="M14 46v10M14 50h8" />
-                <path d="M62 10v22M62 32a8 8 0 1 0 0.01 0" />
-                <path d="M62 48v18M62 56h9M62 62h6" />
-              </g>
-            </svg>
-            <div className="pegboard__glow" />
-          </div>
-
-          <div className="room__shelf">
-            <div className="shelf__camera">
-              <span className="camera__lens" />
-              <span className="camera__flash" />
-            </div>
-            <div className="shelf__board" />
-          </div>
-
-          <div className="room__desk" />
-
-          <div className="room__monitor">
-            <div className="monitor__screen">
-              <p className="monitor__label">PROJECTS</p>
-              <ul className="monitor__list">
-                {SCREEN_LINES.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-              <span className="monitor__cursor" />
-            </div>
-            <div className="monitor__stand" />
-            <div className="monitor__base" />
-          </div>
-
-          <svg className="room__robot" viewBox="0 0 150 190">
-            <g>
-              <line x1="58" y1="30" x2="50" y2="6" stroke="#f3d9e4" strokeWidth="3" />
-              <line x1="92" y1="30" x2="100" y2="6" stroke="#f3d9e4" strokeWidth="3" />
-              <circle cx="50" cy="6" r="4.5" fill="#ff5c8a" />
-              <circle cx="100" cy="6" r="4.5" fill="#ff5c8a" />
-              <rect x="44" y="28" width="62" height="52" rx="8" fill="#efe6f2" />
-              <rect x="51" y="36" width="48" height="33" rx="5" fill="#241731" />
-              <circle cx="66" cy="52" r="3.4" fill="#ffe7ef" />
-              <circle cx="84" cy="52" r="3.4" fill="#ffe7ef" />
-              <rect x="64" y="61" width="22" height="2.6" rx="1.3" fill="#ff5c8a" opacity="0.8" />
-              <rect x="38" y="80" width="74" height="22" rx="7" fill="#e5d7ea" />
-              <rect x="56" y="102" width="38" height="52" rx="7" fill="#f2eaf5" />
-              <rect x="62" y="112" width="26" height="12" rx="3" fill="#ff8fb0" opacity="0.85" />
-              <rect x="30" y="104" width="14" height="34" rx="6" fill="#e0d0e6" />
-              <rect x="106" y="104" width="14" height="34" rx="6" fill="#e0d0e6" />
-              <circle cx="37" cy="142" r="7" fill="#2b1b38" />
-              <circle cx="113" cy="142" r="7" fill="#2b1b38" />
-              <rect x="62" y="154" width="26" height="10" rx="4" fill="#c9b3d6" />
-              <rect x="54" y="164" width="42" height="12" rx="5" fill="#3a2647" />
             </g>
-          </svg>
+            <rect
+              x="24"
+              y="26"
+              width="630"
+              height="300"
+              rx="8"
+              fill="none"
+              stroke="#0f0a17"
+              strokeWidth="9"
+            />
+            <g fill="#120c1b">
+              <rect x="231" y="26" width="6" height="300" />
+              <rect x="441" y="26" width="6" height="300" />
+              <rect x="24" y="204" width="630" height="5" />
+            </g>
+            <path
+              d="M40 60 L 210 26 L 250 26 L 60 96 Z"
+              fill="rgba(255,255,255,0.06)"
+            />
 
-          <div className="room__lamp">
-            <span className="lamp__dome" />
-            <span className="lamp__arm" />
-            <span className="lamp__pool" />
-          </div>
+            {/* Pegboard with the app keycards */}
+            <g>
+              <rect
+                x="690"
+                y="58"
+                width="470"
+                height="272"
+                rx="12"
+                fill="#191320"
+                stroke="rgba(255,255,255,0.14)"
+                strokeWidth="1.5"
+              />
+              <rect x="690" y="58" width="470" height="272" rx="12" fill="url(#hero-peg)" />
+              <rect
+                x="690"
+                y="58"
+                width="470"
+                height="272"
+                rx="12"
+                fill="none"
+                stroke="rgba(255,92,138,0.18)"
+                strokeWidth="10"
+                opacity="0.5"
+              />
+              <line x1="712" y1="88" x2="1138" y2="88" stroke="rgba(255,240,246,0.4)" strokeWidth="2" />
+              <line x1="712" y1="88" x2="1138" y2="88" stroke="rgba(255,92,138,0.35)" strokeWidth="6" opacity="0.35" />
+
+              {KEYCARDS.map((card, index) => {
+                const x = 726 + index * 72
+                const cx = x + 28
+                return (
+                  <g key={card.name} transform={`rotate(${card.tilt} ${cx} 122)`}>
+                    <line x1={cx} y1="88" x2={cx} y2="122" stroke="rgba(255,235,243,0.5)" strokeWidth="1.2" />
+                    <rect x={x} y="122" width="56" height="88" rx="4" fill="#f6eef3" />
+                    <path d={`M${x} 126 a4 4 0 0 1 4 -4 h48 a4 4 0 0 1 4 4 v20 h-56 z`} fill={card.color} />
+                    <circle cx={cx} cy="133" r="2.6" fill="rgba(18,9,24,0.5)" />
+                    <text
+                      x={cx}
+                      y="158"
+                      textAnchor="middle"
+                      fontSize="6"
+                      letterSpacing="0.8"
+                      fill="rgba(28,14,36,0.62)"
+                      style={{ fontFamily: 'var(--mono)' }}
+                    >
+                      {card.kind}
+                    </text>
+                    <text
+                      x={cx}
+                      y="170"
+                      textAnchor="middle"
+                      fontSize="7.5"
+                      fontWeight="600"
+                      letterSpacing="0.4"
+                      fill="#26162f"
+                      style={{ fontFamily: 'var(--mono)' }}
+                    >
+                      {card.name}
+                    </text>
+                    <g fill="rgba(38,22,47,0.35)">
+                      <rect x={x + 8} y="180" width="40" height="2" rx="1" />
+                      <rect x={x + 8} y="186" width="30" height="2" rx="1" />
+                      <rect x={x + 8} y="192" width="35" height="2" rx="1" />
+                      <rect x={x + 8} y="200" width="40" height="3" rx="1" />
+                    </g>
+                  </g>
+                )
+              })}
+
+              <g stroke="#cdb9e0" strokeWidth="2" fill="none" opacity="0.55">
+                <path d="M1100 96v26" />
+                <path d="M1100 122a7 7 0 1 0 0.01 0" />
+                <path d="M1100 136v42M1100 146h10M1100 154h7" />
+                <path d="M1132 96v20" />
+                <path d="M1132 116a8 8 0 1 0 0.01 0" />
+                <path d="M1132 132v34M1132 142h-8M1132 150h-6" />
+              </g>
+              <Diamond x={925} y={38} size={18} />
+            </g>
+
+            <Diamond x={256} y={70} size={13} />
+            <Diamond x={664} y={140} size={10} />
+            <Diamond x={1180} y={338} size={11} />
+
+            {/* Shelf camera */}
+            <g>
+              <rect x="1000" y="372" width="118" height="6" rx="3" fill="#2b1e38" />
+              <rect
+                x="1022"
+                y="308"
+                width="86"
+                height="64"
+                rx="7"
+                fill="#241a30"
+                stroke="rgba(255,255,255,0.13)"
+                strokeWidth="1.4"
+              />
+              <circle cx="1065" cy="340" r="21" fill="#110b19" stroke="rgba(255,157,187,0.5)" strokeWidth="1.6" />
+              <circle cx="1065" cy="340" r="10" fill="#1d1429" stroke="rgba(255,92,138,0.45)" strokeWidth="1.2" />
+              <rect x="1088" y="318" width="12" height="8" rx="2" fill="#ffe1ea" opacity="0.55" />
+              <Diamond x={1065} y={292} size={12} />
+            </g>
+
+            {/* Desk */}
+            <rect x="0" y="430" width="1200" height="410" fill="url(#hero-desk)" />
+            <line x1="0" y1="430" x2="1200" y2="430" stroke="rgba(255,255,255,0.16)" strokeWidth="2" />
+            <ellipse cx="230" cy="470" rx="330" ry="70" fill="rgba(255,120,160,0.1)" />
+
+            {/* Desk lamp, tucked behind the monitor */}
+            <g>
+              <ellipse cx="30" cy="206" rx="120" ry="70" fill="rgba(255,120,160,0.16)" />
+              <path d="M-18 206 q 0 -48 44 -48 q 44 0 44 48 z" fill="#ff8fb4" />
+              <path d="M-18 206 q 0 -48 44 -48 q 44 0 44 48 z" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
+              <rect x="24" y="206" width="3" height="40" fill="#ffb9cf" opacity="0.85" />
+            </g>
+
+            {/* Monitor */}
+            <g>
+              <rect
+                x="58"
+                y="196"
+                width="340"
+                height="204"
+                rx="9"
+                fill="#191123"
+                stroke="rgba(255,255,255,0.17)"
+                strokeWidth="2"
+              />
+              <rect x="66" y="204" width="324" height="188" rx="5" fill="url(#hero-screen)" />
+              <text
+                x="90"
+                y="252"
+                fontSize="25"
+                fontWeight="700"
+                letterSpacing="7"
+                fill="#ffdce7"
+                style={{ fontFamily: 'var(--sans)' }}
+              >
+                PROJECTS
+              </text>
+              {SCREEN_LINES.map((line, index) => (
+                <g key={line}>
+                  <rect x="90" y={274 + index * 22} width="4" height="4" fill="rgba(255,92,138,0.85)" transform={`rotate(45 92 ${276 + index * 22})`} />
+                  <text
+                    x="104"
+                    y={281 + index * 22}
+                    fontSize="9"
+                    letterSpacing="0.6"
+                    fill="rgba(255,255,255,0.44)"
+                    style={{ fontFamily: 'var(--mono)' }}
+                  >
+                    {line}
+                  </text>
+                </g>
+              ))}
+              <rect x="90" y="366" width="42" height="3" fill="#ff9dbb" />
+              <rect x="218" y="400" width="26" height="24" fill="#281b35" />
+              <rect x="172" y="420" width="118" height="9" rx="4" fill="#2c1e3a" />
+            </g>
+
+            {/* Robot with camera */}
+            <g>
+              <line x1="462" y1="292" x2="452" y2="262" stroke="#f3d9e4" strokeWidth="3" />
+              <line x1="516" y1="292" x2="526" y2="262" stroke="#f3d9e4" strokeWidth="3" />
+              <circle cx="452" cy="262" r="4.5" fill="#ff5c8a" />
+              <circle cx="526" cy="262" r="4.5" fill="#ff5c8a" />
+              <rect x="448" y="290" width="82" height="68" rx="10" fill="#efe6f2" />
+              <rect x="460" y="302" width="58" height="44" rx="6" fill="#241731" />
+              <circle cx="478" cy="322" r="4" fill="#ffe7ef" />
+              <circle cx="500" cy="322" r="4" fill="#ffe7ef" />
+              <rect x="478" y="332" width="22" height="3" rx="1.5" fill="#ff5c8a" opacity="0.85" />
+              <rect x="438" y="358" width="102" height="56" rx="9" fill="#e7dbea" />
+              <rect x="472" y="370" width="34" height="16" rx="4" fill="#ff8fb0" opacity="0.85" />
+              <rect x="418" y="362" width="20" height="50" rx="8" fill="#ded0e4" />
+              <rect x="540" y="362" width="20" height="50" rx="8" fill="#ded0e4" />
+              <rect x="452" y="414" width="32" height="16" rx="5" fill="#c9b3d6" />
+              <rect x="494" y="414" width="32" height="16" rx="5" fill="#c9b3d6" />
+              <g>
+                <rect x="462" y="384" width="54" height="38" rx="7" fill="#2b1b38" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+                <circle cx="489" cy="403" r="13" fill="#150e1f" stroke="rgba(255,157,187,0.55)" strokeWidth="1.6" />
+                <circle cx="489" cy="403" r="6" fill="#2a1b38" stroke="rgba(255,92,138,0.5)" strokeWidth="1.2" />
+                <rect x="504" y="388" width="8" height="6" rx="1.5" fill="#ffe1ea" opacity="0.6" />
+              </g>
+            </g>
+
+            <rect width="1200" height="840" fill="rgba(255,255,255,0.008)" />
+          </svg>
 
           <div className="room__scene">
             {lowMode ? <HeroFallback /> : <Suspense fallback={<HeroFallback />}><HeroScene /></Suspense>}

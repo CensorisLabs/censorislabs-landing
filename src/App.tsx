@@ -6,6 +6,7 @@ import About from './components/About'
 import Cursor from './components/Cursor'
 import Footer from './components/Footer'
 import Nav from './components/Nav'
+import RequestSoftware from './components/RequestSoftware'
 import Reviews from './components/Reviews'
 import Sovereignty from './components/Sovereignty'
 import TechnicalLedger from './components/TechnicalLedger'
@@ -18,6 +19,7 @@ const TITLES: Record<string, string> = {
   '#/about': 'About me',
   '#/apps': 'Apps',
   '#/reviews': 'Reviews & comments',
+  '#/request': 'Request software',
 }
 
 export default function App() {
@@ -39,6 +41,18 @@ export default function App() {
     document.title = title ? `${title} · CensorisLabs` : 'CensorisLabs — Independent Software House'
   }, [route])
 
+  // A plain anchor such as #ecosystem is followed before React mounts the
+  // section when the link is used from a routed page, which leaves the visitor
+  // at the top of the document. Re-anchor once the section exists, clearing the
+  // fixed navigation bar.
+  useEffect(() => {
+    if (!route || route.startsWith('#/')) return
+    const target = document.getElementById(route.slice(1))
+    if (!target) return
+    const top = Math.max(target.getBoundingClientRect().top + window.scrollY - 96, 0)
+    window.scrollTo({ top, behavior: 'instant' })
+  }, [route])
+
   useLayoutEffect(() => {
     const cleanups = [initReveals(), initTilt(), initScrollDrift()]
     return () => cleanups.forEach((cleanup) => cleanup())
@@ -46,6 +60,7 @@ export default function App() {
 
   const isAboutPage = route === '#/about'
   const isReviewsPage = route === '#/reviews'
+  const isRequestPage = route === '#/request'
   const isAppPage = route === '#/apps' || route.startsWith('#/apps/')
   const appId = isAppPage ? route.split('/')[2] : undefined
 
@@ -59,7 +74,7 @@ export default function App() {
       <Nav />
 
       <main id="main">
-        {isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isAppPage ? <Apps appId={appId} /> : <>
+        {isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isAppPage ? <Apps appId={appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>

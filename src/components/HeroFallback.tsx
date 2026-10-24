@@ -1,21 +1,15 @@
 /**
- * Static stand-in for the WebGL layer: a scattering of glowing glass shards and
- * magenta diamonds drawn as SVG. Used while the 3D chunk loads and whenever
- * WebGL (or low-end mode) takes the canvas away.
+ * Static stand-in for the WebGL depth layer: the same magenta diamonds the
+ * scene floats, drawn as SVG. Used while the 3D chunk loads and whenever WebGL
+ * (or low-end mode) takes the canvas away, so the hero never changes character.
  */
-const SHARDS = [
-  { x: 18, y: 22, w: 92, h: 62, r: -14, o: 0.24 },
-  { x: 70, y: 58, w: 66, h: 92, r: 9, o: 0.18 },
-  { x: 40, y: 12, w: 58, h: 40, r: 6, o: 0.16 },
-  { x: 76, y: 20, w: 48, h: 66, r: -7, o: 0.2 },
-]
-
 const DIAMONDS = [
-  { x: 210, y: 40, s: 7 },
-  { x: 160, y: 96, s: 5 },
-  { x: 246, y: 118, s: 9 },
-  { x: 128, y: 34, s: 4 },
-  { x: 198, y: 148, s: 5 },
+  { x: 210, y: 46, s: 6, o: 1 },
+  { x: 136, y: 92, s: 4.5, o: 0.8 },
+  { x: 246, y: 124, s: 8, o: 0.9 },
+  { x: 96, y: 52, s: 3.5, o: 0.65 },
+  { x: 188, y: 150, s: 4.5, o: 0.7 },
+  { x: 62, y: 132, s: 3, o: 0.5 },
 ]
 
 export default function HeroFallback() {
@@ -23,42 +17,35 @@ export default function HeroFallback() {
     <div className="hero__fallback" aria-hidden="true">
       <svg viewBox="0 0 280 180" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
         <defs>
-          <linearGradient id="shard-glass" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ff5c8a" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.08" />
-          </linearGradient>
-          <radialGradient id="diamond-core">
-            <stop offset="0%" stopColor="#ffd7e5" />
+          <radialGradient id="hero-fallback-diamond">
+            <stop offset="0%" stopColor="#ffe1ea" />
             <stop offset="100%" stopColor="#ff2e88" />
           </radialGradient>
         </defs>
 
-        {SHARDS.map((shard, index) => (
-          <rect
-            key={index}
-            x={shard.x}
-            y={shard.y}
-            width={shard.w}
-            height={shard.h}
-            rx="4"
-            transform={`rotate(${shard.r} ${shard.x + shard.w / 2} ${shard.y + shard.h / 2})`}
-            fill="url(#shard-glass)"
-            stroke="#ff8fb4"
-            strokeOpacity={shard.o}
-            strokeWidth="0.7"
-          />
-        ))}
+        <circle cx="150" cy="90" r="132" fill="none" stroke="#a855f7" strokeOpacity="0.1" />
+        <circle cx="150" cy="90" r="164" fill="none" stroke="#a855f7" strokeOpacity="0.07" />
 
         {DIAMONDS.map((diamond, index) => (
-          <g key={index} transform={`translate(${diamond.x} ${diamond.y}) rotate(45)`}>
-            <rect x={-diamond.s} y={-diamond.s} width={diamond.s * 2} height={diamond.s * 2} fill="url(#diamond-core)" />
+          <g
+            key={index}
+            transform={`translate(${diamond.x} ${diamond.y}) rotate(45)`}
+            opacity={diamond.o}
+          >
             <rect
-              x={-diamond.s * 2}
-              y={-diamond.s * 2}
-              width={diamond.s * 4}
-              height={diamond.s * 4}
+              x={-diamond.s * 2.4}
+              y={-diamond.s * 2.4}
+              width={diamond.s * 4.8}
+              height={diamond.s * 4.8}
               fill="#ff5c8a"
               opacity="0.12"
+            />
+            <rect
+              x={-diamond.s}
+              y={-diamond.s}
+              width={diamond.s * 2}
+              height={diamond.s * 2}
+              fill="url(#hero-fallback-diamond)"
             />
           </g>
         ))}

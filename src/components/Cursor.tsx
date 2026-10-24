@@ -14,12 +14,14 @@ const TARGETS: Array<[string, string]> = [
   ['input, textarea, select', 'TYPE'],
 ]
 
-function labelFor(element: Element | null): string {
-  const custom = element?.closest<HTMLElement>('[data-cursor]')
+function labelFor(target: EventTarget | null): string {
+  if (!(target instanceof Element)) return ''
+
+  const custom = target.closest<HTMLElement>('[data-cursor]')
   if (custom) return custom.dataset.cursor || ''
 
   for (const [selector, label] of TARGETS) {
-    if (element?.closest(selector)) return label
+    if (target.closest(selector)) return label
   }
   return ''
 }
@@ -89,7 +91,7 @@ export default function Cursor() {
       trailNode.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) translate(-50%, -50%)`
       trailNode.style.opacity = '0.3'
 
-      const text = labelFor(event.target as Element | null)
+      const text = labelFor(event.target)
       ringNode.classList.toggle('is-active', Boolean(text))
       labelNode.textContent = text
     }

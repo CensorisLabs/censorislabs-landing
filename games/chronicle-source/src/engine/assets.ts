@@ -2,11 +2,13 @@ import * as THREE from 'three'
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 export const CC0_GAME_MODELS = {
-  assaultRifle: { url: 'assets/models/cc0/quaternius/assault-rifle.glb', sha256: '119c638bd65ef97e7843f230cfca17abd526af9c579a98a87d6df3e6f299c7a5' },
+  assaultRifle: { url: 'assets/models/cc0/quaternius/assault-rifle.glb', sha256: 'a84ae184c1eedd878ec3034b5da6d9bf3d01eca6eacdc3022f8ba0cba6d7f01d' },
+  sniperRifle: { url: 'assets/models/cc0/quaternius/sniper-rifle.glb', sha256: 'e1323c5ecae8d792835b80d685d9acbf4f46466ed6a6a31892cbac01a0661a4c' },
   blaster: { url: 'assets/models/cc0/kenney-blaster/blaster-c.glb', sha256: '1c4c53f201597b2845c3d71717e0c465af1c21d8f8c30c0e1b4358dc33133d35', textures: [{ url: 'assets/models/cc0/kenney-blaster/Textures/colormap.png', sha256: '4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc' }] },
   operator: { url: 'assets/models/cc0/kenney-operator/character-i.glb', sha256: '2b566d3b6261faa3e151b352396d823a285834f039ff6476db248ec6da902fe8', textures: [{ url: 'assets/models/cc0/kenney-operator/Textures/texture-i.png', sha256: '2c721b0a8837836ab0bf0eb0de12ca14e5d518ccba7420b8c673ed4600dc6b63' }] },
   mp5: { url: 'assets/models/cc0/opengameart/mp5.glb', sha256: '42ea467a63c66d5467b77c40c4b1722977e3ca0e5d4d36570c1d295eaf66ef03' },
-  sword: { url: 'assets/models/cc0/texnist/sword2.glb', sha256: '6bf40949aa60239f6313fe067f0a3c2963271a881bb3310b92df92d014bf447b' },
+  buildingWall: { url: 'assets/models/cc0/kenney-building/wall.glb', sha256: '769a02a70327132ba864c04299631c65fb08e96e01e1796ba73ddf7f44679a36', textures: [{ url: 'assets/models/cc0/kenney-building/Textures/colormap.png', sha256: '01741a46a279bef667de3143ee653d0073ed7cae925d88341281391d9220092b' }] },
+  siteFrame: { url: 'assets/models/cc0/kenney-building/barricade-doorway-a.glb', sha256: '0d8bc73f2cf7912b6a60affaa706c99774af7cb72c15f91dfd66870a5bf2add0', textures: [{ url: 'assets/models/cc0/kenney-building/Textures/colormap.png', sha256: '01741a46a279bef667de3143ee653d0073ed7cae925d88341281391d9220092b' }] },
 } as const
 
 /**

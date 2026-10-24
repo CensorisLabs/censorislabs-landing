@@ -32,19 +32,19 @@ async function boot(): Promise<void> {
   ui.show('boot'); applySettings()
   const assets = new Assets()
   let loaded = 0
-  const bootTaskCount = 8
+  const bootTaskCount = 10
   const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(Math.min(0.9, 0.08 + loaded / bootTaskCount * 0.82)); return value })
   const optionalModel = (key: keyof typeof CC0_GAME_MODELS) => {
     const model = CC0_GAME_MODELS[key]
     return track(assets.gltfVerified(model.url, model.sha256, 'textures' in model ? model.textures : []).catch(error => { console.warn(`Optional model unavailable: ${model.url}`, error); return null }))
   }
   ui.setBootProgress(0.08)
-  const [{ Game }, { Renderer }, , assaultRifle, blaster, operator, mp5, sword] = await Promise.all([
+  const [{ Game }, { Renderer }, , assaultRifle, sniperRifle, blaster, operator, mp5, buildingWall, siteFrame] = await Promise.all([
     track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready),
-    optionalModel('assaultRifle'), optionalModel('blaster'), optionalModel('operator'), optionalModel('mp5'), optionalModel('sword'),
+    optionalModel('assaultRifle'), optionalModel('sniperRifle'), optionalModel('blaster'), optionalModel('operator'), optionalModel('mp5'), optionalModel('buildingWall'), optionalModel('siteFrame'),
   ])
   const renderer = new Renderer(canvas, save.data.quality)
-  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { assaultRifle, blaster, operator, mp5, sword })
+  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { assaultRifle, sniperRifle, blaster, operator, mp5, buildingWall, siteFrame })
   game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
     step: dt => { if (input.consume('pause') && performance.now() - lockLostAt > 300) { if (game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } else if (game?.mode === 'paused') { game.resume(); ui.show('hud'); input.lockPointer() } } game?.step(dt) },

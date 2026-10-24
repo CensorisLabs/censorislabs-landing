@@ -119,12 +119,13 @@ export class Game {
     this.scene.background = new THREE.Color(palette.sky)
     this.scene.fog = new THREE.Fog(palette.fog, 100, 210)
     const floor = this.block(new THREE.Vector3(64, 0.4, 64), new THREE.Vector3(0, -0.2, 0), '#ffffff')
-    const groundTexture = this.voxelTexture(palette.ground, palette.stone)
+    const groundVariation = new THREE.Color(palette.ground).lerp(new THREE.Color(palette.stone), 0.14).getStyle()
+    const groundTexture = this.voxelTexture(palette.ground, groundVariation)
     groundTexture.repeat.set(16, 16)
     const floorMaterial = floor.material as THREE.MeshStandardMaterial
     floorMaterial.map = groundTexture
     floorMaterial.needsUpdate = true
-    const grid = new THREE.GridHelper(64, 8, '#557b72', '#668273'); grid.position.y = 0.012; this.arenaRoot.add(grid)
+    // Keep the floor clear and the lane silhouettes easy to read.
     // Low broken perimeter walls leave the horizon open and create multiple arena entrances.
     for (let lane = -24; lane <= 24; lane += 8) {
       if (Math.abs(lane) < 5) continue
@@ -273,7 +274,8 @@ export class Game {
       addBox([pistol ? 0.1 : 0.12, 0.1, barrelLength], [0.36, -0.31, -0.88 - barrelLength / 2], '#26313c')
       addBox([pistol ? 0.15 : 0.2, 0.12, 0.12], [0.36, -0.31, -0.88 - barrelLength], '#121a23', true)
       // The model index changes stock, handguard, magazine and optic outline across the armory.
-      if (!pistol && model % 4 !== 0) addBox([0.25 + model % 3 * 0.04, 0.13, model % 2 ? 0.5 : 0.34], [0.36, -0.35, -0.12], selectedGun?.color ?? primary)
+      if (!pistol && model % 4 !== 1) addBox([0.3, 0.15, model % 2 ? 0.48 : 0.36], [0.36, -0.35, -0.12], '#514235')
+      if (!pistol && model % 4 !== 0) addBox([receiverWidth, 0.15, 0.4], [0.36, -0.34, -0.91], selectedGun?.color ?? primary)
       if (model % 2 === 0 || !pistol) addBox([pistol ? 0.14 : 0.2, pistol ? 0.25 : 0.34, 0.17], [0.36, -0.58, -0.55], selectedGun?.color ?? primary)
       addBox([0.16, pistol ? 0.1 : 0.12, 0.28], [0.36, -0.53, -0.35], '#293540')
       if (sniper) {

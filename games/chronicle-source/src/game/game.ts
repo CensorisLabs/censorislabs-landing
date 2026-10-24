@@ -722,6 +722,11 @@ export class Game {
   private selectedHandgunBase(): WeaponId { return armoryGun(this.save.data.handgunGunId).base }
   private worldPoint(point: THREE.Vector3): THREE.Vector3 { return point.clone().multiplyScalar(this.mapScale) }
   private botSpawn(bot: Bot): THREE.Vector3 { return bot.spawn.clone().multiplyScalar(this.mapScale) }
+  private centralSpawn(spawns: THREE.Vector3[]): THREE.Vector3 | undefined {
+    if (!spawns.length) return undefined
+    const center = spawns.reduce((sum, spawn) => sum.add(spawn), new THREE.Vector3()).multiplyScalar(1 / spawns.length)
+    return spawns.reduce((best, spawn) => spawn.distanceToSquared(center) < best.distanceToSquared(center) ? spawn : best).clone()
+  }
   private searchBlueSideIsSouth(): boolean { return this.round <= SEARCH_ROUND.halfRounds }
   private searchBase(team: 'blue' | 'red'): THREE.Vector3 {
     const blueIsSouth = this.searchBlueSideIsSouth()
@@ -733,7 +738,8 @@ export class Game {
       const blueUsesFirst = blueIsSouth
       const useFirst = (team === 'blue') === blueUsesFirst
       const spawns = useFirst ? this.kchSpawnTeams.first : this.kchSpawnTeams.second
-      if (spawns.length) return spawns[Math.floor((spawns.length - 1) / 2)]!.clone()
+      const spawn = this.centralSpawn(spawns)
+      if (spawn) return spawn
     }
     return new THREE.Vector3(0, 0, teamIsSouth ? -25 : 25)
   }
@@ -802,7 +808,7 @@ export class Game {
     this.relics.forEach(({ mesh }) => { mesh.visible = true }); if (this.grenadeProjectile) { this.grenadeProjectile.mesh.removeFromParent(); this.grenadeProjectile.mesh.geometry.dispose(); (this.grenadeProjectile.mesh.material as THREE.Material).dispose(); this.grenadeProjectile = null } this.grenadeCount = 0; this.inspectTime = 0; this.spectatorIndex = 0; this.activeSlot = 0; this.currentWeapon = matchType === 'gungame' ? GUN_GAME_ORDER[0]! : this.selectedPrimaryBase(); this.slideLeft = 0; this.ammo = WEAPONS[this.currentWeapon].magazine; this.reloadLeft = 0; this.playerDeadUntil = 0; this.run = this.newRun(); this.teleport(this.playerSpawn()); this.yaw = Math.PI
     if (this.activeKchMap && this.kchSpawnTeams.first.length && this.kchSpawnTeams.second.length) {
       const from = this.matchType === 'search' ? this.searchBase('blue') : this.player.root.position.clone().multiplyScalar(1 / this.mapScale)
-      const to = this.matchType === 'search' ? this.searchBase('red') : this.kchSpawnTeams.second[0]!
+      const to = this.matchType === 'search' ? this.searchBase('red') : this.centralSpawn(this.kchSpawnTeams.second) ?? this.kchSpawnTeams.second[0]!
       this.yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z))
     }
     this.pitch = 0; this.updateViewModel()
@@ -854,7 +860,8 @@ export class Game {
     if (this.matchType === 'search') return this.searchPlayerSpawn()
     const marker = this.activeCustomMap?.markers.find(item => item.kind === 'player-spawn')
     if (marker) return new THREE.Vector3(marker.x, 0, marker.z).multiplyScalar(this.mapScale)
-    if (this.activeKchMap && this.kchSpawnTeams.first.length) return this.kchSpawnTeams.first[Math.floor((this.kchSpawnTeams.first.length - 1) / 2)]!.clone().multiplyScalar(this.mapScale)
+    const spawn = this.activeKchMap ? this.centralSpawn(this.kchSpawnTeams.first) : undefined
+    if (spawn) return spawn.multiplyScalar(this.mapScale)
     return new THREE.Vector3(0, 0, -26 * this.mapScale)
   }
   private teleport(position: THREE.Vector3): void { this.player.root.position.copy(position); this.verticalVelocity = 0; this.horizontalVelocity.set(0, 0, 0); this.cameraLanding = 0 }

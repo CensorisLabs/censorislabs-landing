@@ -238,18 +238,31 @@ export class Game {
       dethroned: ['#70815f', '#c7a260', '#837b70', '#a95e4d', '#526f70', '#d6c9a3', '#8f9d78', '#b17d4f'],
     }
     const palette = palettes[this.mapId]
-    const textureCounts = new Map<number, number>()
-    for (const block of rawBlocks) textureCounts.set(block.texture, (textureCounts.get(block.texture) ?? 0) + 1)
-    const rankedTextures = [...textureCounts.entries()].sort((a, b) => b[1] - a[1]).map(([texture]) => texture)
-    const textureColors = new Map(rankedTextures.map((texture, index) => [texture, index % palette.length]))
-    const grouped: Array<Array<{ x: number; y: number; z: number }>> = Array.from({ length: palette.length }, () => [])
+    const grouped = new Map<string, Array<{ x: number; y: number; z: number }>>()
+    const fenceEdges: [Array<{ x: number; y: number; z: number }>, Array<{ x: number; y: number; z: number }>, Array<{ x: number; y: number; z: number }>] = [[], [], []]
+    const fenceEdgeKeys = new Set<string>()
+    const addFenceEdge = (axis: 0 | 1 | 2, x: number, y: number, z: number) => {
+      const key = `${axis}:${x},${y},${z}`
+      if (fenceEdgeKeys.has(key)) return
+      fenceEdgeKeys.add(key)
+      fenceEdges[axis].push({ x, y, z })
+    }
+    const blockColors: Record<number, string> = { 30: '#c8c7c2', 200: '#2676d4', 201: '#cb4b50' }
     this.kchColumns.clear()
     for (const block of rawBlocks) {
       const x = (block.x - xCenter) * this.kchCellScale
       const y = (block.y - yOrigin) * this.kchCellScale
       const z = (block.z - zCenter) * this.kchCellScale
-      const colorIndex = textureColors.get(block.texture) ?? Math.abs(block.texture * 31) % palette.length
-      grouped[colorIndex]!.push({ x, y, z })
+      if (block.texture === 27) {
+        for (const dy of [-0.5, 0.5]) for (const dz of [-0.5, 0.5]) addFenceEdge(0, block.x, block.y + dy, block.z + dz)
+        for (const dx of [-0.5, 0.5]) for (const dz of [-0.5, 0.5]) addFenceEdge(1, block.x + dx, block.y, block.z + dz)
+        for (const dx of [-0.5, 0.5]) for (const dy of [-0.5, 0.5]) addFenceEdge(2, block.x + dx, block.y + dy, block.z)
+      } else {
+        const color = blockColors[block.texture] ?? palette[Math.abs(block.texture) % palette.length]!
+        const blocks = grouped.get(color) ?? []
+        blocks.push({ x, y, z })
+        grouped.set(color, blocks)
+      }
       const key = `${block.x},${block.z}`
       const column = this.kchColumns.get(key) ?? []
       column.push({ bottom: (block.y - 0.5 - yOrigin) * this.kchCellScale, top: (block.y + 0.5 - yOrigin) * this.kchCellScale })
@@ -257,12 +270,11 @@ export class Game {
     }
     const geometry = new THREE.BoxGeometry(1, 1, 1)
     const dummy = new THREE.Object3D()
-    for (let colorIndex = 0; colorIndex < grouped.length; colorIndex += 1) {
-      const blocks = grouped[colorIndex]!
+    for (const [color, blocks] of grouped) {
       if (!blocks.length) continue
-      const material = this.mat(palette[colorIndex]!)
+      const material = this.mat(color)
       const mesh = new THREE.InstancedMesh(geometry, material, blocks.length)
-      mesh.name = `KCH ${data.mapName} voxel batch ${colorIndex}`
+      mesh.name = `KCH ${data.mapName} voxel material ${color}`
       mesh.userData.surfaceType = /dune|sand|antfarm/i.test(data.mapName) ? 'gravel' : /lab|collision/i.test(data.mapName) ? 'metal' : 'concrete'
       mesh.castShadow = false; mesh.receiveShadow = true
       blocks.forEach((block, index) => { dummy.position.set(block.x, block.y, block.z); dummy.scale.setScalar(this.kchCellScale); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix) })
@@ -271,6 +283,20 @@ export class Game {
       this.arenaRoot.add(mesh)
     }
     geometry.dispose()
+    const edgeGeometries = [new THREE.BoxGeometry(1, 0.055, 0.055), new THREE.BoxGeometry(0.055, 1, 0.055), new THREE.BoxGeometry(0.055, 0.055, 1)]
+    for (let axis = 0; axis < fenceEdges.length; axis += 1) {
+      const edges = fenceEdges[axis]!
+      if (!edges.length) continue
+      const mesh = new THREE.InstancedMesh(edgeGeometries[axis]!, new THREE.MeshLambertMaterial({ color: '#995c3b' }), edges.length)
+      mesh.name = `KCH ${data.mapName} lattice`
+      mesh.userData.surfaceType = 'metal'
+      mesh.castShadow = false; mesh.receiveShadow = true
+      edges.forEach((edge, index) => {
+        dummy.position.set((edge.x - xCenter) * this.kchCellScale, (edge.y - yOrigin) * this.kchCellScale, (edge.z - zCenter) * this.kchCellScale)
+        dummy.scale.setScalar(this.kchCellScale); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix)
+      })
+      mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); this.arenaRoot.add(mesh)
+    }
     const sourceSpawns = (list: KchSpawn[]) => list.filter(spawn => spawn?.pos?.length === 3 && spawn.pos.every(Number.isFinite)).map(spawn => new THREE.Vector3((spawn.pos[0] - xCenter) * this.kchCellScale, (spawn.pos[1] - yOrigin) * this.kchCellScale, (spawn.pos[2] - zCenter) * this.kchCellScale))
     this.kchSpawnTeams = { first: sourceSpawns(data.spawnPlaces?.firstTeam ?? []), second: sourceSpawns(data.spawnPlaces?.secondTeam ?? []) }
     this.activeKchMap = data

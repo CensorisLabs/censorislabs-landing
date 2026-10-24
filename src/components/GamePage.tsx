@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import './GamePage.css'
 
 const SITE_THEMES = ['obsidian', 'amethyst', 'ocean', 'ember'] as const
@@ -16,6 +16,7 @@ function getSiteTheme(): SiteTheme {
 
 export default function GamePage() {
   const theme = getSiteTheme()
+  const [gameVersion] = useState(() => Date.now().toString(36))
   useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
 
   return (
@@ -33,7 +34,7 @@ export default function GamePage() {
       </header>
       <iframe
         className="frontier-page__game"
-        src={'/games/chronicle/?siteTheme=' + theme}
+        src={'/games/chronicle/?siteTheme=' + theme + '&v=' + gameVersion}
         title="Chronicle Frontier, an original browser FPS"
         allow="fullscreen; gamepad; pointer-lock"
         allowFullScreen

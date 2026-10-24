@@ -19,7 +19,7 @@ export class Game {
   readonly player = { root: new THREE.Group(), teleport: (position: THREE.Vector3) => this.teleport(position) }
   readonly cores = { remaining: () => [] as THREE.Vector3[] }
   private readonly arenaRoot = new THREE.Group()
-  private readonly cameraInternal = new THREE.PerspectiveCamera(72, 1, 0.05, 180)
+  private readonly cameraInternal = new THREE.PerspectiveCamera(92, 1, 0.05, 180)
   private readonly raycaster = new THREE.Raycaster()
   private readonly visionRaycaster = new THREE.Raycaster()
   private readonly bots: Bot[] = []
@@ -143,13 +143,13 @@ export class Game {
       for (const z of [-18, -12, 12, 18]) {
         this.block(new THREE.Vector3(2.2, 5, 2.2), new THREE.Vector3(-18, 2.5, z), palette.stone)
         this.block(new THREE.Vector3(2.2, 5, 2.2), new THREE.Vector3(18, 2.5, z), palette.stone)
-        this.block(new THREE.Vector3(38, 0.45, 2.6), new THREE.Vector3(0, 5, z), palette.trim)
+
       }
       this.block(new THREE.Vector3(22, 1.4, 12), new THREE.Vector3(0, 0.7, -22), palette.trim)
     } else {
       for (const z of [-17, -11, 11, 17]) {
         for (const x of [-18, -12, 12, 18]) this.block(new THREE.Vector3(1.2, 5.5, 1.2), new THREE.Vector3(x, 2.75, z), palette.stone)
-        this.block(new THREE.Vector3(40, 0.45, 1.8), new THREE.Vector3(0, 5.4, z), palette.trim)
+
       }
     }
     for (const [x, z, r] of [[-24, 21, 3], [23, 21, 3], [-23, -21, 3], [23, -21, 3]] as const) { const pad = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.16, 8), this.mat(palette.trim)); pad.position.set(x, 0.08, z); this.arenaRoot.add(pad) }
@@ -231,7 +231,7 @@ export class Game {
     const teamMode = ['tdm', 'domination', 'hardpoint', 'ctf', 'search'].includes(matchType)
     this.mapScale = matchType === 'training' ? 0.72 : teamMode ? (this.teamSize === 1 ? 0.48 : this.teamSize === 4 ? 0.68 : 0.82) : matchType === 'ffa' ? 0.82 : 1
     this.arenaRoot.scale.setScalar(this.mapScale)
-    this.activeBotCount = matchType === 'training' || matchType === 'ffa' ? 6 : matchType === 'royale' ? this.royalePlayers - 1 : teamMode ? this.teamSize * 2 - 1 : 6
+    this.activeBotCount = matchType === 'training' ? 6 : matchType === 'ffa' ? 8 : matchType === 'royale' ? this.royalePlayers - 1 : teamMode ? this.teamSize * 2 - 1 : 6
     this.objective = ({ ffa: 'FIRST TO 12 ELIMINATIONS', tdm: 'FIRST TEAM TO 16 ELIMINATIONS', royale: 'BE THE LAST OPERATOR STANDING', training: 'MOVING TARGET PRACTICE', domination: 'CAPTURE AND HOLD THREE ZONES', hardpoint: 'CONTROL THE ROTATING HARDPOINT', ctf: 'STEAL THE ENEMY STANDARD', search: 'PLANT OR DEFUSE THE RELIC CHARGE' } satisfies Record<MatchType, string>)[matchType]
     if (mapId !== this.mapId) { this.mapId = mapId; this.buildArena() }
     this.matchTime = 0; this.blueScore = 0; this.redScore = 0; this.botScoreTimer = 8; this.stormDamageTimer = 0; this.battleSimTimer = 1.3; this.objectiveClock = 1; this.objectiveRotation = 0; this.zoneOwners.fill(null); this.zoneProgress.fill(0); this.flagCarried = false; this.flagScoreClock = 0; this.round = 1; this.roundClock = 0; this.roundBreak = 0; this.chargePlanted = false; this.chargeTimer = 0; this.plantProgress = 0; this.plantSite = 0
@@ -240,6 +240,14 @@ export class Game {
     const activeCount = this.activeBotCount
     this.bots.forEach((bot, i) => {
       bot.team = teamMode && i < this.teamSize - 1 ? 'blue' : 'red'
+      const allyCount = teamMode ? this.teamSize - 1 : 0
+      const spawnIndex = bot.team === 'blue' ? i : i - allyCount
+      const spawnCount = bot.team === 'blue' ? allyCount : this.activeBotCount - allyCount
+      const angle = teamMode
+        ? (bot.team === 'blue' ? Math.PI : 0) + (spawnIndex / Math.max(1, spawnCount - 1) - 0.5) * 0.82
+        : i / Math.max(1, this.activeBotCount) * Math.PI * 2
+      const radius = 16 + (i % 3) * 1.2
+      bot.spawn.set(Math.sin(angle) * radius, 0, Math.cos(angle) * radius)
       bot.alive = i < activeCount; bot.root.visible = bot.alive; bot.health = 100; bot.respawnAt = 0; bot.stormTime = 0; bot.kills = 0; bot.deaths = 0; bot.root.position.set(bot.spawn.x * this.mapScale, 0, bot.spawn.z * this.mapScale); bot.nextShot = 1.1 + i * 0.16
       const teamColor = teamMode && bot.team === 'blue' ? '#4e9ce0' : '#cb6657'
       for (const mesh of [bot.hitMeshes[0], bot.hitMeshes[2], bot.hitMeshes[3]]) if (mesh instanceof THREE.Mesh && mesh.material instanceof THREE.MeshStandardMaterial) mesh.material.color.set(teamColor)
@@ -270,7 +278,7 @@ export class Game {
     else if ((this.matchType === 'tdm' && this.blueScore >= 16) || ((this.matchType === 'domination' || this.matchType === 'hardpoint') && this.blueScore >= 100) || (this.matchType === 'ctf' && this.blueScore >= 3)) this.finish('won')
     else if ((this.matchType === 'tdm' && this.redScore >= 16) || ((this.matchType === 'domination' || this.matchType === 'hardpoint') && this.redScore >= 100) || (this.matchType === 'ctf' && this.redScore >= 3)) this.finish('lost')
     else if (this.matchType === 'royale' && this.run.aliveBots <= 0 && !this.playerDeadUntil) this.finish('won')
-    else if (this.run.timeLeft <= 0 && this.matchType !== 'training') this.finish(this.blueScore > this.redScore || (this.matchType === 'ffa' && this.run.kills >= Math.max(...this.bots.map(bot => bot.kills))) ? 'won' : 'lost')
+    else if (this.run.timeLeft <= 0 && this.matchType !== 'training') this.finish(this.blueScore > this.redScore || (this.matchType === 'ffa' && this.run.kills > Math.max(...this.bots.map(bot => bot.kills))) ? 'won' : 'lost')
     this.run.ammo = this.ammo; this.run.reload = this.reloadLeft; this.run.weapon = this.currentWeapon; this.run.weaponName = this.activeWeaponName(); this.run.aimed = this.input.held('ads'); this.run.accuracy = this.run.shots ? this.run.hits / this.run.shots : 0; this.run.scoreboard = this.scoreboard()
   }
   private stepRelics(dt: number): void { for (const relic of this.relics) { if (!relic.mesh.visible) continue; relic.mesh.rotation.y += dt * 1.5; relic.mesh.position.y = Number(relic.mesh.userData.baseY) + Math.sin(this.matchTime * 2.2 + relic.at.x) * 0.12; if (this.player.root.position.distanceTo(this.worldPoint(relic.at)) < 1.7) { relic.mesh.visible = false; this.audio.play('pickup'); this.addXp(40); this.save.update({ credits: this.save.data.credits + 35 }); this.hooks.banner(`${this.mapName()} RELIC FOUND // +40 XP · +35 CR`) } } }
@@ -320,13 +328,13 @@ export class Game {
     }
     const wish = forward.multiplyScalar(this.input.move.y).addScaledVector(right, this.input.move.x)
     if (wish.lengthSq() > 1) wish.normalize()
-    const speed = (this.input.held('sprint') ? 9.6 : 7.2) * weapon.movement * (this.input.held('ads') ? 0.72 : 1) * (crouching ? 0.58 : 1)
+    const speed = (this.input.held('sprint') ? 10.8 : 8) * weapon.movement * (this.input.held('ads') ? 0.72 : 1) * (crouching ? 0.58 : 1)
     if (this.slideLeft > 0) {
       const slideSpeed = 8 + 4 * Math.min(1, this.slideLeft / 0.62)
       this.horizontalVelocity.lerp(this.slideDirection.clone().multiplyScalar(slideSpeed), 1 - Math.exp(-3.5 * dt))
     } else {
       const targetVelocity = wish.multiplyScalar(speed)
-      const acceleration = grounded ? (this.input.move.x || this.input.move.y ? 24 : 15) : 8
+      const acceleration = grounded ? (this.input.move.x || this.input.move.y ? 30 : 18) : 9
       this.horizontalVelocity.lerp(targetVelocity, 1 - Math.exp(-acceleration * dt))
     }
     const move = this.horizontalVelocity.clone().multiplyScalar(dt)
@@ -389,7 +397,7 @@ export class Game {
       if (isAlly && this.matchType === 'tdm' && this.playerDeadUntil) { if (distance > 1.7) { bot.root.position.x += toPlayer.x / Math.max(distance, 1) * dt * 4; bot.root.position.z += toPlayer.z / Math.max(distance, 1) * dt * 4 } else if (this.matchTime - this.playerDownedAt >= 1.4) { this.playerDeadUntil = 0; this.run.health = 55; this.run.armor = 20; this.teleport(playerPos.clone().add(new THREE.Vector3(1.1, 0, 1.1))); this.hooks.banner(`${bot.name} // REVIVED YOU`) } continue }
       if (this.matchType === 'training') { bot.root.position.x = bot.spawn.x * this.mapScale + Math.sin(bot.phase * 0.6) * 1.5 * this.mapScale; bot.root.position.z = bot.spawn.z * this.mapScale + Math.cos(bot.phase * 0.7) * 1.5 * this.mapScale; continue }
       if (this.matchType === 'search' && this.roundClock < 8) continue
-      if (!isAlly && distance < 25 && !this.playerDeadUntil) {
+      if (!isAlly && distance < 54 && !this.playerDeadUntil) {
         bot.root.rotation.y = Math.atan2(toPlayer.x, toPlayer.z)
         if (this.matchTime >= bot.nextShot) {
           const reaction = { recruit: 1.35, regular: 0.95, veteran: 0.7, elite: 0.52 }[this.difficulty] * (0.88 + bot.style * 0.1)
@@ -397,7 +405,7 @@ export class Game {
           bot.nextShot = this.matchTime + reaction + bot.id * 0.035
           if (Math.random() < Math.max(0.1, aim - distance * 0.012)) { const origin = bot.root.position.clone().setY(1.6); const direction = playerPos.clone().setY(1.4).sub(origin); const distanceToTarget = direction.length(); this.visionRaycaster.set(origin, direction.normalize()); this.visionRaycaster.far = distanceToTarget; const obstruction = this.visionRaycaster.intersectObjects(this.arenaRoot.children, true)[0]; this.visionRaycaster.far = Infinity; if (!obstruction) this.damagePlayer(7 + bot.id % 3 * 2, bot) }
         }
-        if (distance > 8) { const flank = bot.style === 1 ? Math.sin(bot.phase) * 0.8 : 0; bot.root.position.x += (toPlayer.x / Math.max(distance, 1) + flank) * dt * (1.3 + bot.style * 0.15); bot.root.position.z += toPlayer.z / Math.max(distance, 1) * dt * (1.3 + bot.style * 0.15) }
+        if (distance > 8) { const flank = bot.style === 1 ? Math.sin(bot.phase) * 0.8 : 0; bot.root.position.x += (toPlayer.x / Math.max(distance, 1) + flank) * dt * (2.4 + bot.style * 0.2); bot.root.position.z += toPlayer.z / Math.max(distance, 1) * dt * (2.4 + bot.style * 0.2) }
       } else {
         bot.root.position.x = bot.spawn.x * this.mapScale + Math.sin(bot.phase) * 4.2 * this.mapScale
         bot.root.position.z = bot.spawn.z * this.mapScale + Math.cos(bot.phase * 0.8) * 3.8 * this.mapScale

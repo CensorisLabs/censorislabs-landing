@@ -133,7 +133,7 @@ export class Ui {
       case 'deploy': this.actions.play(this.selectedMode, this.selectedMap, this.difficulty, { royalePlayers: this.royalePlayers, teamSize: this.teamSize }); break
       case 'armory-back': this.show('title'); break
       case 'resume': this.actions.resume(); break
-      case 'restart': this.actions.play(this.selectedMode, this.selectedMap, this.difficulty, { royalePlayers: this.royalePlayers, teamSize: this.teamSize }); break
+      case 'restart': this.actions.restart(); break
       case 'quit': this.actions.quit(); break
       case 'settings': this.show('settings'); break
       case 'leaderboard': this.show('leaderboard'); this.renderLeaderboard(); break
@@ -171,7 +171,10 @@ export class Ui {
       else if (kind === 'player-spawn') {
         this.customMap.markers = this.customMap.markers.filter(marker => marker.kind !== kind)
         this.customMap.markers.push({ kind, x, z })
-      } else if (this.customMap.markers.length < 24) this.customMap.markers.push({ kind, x, z, ...(kind === 'site' ? { label } : {}) })
+      } else if (kind === 'site') {
+        this.customMap.markers = this.customMap.markers.filter(marker => marker.kind !== 'site' || marker.label !== label)
+        this.customMap.markers.push({ kind, x, z, label })
+      } else if (this.customMap.markers.length < 24) this.customMap.markers.push({ kind, x, z })
     }
     this.customMap = validateCustomMap(this.customMap) ?? this.customMap
     storeCustomMap(this.customMap); this.renderMapEditor()

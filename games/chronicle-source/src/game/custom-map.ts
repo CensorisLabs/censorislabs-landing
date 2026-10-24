@@ -45,14 +45,25 @@ export function validateCustomMap(input: unknown): CustomMap | null {
     if (!item || typeof item !== 'object') return null
     const marker = item as Partial<CustomMapMarker>
     if (marker.kind !== 'player-spawn' && marker.kind !== 'bot-spawn' && marker.kind !== 'site') return null
-    markers.push({ kind: marker.kind, x: snapGrid(marker.x), z: snapGrid(marker.z), ...(marker.kind === 'site' ? { label: marker.label === 'B' ? 'B' : 'A' } : {}) })
+    const normalized: CustomMapMarker = { kind: marker.kind, x: snapGrid(marker.x), z: snapGrid(marker.z), ...(marker.kind === 'site' ? { label: marker.label === 'B' ? 'B' : 'A' } : {}) }
+    const uniqueMarker = marker.kind === 'player-spawn'
+      ? markers.findIndex(existing => existing.kind === 'player-spawn')
+      : marker.kind === 'site'
+        ? markers.findIndex(existing => existing.kind === 'site' && existing.label === normalized.label)
+        : -1
+    if (uniqueMarker >= 0) markers[uniqueMarker] = normalized
+    else markers.push(normalized)
   }
   const name = typeof raw.name === 'string' ? raw.name.trim().slice(0, 32) : ''
   return { version: 1, name: name || 'Custom Field', blocks, markers }
 }
 
 export function readCustomMap(): CustomMap {
-  try { return validateCustomMap(JSON.parse(localStorage.getItem(CUSTOM_MAP_KEY) ?? 'null')) ?? structuredClone(DEFAULT_CUSTOM_MAP) }
+  try {
+    const stored = localStorage.getItem(CUSTOM_MAP_KEY)
+    if (stored && stored.length > MAX_CUSTOM_MAP_JSON_BYTES) return structuredClone(DEFAULT_CUSTOM_MAP)
+    return validateCustomMap(JSON.parse(stored ?? 'null')) ?? structuredClone(DEFAULT_CUSTOM_MAP)
+  }
   catch { return structuredClone(DEFAULT_CUSTOM_MAP) }
 }
 

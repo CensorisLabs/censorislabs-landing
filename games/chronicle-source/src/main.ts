@@ -22,7 +22,7 @@ async function boot(): Promise<void> {
   const ui = new Ui(i18n, save, audio, input, {
     play: (mode: MatchType, map: MapId, difficulty: BotDifficulty, settings) => { if (!game) return; audio.unlock(); audio.startMusic(); game.start(mode, map, difficulty, settings); ui.show('hud'); input.lockPointer() },
     resume: () => { game?.resume(); ui.show('hud'); input.lockPointer() },
-    restart: () => { if (!game) return; audio.unlock(); game.start(); ui.show('hud'); input.lockPointer() },
+    restart: () => { if (!game) return; audio.unlock(); game.restart(); ui.show('hud'); input.lockPointer() },
     quit: () => { game?.toTitle(); input.unlockPointer(); ui.show('title') },
     settings: patch => { save.update(patch); applySettings(); ui.refreshSettings(); if (patch.locale) i18n.set(patch.locale) },
   })

@@ -539,6 +539,13 @@ export class Game {
     const brief = ({ ffa: 'FREE FOR ALL', tdm: 'TEAM DEATHMATCH', royale: `${this.royalePlayers}-OPERATOR FRONTIER ROYALE`, training: 'AIM RANGE', domination: 'DOMINATION', hardpoint: 'HARDPOINT', ctf: 'CAPTURE THE STANDARD', search: 'RELIC SEARCH & DEFUSE' } satisfies Record<MatchType, string>)[matchType]
     this.hooks.banner(`${brief} // WASD MOVE · SHIFT SPRINT · CTRL+SHIFT SLIDE · SPACE JUMP · CLICK TO AIM`)
   }
+  restart(): void {
+    this.start(this.matchType, this.mapId, this.difficulty, {
+      royalePlayers: this.royalePlayers,
+      teamSize: this.teamSize,
+      ...(this.activeCustomMap ? { customMap: this.activeCustomMap } : {}),
+    })
+  }
   pause(): void { if (this.mode === 'playing') this.mode = 'paused' }
   resume(): void { if (this.mode !== 'paused') return; this.mode = 'playing'; this.input.endFrame(); this.input.takeLook() }
   toTitle(): void { this.mode = 'attract'; this.run = this.newRun() }

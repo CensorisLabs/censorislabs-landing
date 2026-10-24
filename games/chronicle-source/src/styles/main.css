@@ -33,3 +33,26 @@
 .hud-storm{color:var(--gold)}
 @media(max-width:800px){.mode-grid{grid-template-columns:1fr}.mode-card{min-height:0}.mode-card>b{margin-top:8px}.match-options{grid-template-columns:1fr}.operator-track{grid-template-columns:repeat(8,minmax(0,1fr))}}
 @media(max-width:520px){.mode-card{padding:12px}.operator-track{grid-template-columns:repeat(6,minmax(0,1fr))}.hud-mode,.hud-storm{font-size:7px}}
+
+/* Chronicle armory and match preparation */
+.screen-armory{background:radial-gradient(ellipse at 50% 0,rgba(36,93,102,.34),rgba(2,5,8,.92) 66%)}
+.armory-content{gap:12px;position:relative;overflow-y:auto}
+.armory-content h2{font-size:clamp(30px,4vw,48px);letter-spacing:-.04em}
+.armory-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+.armory-columns label{display:grid;gap:9px;color:var(--cyan2);font-size:10px;letter-spacing:.16em}
+.armory-columns select{height:46px;min-width:0;padding:0 12px;color:var(--text);background:#080f15;border:1px solid rgba(143,181,186,.28);font:inherit;font-size:12px;letter-spacing:.02em}
+.armory-columns label small{font-size:9px;color:var(--muted);letter-spacing:.1em}
+.weapon-preview{height:68px;display:block;position:relative;background:linear-gradient(180deg,transparent 45%,var(--gun) 46% 60%,transparent 61%),linear-gradient(90deg,transparent 22%,#171e22 23% 30%,transparent 31%),linear-gradient(90deg,transparent 64%,var(--gun) 65% 76%,transparent 77%);filter:drop-shadow(0 0 12px color-mix(in srgb,var(--gun),transparent 44%))}
+.weapon-preview:before{content:"";position:absolute;width:36%;height:8px;top:33px;left:34%;background:var(--gun);clip-path:polygon(0 0,100% 0,92% 100%,8% 100%)}
+.weapon-preview.sidearm:before{left:40%;width:25%;top:34px;transform:scale(.72)}
+.knife-picker{border-top:1px solid var(--line);padding-top:14px}.knife-picker>b{font-size:10px;letter-spacing:.18em;color:var(--gold)}
+.knife-picker>div{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
+.knife-choice{display:grid;justify-items:center;gap:8px;padding:10px 5px;border:1px solid rgba(143,181,186,.18);color:var(--text);background:rgba(4,10,15,.6);cursor:pointer}
+.knife-choice i{height:7px;width:64%;background:linear-gradient(90deg,var(--knife),#d6e3df);transform:skew(-25deg);box-shadow:0 0 14px color-mix(in srgb,var(--knife),transparent 45%)}
+.knife-choice span{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.knife-choice.is-selected{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(240,194,99,.22)}
+.knife-choice.is-locked{opacity:.4;cursor:not-allowed}
+.armory-footer{display:flex;justify-content:space-between;gap:10px;margin-top:8px}.armory-controls{color:var(--muted);font-size:9px;letter-spacing:.11em}
+.daily-contract{display:grid;grid-template-columns:1fr auto;gap:5px 14px;align-items:center;margin-top:20px;padding:14px 16px;border:1px solid rgba(228,184,94,.35);background:linear-gradient(90deg,rgba(228,184,94,.09),rgba(4,10,15,.3))}
+.daily-contract>span{color:var(--gold);font-size:9px;letter-spacing:.17em}.daily-contract>b{grid-row:2;font-size:13px}.daily-contract>i{grid-column:2;grid-row:1/3;width:130px;height:5px;background:#293039}.daily-contract>i em{display:block;height:100%;background:var(--gold)}.daily-contract>small{grid-column:1/-1;color:var(--muted);font-size:9px;letter-spacing:.1em}
+@media(max-width:600px){.armory-columns{grid-template-columns:1fr}.knife-picker>div{grid-template-columns:repeat(3,minmax(0,1fr))}.daily-contract{grid-template-columns:1fr}.daily-contract>i{grid-column:1;grid-row:auto;width:100%}.armory-footer{flex-direction:column}.armory-footer button{width:100%}}

@@ -1,6 +1,6 @@
 export type WeaponId = 'glock' | 'deagle' | 'mp5' | 'ak47' | 'm4a4' | 'awp' | 'knife'
-export type MatchType = 'ffa' | 'tdm' | 'royale'
-export type MapId = 'aurelian-forum' | 'sun-archive' | 'fjordgate'
+export type MatchType = 'ffa' | 'tdm' | 'royale' | 'training'
+export type MapId = 'aurelian-forum' | 'sun-archive' | 'fjordgate' | 'stonewind-pass' | 'cedar-citadel' | 'marble-coast' | 'ember-market'
 export type BotDifficulty = 'recruit' | 'regular' | 'veteran' | 'elite'
 export type Rarity = 'Consumer' | 'Industrial' | 'Mil-Spec' | 'Restricted' | 'Classified' | 'Covert' | 'Legendary'
 
@@ -57,6 +57,7 @@ export const SKINS: SkinItem[] = [
   { id: 'awp-nightfall', weapon: 'awp', name: 'Nightfall Script', rarity: 'Covert', color: '#7260b8', pattern: 'nightfall' },
   { id: 'knife-jade', weapon: 'knife', name: 'Jade Oath', rarity: 'Legendary', color: '#51b99c', pattern: 'jade' },
   { id: 'knife-ivory', weapon: 'knife', name: 'Ivory Vow', rarity: 'Covert', color: '#e9ddbe', pattern: 'ivory' },
+  ...Array.from({ length: 1000 }, (_, i) => { const bases: WeaponId[] = ['glock', 'deagle', 'mp5', 'ak47', 'm4a4', 'awp']; const names = ['Tidal Archive', 'Copper Constellation', 'Basalt Bloom', 'Cedar Cipher', 'Amber Current', 'Frosted Quarry', 'Mosslight', 'Starfall Mosaic', 'Ochre Circuit', 'Violet Cartographer', 'Saltwind Lattice', 'Ember Filigree', 'Quartz Compass', 'Marble Runes', 'Rain-etched Bronze', 'Lantern Static']; const colors = ['#4b9f9b', '#b47a4d', '#687784', '#bd9e55', '#7f65a5', '#718b61', '#b75e50', '#567ca0', '#c5a96f', '#59706b', '#a46786', '#668da0']; const rarities: Rarity[] = ['Consumer', 'Industrial', 'Mil-Spec', 'Restricted', 'Classified', 'Covert']; return { id: `chronicle-finish-${i + 1}`, weapon: bases[i % bases.length]!, name: `${names[i % names.length]} ${String(Math.floor(i / names.length) + 1).padStart(2, '0')}`, rarity: rarities[Math.floor(i / 16) % rarities.length]!, color: colors[(i * 5) % colors.length]!, pattern: ['strata', 'rune', 'mosaic', 'stipple', 'braid', 'constellation', 'weathering', 'inlay'][i % 8]! } }),
 ]
 
 export type OperatorSkin = { id: string; name: string; level: number; cloth: string; trim: string; accent: string; model: number }
@@ -94,6 +95,7 @@ export const OPERATOR_SKINS: OperatorSkin[] = [
   { id: 'long-winter', name: 'Long Winter', level: 30, cloth: '#536f88', trim: '#d9e3e4', accent: '#8c5f70', model: 5 },
   { id: 'first-chronicle', name: 'First Chronicle', level: 40, cloth: '#5b4a79', trim: '#efd48b', accent: '#6fae97', model: 6 },
   { id: 'world-keeper', name: 'World Keeper', level: 50, cloth: '#9b6b38', trim: '#f5e6b5', accent: '#64bcb1', model: 7 },
+  ...Array.from({ length: 16 }, (_, i) => ({ id: `chronicle-operator-${i + 33}`, name: ['Quartz Ranger', 'Brass Navigator', 'Wildfire Scout', 'Harbor Marshal', 'Pinewatch', 'Dune Cartographer', 'Blueglass Guard', 'Ashen Courier', 'Copper Pathfinder', 'Moonlit Sentinel', 'Cedar Banner', 'Saltwind Keeper', 'Stormline Scout', 'Gilded Surveyor', 'Violet Wayfarer', 'First Light'][i]!, level: 31 + i, cloth: ['#65768a', '#865c42', '#597454', '#674f71', '#4b7780', '#a17845', '#526187', '#776853'][i % 8]!, trim: ['#d1be91', '#d0a85f', '#c4d19a', '#d8c9e4'][i % 4]!, accent: ['#ad624f', '#4b9890', '#bc8651', '#7189b6'][i % 4]!, model: i % 8 })),
 ]
 
 export function operatorSkinForLevel(level: number): OperatorSkin {
@@ -117,3 +119,30 @@ export function skinFor(id: string | undefined): SkinItem | undefined {
 export function defaultInventory(): SkinItem[] {
   return SKINS.filter(skin => skin.rarity === 'Consumer' || skin.rarity === 'Industrial').slice(0, 2)
 }
+
+
+export type ArmoryGun = { id: string; name: string; slot: 'primary' | 'handgun'; base: WeaponId; color: string; model: number; era: string }
+const PRIMARY_BASES: WeaponId[] = ['ak47', 'm4a4', 'awp', 'mp5']
+const HANDGUN_BASES: WeaponId[] = ['glock', 'deagle']
+const GUN_WORDS = ['Pilgrim', 'Foundry', 'Wayfarer', 'Rampart', 'Sundial', 'Tidewall', 'Northstar', 'Cairn', 'Cinder', 'Mosaic', 'Oath', 'Lantern', 'Relic', 'Vanguard', 'Warden', 'Rook']
+const GUN_COLORS = ['#b67546', '#7e9a9e', '#719dc7', '#d5a84a', '#6ba18c', '#b85b4b', '#c6a456', '#72809d', '#54a69c', '#9564ac', '#d07d48', '#8b9c6c']
+export const ARMORY_GUNS: ArmoryGun[] = [
+  ...Array.from({ length: 60 }, (_, i) => ({ id: `primary-${i + 1}`, name: `${GUN_WORDS[i % GUN_WORDS.length]} ${['Rifle', 'Carbine', 'Longshot', 'Repeater'][Math.floor(i / 4) % 4]} ${String(i + 1).padStart(2, '0')}`, slot: 'primary' as const, base: PRIMARY_BASES[i % PRIMARY_BASES.length]!, color: GUN_COLORS[i % GUN_COLORS.length]!, model: i % 8, era: ['Aurelian', 'Nile', 'Fjord', 'Cedar'][Math.floor(i / 15)]! })),
+  ...Array.from({ length: 16 }, (_, i) => ({ id: `sidearm-${i + 1}`, name: `${GUN_WORDS[(i + 5) % GUN_WORDS.length]} ${i % 2 ? 'Handcannon' : 'Sidearm'} ${String(i + 1).padStart(2, '0')}`, slot: 'handgun' as const, base: HANDGUN_BASES[i % HANDGUN_BASES.length]!, color: GUN_COLORS[(i + 3) % GUN_COLORS.length]!, model: i % 8, era: ['Aurelian', 'Nile', 'Fjord', 'Cedar'][Math.floor(i / 4)]! })),
+]
+export const KNIFE_SKINS = [
+  { id: 'knife-gold', name: 'Auric Edge', color: '#f5c85a', level: 1 }, { id: 'knife-jade', name: 'Jade Oath', color: '#51b99c', level: 1 }, { id: 'knife-ivory', name: 'Ivory Vow', color: '#e9ddbe', level: 1 },
+  ...Array.from({ length: 72 }, (_, i) => ({ id: `knife-reward-${i + 1}`, name: `${['Glacier Fang', 'Ember Shard', 'Basalt Talon', 'Riverglass', 'Cedar Tooth', 'Violet Relic', 'Stormglass', 'Sunken Bronze', 'Moonstone', 'Moss Edge', 'Crimson Flint', 'Star-Iron'][i % 12]} ${String(Math.floor(i / 12) + 1).padStart(2, '0')}`, color: GUN_COLORS[(i * 5 + 2) % GUN_COLORS.length]!, level: 2 + Math.floor(i * 49 / 72) })),
+]
+export const HISTORIC_MAPS: { id: MapId; name: string; era: string; terrain: string }[] = [
+  { id: 'aurelian-forum', name: 'Aurelian Forum', era: 'Roman republic', terrain: '#62594e' }, { id: 'sun-archive', name: 'Sun Archive', era: 'Nile kingdoms', terrain: '#816a46' }, { id: 'fjordgate', name: 'Fjordgate', era: 'Northern trade age', terrain: '#40555b' },
+  { id: 'stonewind-pass', name: 'Stonewind Pass', era: 'Great mountain wall', terrain: '#69705e' }, { id: 'cedar-citadel', name: 'Cedar Citadel', era: 'Hilltop fortress age', terrain: '#596d5b' }, { id: 'marble-coast', name: 'Marble Coast', era: 'Aegean city-states', terrain: '#71808a' }, { id: 'ember-market', name: 'Ember Market', era: 'Silk-road crossroads', terrain: '#8b6549' },
+]
+export function armoryGun(id: string | undefined): ArmoryGun { return ARMORY_GUNS.find(gun => gun.id === id) ?? ARMORY_GUNS[0]! }
+
+export type ContractKind = 'elim' | 'headshot' | 'knife' | 'ads' | 'sniper' | 'sidearm' | 'slide' | 'moving' | 'longshot' | 'airborne'
+const CONTRACT_SEEDS: { kind: ContractKind; noun: string }[] = [
+  { kind: 'elim', noun: 'Get five eliminations' }, { kind: 'headshot', noun: 'Land three headshots' }, { kind: 'knife', noun: 'Finish three rivals with a knife' }, { kind: 'ads', noun: 'Secure three aimed eliminations' }, { kind: 'sniper', noun: 'Score three marksman eliminations' },
+  { kind: 'sidearm', noun: 'Get three sidearm eliminations' }, { kind: 'slide', noun: 'Eliminate three rivals after a slide' }, { kind: 'moving', noun: 'Land three moving eliminations' }, { kind: 'longshot', noun: 'Win three long-range duels' }, { kind: 'airborne', noun: 'Land three airborne eliminations' },
+]
+export const DAILY_CONTRACTS = Array.from({ length: 30 }, (_, i) => ({ ...CONTRACT_SEEDS[i % CONTRACT_SEEDS.length]!, name: i < CONTRACT_SEEDS.length ? CONTRACT_SEEDS[i]!.noun : `${CONTRACT_SEEDS[i % CONTRACT_SEEDS.length]!.noun} // Field Order ${String(i + 1).padStart(2, '0')}`, goal: CONTRACT_SEEDS[i % CONTRACT_SEEDS.length]!.kind === 'elim' ? 5 : 3 }))

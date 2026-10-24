@@ -16,7 +16,7 @@ async function boot(): Promise<void> {
   const audio = new Audio()
   let game: import('./game/game').Game | undefined
   let lockLostAt = 0
-  const applySettings = () => { input.sensitivity = save.data.sensitivity; input.invertY = save.data.invertY; audio.setVolumes(save.data.musicVolume, save.data.sfxVolume, save.data.muted); if (game) game.setQuality(save.data.quality) }
+  const applySettings = () => { input.sensitivity = save.data.sensitivity; input.invertY = save.data.invertY; audio.setVolumes(save.data.musicVolume, save.data.sfxVolume, save.data.muted); if (game) { game.setQuality(save.data.quality); game.setFov(save.data.fov) } }
   const ui = new Ui(i18n, save, audio, input, {
     play: (mode: MatchType, map: MapId, difficulty: BotDifficulty) => { if (!game) return; audio.unlock(); audio.startMusic(); game.start(mode, map, difficulty); ui.show('hud'); input.lockPointer() },
     resume: () => { game?.resume(); ui.show('hud'); input.lockPointer() },
@@ -31,7 +31,7 @@ async function boot(): Promise<void> {
   const [{ Game }, { Renderer }] = await Promise.all([track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready)])
   const renderer = new Renderer(canvas, save.data.quality)
   game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) })
-  ui.setGame(game); ui.setBootProgress(1)
+  game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
     step: dt => { if (input.consume('pause') && performance.now() - lockLostAt > 300) { if (game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } else if (game?.mode === 'paused') { game.resume(); ui.show('hud'); input.lockPointer() } } game?.step(dt) },
     render: (alpha, frameSeconds) => { input.update(); ui.frame(frameSeconds); if (game) { loop.paused = game.mode === 'paused' || game.mode === 'attract' || game.mode === 'ended'; game.render(alpha, frameSeconds); if (game.mode === 'playing' || game.mode === 'ended') ui.updateHud(game.snapshot()) } },

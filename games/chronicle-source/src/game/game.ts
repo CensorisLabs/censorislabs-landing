@@ -774,7 +774,7 @@ export class Game {
     this.yaw = this.searchBlueSideIsSouth() ? Math.PI : 0
     if (this.activeKchMap && this.kchSpawnTeams.first.length && this.kchSpawnTeams.second.length) {
       const from = this.searchBase('blue'), to = this.searchBase('red')
-      this.yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z))
+      this.yaw = Math.atan2(to.x - from.x, -(to.z - from.z))
     }
     this.chargePlanted = false; this.chargeTimer = 0; this.plantProgress = 0; this.defuseProgress = 0; this.plantSite = (this.round - 1) % 2
     this.playerSpawnProtectedUntil = this.matchTime + SEARCH_ROUND.buySeconds + SEARCH_ROUND.spawnShieldSeconds
@@ -803,7 +803,7 @@ export class Game {
     if (this.activeKchMap && this.kchSpawnTeams.first.length && this.kchSpawnTeams.second.length) {
       const from = this.matchType === 'search' ? this.searchBase('blue') : this.player.root.position.clone().multiplyScalar(1 / this.mapScale)
       const to = this.matchType === 'search' ? this.searchBase('red') : this.kchSpawnTeams.second[0]!
-      this.yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z))
+      this.yaw = Math.atan2(to.x - from.x, -(to.z - from.z))
     }
     this.pitch = 0; this.updateViewModel()
     this.updateLobbyPreviewSkin()

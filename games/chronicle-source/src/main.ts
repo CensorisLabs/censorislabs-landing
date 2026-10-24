@@ -2,8 +2,12 @@ import './styles/main.css'
 import './styles/hud.css'
 import './styles/editor.css'
 import './styles/tactical.css'
+import './styles/lobby.css'
+import './styles/kirka-ui.css'
 import { Audio } from './engine/audio'
-import { Assets, CC0_GAME_MODELS } from './engine/assets'
+import { Assets, KCH_GAME_MAPS, KCH_GAME_MODELS } from './engine/assets'
+import type { GameModels } from './game/game'
+import type { KchMapData } from './game/kch-map'
 import { I18n, resolveLocale } from './engine/i18n'
 import { Input } from './engine/input'
 import { GameLoop } from './engine/loop'
@@ -32,19 +36,27 @@ async function boot(): Promise<void> {
   ui.show('boot'); applySettings()
   const assets = new Assets()
   let loaded = 0
-  const bootTaskCount = 10
+  const modelKeys = Object.keys(KCH_GAME_MODELS) as Array<keyof typeof KCH_GAME_MODELS>
+  const mapIds = Object.keys(KCH_GAME_MAPS) as MapId[]
+  const bootTaskCount = 3 + modelKeys.length + mapIds.length
   const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(Math.min(0.9, 0.08 + loaded / bootTaskCount * 0.82)); return value })
-  const optionalModel = (key: keyof typeof CC0_GAME_MODELS) => {
-    const model = CC0_GAME_MODELS[key]
-    return track(assets.gltfVerified(model.url, model.sha256, 'textures' in model ? model.textures : []).catch(error => { console.warn(`Optional model unavailable: ${model.url}`, error); return null }))
+  const optionalModel = (key: keyof typeof KCH_GAME_MODELS) => {
+    const model = KCH_GAME_MODELS[key]
+    return track(assets.gltfVerified(model.url, model.sha256).catch(error => { console.warn(`Optional KCH model unavailable: ${model.url}`, error); return null }))
+  }
+  const optionalMap = (id: MapId) => {
+    const map = KCH_GAME_MAPS[id]
+    return track(assets.jsonVerified<KchMapData>(map.url, map.sha256).catch(error => { console.warn(`Optional KCH map unavailable: ${map.url}`, error); return null }))
   }
   ui.setBootProgress(0.08)
-  const [{ Game }, { Renderer }, , assaultRifle, sniperRifle, blaster, operator, mp5, buildingWall, siteFrame] = await Promise.all([
+  const [{ Game }, { Renderer }, , loadedModels, loadedMaps] = await Promise.all([
     track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready),
-    optionalModel('assaultRifle'), optionalModel('sniperRifle'), optionalModel('blaster'), optionalModel('operator'), optionalModel('mp5'), optionalModel('buildingWall'), optionalModel('siteFrame'),
+    Promise.all(modelKeys.map(optionalModel)), Promise.all(mapIds.map(optionalMap)),
   ])
+  const models = Object.fromEntries(modelKeys.map((key, index) => [key, loadedModels[index] ?? null])) as unknown as Omit<GameModels, 'kchMaps'>
+  const kchMaps = Object.fromEntries(mapIds.flatMap((id, index) => loadedMaps[index] ? [[id, loadedMaps[index]!]] : [])) as GameModels['kchMaps']
   const renderer = new Renderer(canvas, save.data.quality)
-  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { assaultRifle, sniperRifle, blaster, operator, mp5, buildingWall, siteFrame })
+  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps })
   game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
     step: dt => { if (input.consume('pause') && performance.now() - lockLostAt > 300) { if (game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } else if (game?.mode === 'paused') { game.resume(); ui.show('hud'); input.lockPointer() } } game?.step(dt) },

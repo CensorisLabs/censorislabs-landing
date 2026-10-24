@@ -1,14 +1,30 @@
 import * as THREE from 'three'
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-export const CC0_GAME_MODELS = {
-  assaultRifle: { url: 'assets/models/cc0/quaternius/assault-rifle.glb', sha256: 'a84ae184c1eedd878ec3034b5da6d9bf3d01eca6eacdc3022f8ba0cba6d7f01d' },
-  sniperRifle: { url: 'assets/models/cc0/quaternius/sniper-rifle.glb', sha256: 'e1323c5ecae8d792835b80d685d9acbf4f46466ed6a6a31892cbac01a0661a4c' },
-  blaster: { url: 'assets/models/cc0/kenney-blaster/blaster-c.glb', sha256: '1c4c53f201597b2845c3d71717e0c465af1c21d8f8c30c0e1b4358dc33133d35', textures: [{ url: 'assets/models/cc0/kenney-blaster/Textures/colormap.png', sha256: '4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc' }] },
-  operator: { url: 'assets/models/cc0/kenney-operator/character-i.glb', sha256: '2b566d3b6261faa3e151b352396d823a285834f039ff6476db248ec6da902fe8', textures: [{ url: 'assets/models/cc0/kenney-operator/Textures/texture-i.png', sha256: '2c721b0a8837836ab0bf0eb0de12ca14e5d518ccba7420b8c673ed4600dc6b63' }] },
-  mp5: { url: 'assets/models/cc0/opengameart/mp5.glb', sha256: '42ea467a63c66d5467b77c40c4b1722977e3ca0e5d4d36570c1d295eaf66ef03' },
-  buildingWall: { url: 'assets/models/cc0/kenney-building/wall.glb', sha256: '769a02a70327132ba864c04299631c65fb08e96e01e1796ba73ddf7f44679a36', textures: [{ url: 'assets/models/cc0/kenney-building/Textures/colormap.png', sha256: '01741a46a279bef667de3143ee653d0073ed7cae925d88341281391d9220092b' }] },
-  siteFrame: { url: 'assets/models/cc0/kenney-building/barricade-doorway-a.glb', sha256: '0d8bc73f2cf7912b6a60affaa706c99774af7cb72c15f91dfd66870a5bf2add0', textures: [{ url: 'assets/models/cc0/kenney-building/Textures/colormap.png', sha256: '01741a46a279bef667de3143ee653d0073ed7cae925d88341281391d9220092b' }] },
+export const KCH_GAME_MODELS = {
+  player: { url: 'assets/models/kch/player.glb', sha256: '9457ddcd1e18a63cc01c392caee8800ca3e59a2a64d7c467377140295213cfec' },
+  arms: { url: 'assets/models/kch/arms.glb', sha256: 'c56f9d93d7c1e34b6afb47b404d80d797922a49e86d8d76d487d91dfafd8ce33' },
+  ar9: { url: 'assets/models/kch/ar9.glb', sha256: '365548aeeadb84b3c07f321e83d79f8f31ea193dd1b2e98bbd9f0334d21a142b' },
+  scar: { url: 'assets/models/kch/scar.glb', sha256: 'eadc8a2908428fa962f8d68f02781f1e83de7b31c185dc8d4160bb5fecd21837' },
+  lar: { url: 'assets/models/kch/lar.glb', sha256: '2cdd08c03b12f164ca19c4e9a6895a0f53f71148ae6b23925da2a3c62a02c10d' },
+  m60: { url: 'assets/models/kch/m60.glb', sha256: '7274f68837e08f50ca381c68f4c2f6e9898c2550750971ee21531903743acc1e' },
+  mac10: { url: 'assets/models/kch/mac10.glb', sha256: '6862af6c197fb03a224d9241d13748a4b49635c1e4c91792bef5e947149af25a' },
+  revolver: { url: 'assets/models/kch/revolver.glb', sha256: 'e099d330969cb859689f6fc538e5a4539cf4331a7f75453376bdeaa618c1c186' },
+  shark: { url: 'assets/models/kch/shark.glb', sha256: 'ea92c57b231bdbf9ecdc48274f69ce20196a72f86c3789da6fc47f4864d1700a' },
+  vita: { url: 'assets/models/kch/vita.glb', sha256: 'e79752419d5478679048049613b1f82bb91acd7aaa2d32ce1d272c4ac6ac6d91' },
+  weatie: { url: 'assets/models/kch/weatie.glb', sha256: '4eb57d45a9c76c38ce8c8f8692ca137476342428dfa9149e85265799634b46e5' },
+  bayonet: { url: 'assets/models/kch/bayonet.glb', sha256: '61dd54e96c94b547ef91727faa2fad2fdff2d9e96cf82d52ddba99076cd05d96' },
+  tomahawk: { url: 'assets/models/kch/tomahawk.glb', sha256: '805a7520a2a3d6b646b23b297e0657d1934b8624a9a47236e8bda8c816bb4b30' },
+} as const
+
+export const KCH_GAME_MAPS = {
+  'antfarm': { url: 'assets/maps/kch/antfarm.json', sha256: 'a916dda87f331306eacf4d3951258eb9dcb6efa92fb02e8e8301cb0243458afe' },
+  'schism': { url: 'assets/maps/kch/schism.json', sha256: 'd5012561f79018139f592c1f746147855b83245c2df1f2c459864d0c6e34fe87' },
+  'labs': { url: 'assets/maps/kch/labs.json', sha256: '018c60a29a2934cd1e80245f8d5256cd3952caa7dc134414849095c3870ef873' },
+  'collision': { url: 'assets/maps/kch/collision.json', sha256: 'cfacfc60b93a72049f93153522d6a089f72d3b32ccadde74530f128449007551' },
+  'dunes': { url: 'assets/maps/kch/dunes.json', sha256: '412a6b7da16b334321f457bcc3b5d90d28a1b49a510c6204a27d775211c7df1e' },
+  'skyfel': { url: 'assets/maps/kch/skyfel.json', sha256: '8e9d9790f7f6ec02bd045e64512907acd940b50d03742ec35fef418eacbceb2a' },
+  'dethroned': { url: 'assets/maps/kch/dethroned.json', sha256: '3cd2d894cbd94ef5b994be2f7dc970e67fd8bf72f9ddb498149609cb17130f8e' },
 } as const
 
 /**
@@ -60,6 +76,14 @@ export class Assets {
     const actual = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
     if (actual !== expectedSha256.toLowerCase()) throw new Error(`SHA-256 mismatch for ${url}`)
     return { absoluteUrl, bytes }
+  }
+
+  /** Verify and parse a small JSON asset before exposing it to gameplay. */
+  jsonVerified<T>(url: string, expectedSha256: string): Promise<T> {
+    return this.memo(`${url}#sha256=${expectedSha256}`, async () => {
+      const { bytes } = await this.verifyBytes(url, expectedSha256)
+      return JSON.parse(new TextDecoder().decode(bytes)) as T
+    })
   }
 
   /** Color textures are tagged sRGB; pass `color: false` for normal/roughness maps. */

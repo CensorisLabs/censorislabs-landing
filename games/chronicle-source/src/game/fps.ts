@@ -3,7 +3,7 @@ import type { CustomMap } from './custom-map'
 export type WeaponId = 'glock' | 'deagle' | 'mp5' | 'ak47' | 'm4a4' | 'awp' | 'knife'
 export type MatchType = 'ffa' | 'tdm' | 'royale' | 'training' | 'domination' | 'hardpoint' | 'ctf' | 'search' | 'gungame'
 export type MatchSettings = { royalePlayers?: 30 | 50 | 60 | 100; teamSize?: 1 | 4 | 5; customMap?: CustomMap }
-export type MapId = 'aurelian-forum' | 'sun-archive' | 'fjordgate' | 'stonewind-pass' | 'cedar-citadel' | 'marble-coast' | 'ember-market'
+export type MapId = 'antfarm' | 'schism' | 'labs' | 'collision' | 'dunes' | 'skyfel' | 'dethroned'
 export type BotDifficulty = 'recruit' | 'regular' | 'veteran' | 'elite'
 export type Rarity = 'Consumer' | 'Industrial' | 'Mil-Spec' | 'Restricted' | 'Classified' | 'Covert' | 'Legendary'
 
@@ -139,8 +139,13 @@ export const KNIFE_SKINS = [
   ...Array.from({ length: 72 }, (_, i) => ({ id: `knife-reward-${i + 1}`, name: `${['Glacier Fang', 'Ember Shard', 'Basalt Talon', 'Riverglass', 'Cedar Tooth', 'Violet Relic', 'Stormglass', 'Sunken Bronze', 'Moonstone', 'Moss Edge', 'Crimson Flint', 'Star-Iron'][i % 12]} ${String(Math.floor(i / 12) + 1).padStart(2, '0')}`, color: GUN_COLORS[(i * 5 + 2) % GUN_COLORS.length]!, level: 2 + Math.floor(i * 49 / 72) })),
 ]
 export const HISTORIC_MAPS: { id: MapId; name: string; era: string; terrain: string }[] = [
-  { id: 'aurelian-forum', name: 'Aurelian Forum', era: 'Roman republic', terrain: '#62594e' }, { id: 'sun-archive', name: 'Sun Archive', era: 'Nile kingdoms', terrain: '#816a46' }, { id: 'fjordgate', name: 'Fjordgate', era: 'Northern trade age', terrain: '#40555b' },
-  { id: 'stonewind-pass', name: 'Stonewind Pass', era: 'Great mountain wall', terrain: '#69705e' }, { id: 'cedar-citadel', name: 'Cedar Citadel', era: 'Hilltop fortress age', terrain: '#596d5b' }, { id: 'marble-coast', name: 'Marble Coast', era: 'Aegean city-states', terrain: '#71808a' }, { id: 'ember-market', name: 'Ember Market', era: 'Silk-road crossroads', terrain: '#8b6549' },
+  { id: 'antfarm', name: 'Antfarm', era: 'KCH Community Map', terrain: '#bf9a50' },
+  { id: 'schism', name: 'Schism', era: 'KCH Community Map', terrain: '#73838e' },
+  { id: 'labs', name: 'Labs', era: 'KCH Community Map', terrain: '#4b9b9a' },
+  { id: 'collision', name: 'Collision', era: 'KCH Community Map', terrain: '#916c8f' },
+  { id: 'dunes', name: 'Dunes', era: 'KCH Community Map', terrain: '#c99b58' },
+  { id: 'skyfel', name: 'Skyfel', era: 'KCH Community Map', terrain: '#5688b1' },
+  { id: 'dethroned', name: 'Dethroned', era: 'KCH Community Map', terrain: '#71815f' },
 ]
 export function armoryGun(id: string | undefined): ArmoryGun { return ARMORY_GUNS.find(gun => gun.id === id) ?? ARMORY_GUNS[0]! }
 

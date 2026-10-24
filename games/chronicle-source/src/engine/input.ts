@@ -1,12 +1,12 @@
 /** Unified keyboard, mouse, gamepad and touch input for VoxelStrike. */
-export type Action = 'jump' | 'sprint' | 'crouch' | 'ping' | 'pause' | 'confirm' | 'back' | 'interact' | 'shoot' | 'ads' | 'reload' | 'scoreboard' | 'inspect' | 'weapon1' | 'weapon2' | 'weapon3' | 'weapon4' | 'weapon5' | 'weapon6' | 'weapon7'
+export type Action = 'jump' | 'sprint' | 'crouch' | 'ping' | 'pause' | 'confirm' | 'back' | 'interact' | 'shoot' | 'ads' | 'reload' | 'scoreboard' | 'inspect' | 'weapon1' | 'weapon2' | 'weapon3' | 'weapon4' | 'weapon5' | 'weapon6' | 'weapon7' | 'spectate' | 'grenade'
 export type InputMethod = 'keyboard' | 'gamepad' | 'touch'
 
 const KEY_BINDINGS: Record<Action, string[]> = {
-  jump: ['Space'], sprint: ['ShiftLeft', 'ShiftRight'], crouch: ['ControlLeft', 'ControlRight'], ping: ['KeyQ'], pause: ['Escape', 'KeyP'], confirm: ['Enter', 'NumpadEnter'], back: [], interact: ['KeyE'], shoot: [], ads: [], reload: ['KeyR'], scoreboard: ['Tab'], inspect: ['KeyT'], weapon1: ['Digit1'], weapon2: ['Digit2'], weapon3: ['Digit3'], weapon4: ['Digit4'], weapon5: ['Digit5'], weapon6: ['Digit6'], weapon7: ['Digit7'],
+  jump: ['Space'], sprint: ['ShiftLeft', 'ShiftRight'], crouch: ['ControlLeft', 'ControlRight'], ping: ['KeyQ'], pause: ['Escape', 'KeyP'], confirm: ['Enter', 'NumpadEnter'], back: [], interact: ['KeyE'], shoot: [], ads: [], reload: ['KeyR'], scoreboard: ['Tab'], inspect: ['KeyT'], weapon1: ['Digit1'], weapon2: ['Digit2'], weapon3: ['Digit3'], weapon4: ['Digit4'], weapon5: ['Digit5'], weapon6: ['Digit6'], weapon7: ['Digit7'], spectate: ['KeyX'], grenade: ['KeyG'],
 }
 const MOVE_KEYS = { up: ['KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'] }
-const PAD_BINDINGS: Record<Action, number[]> = { jump: [0], sprint: [4, 10], crouch: [1], ping: [5], pause: [9], confirm: [0], back: [1], interact: [3], shoot: [7], ads: [6], reload: [2], scoreboard: [4], inspect: [3], weapon1: [], weapon2: [], weapon3: [], weapon4: [], weapon5: [], weapon6: [], weapon7: [] }
+const PAD_BINDINGS: Record<Action, number[]> = { jump: [0], sprint: [4, 10], crouch: [1], ping: [5], pause: [9], confirm: [0], back: [1], interact: [3], shoot: [7], ads: [6], reload: [2], scoreboard: [4], inspect: [3], weapon1: [], weapon2: [], weapon3: [], weapon4: [], weapon5: [], weapon6: [], weapon7: [], spectate: [], grenade: [] }
 
 export class Input {
   readonly move = { x: 0, y: 0 }

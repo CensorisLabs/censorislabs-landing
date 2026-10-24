@@ -1,7 +1,7 @@
 import type { CustomMap } from './custom-map'
 
 export type WeaponId = 'glock' | 'deagle' | 'mp5' | 'ak47' | 'm4a4' | 'awp' | 'knife'
-export type MatchType = 'ffa' | 'tdm' | 'royale' | 'training' | 'domination' | 'hardpoint' | 'ctf' | 'search'
+export type MatchType = 'ffa' | 'tdm' | 'royale' | 'training' | 'domination' | 'hardpoint' | 'ctf' | 'search' | 'gungame'
 export type MatchSettings = { royalePlayers?: 30 | 50 | 60 | 100; teamSize?: 1 | 4 | 5; customMap?: CustomMap }
 export type MapId = 'aurelian-forum' | 'sun-archive' | 'fjordgate' | 'stonewind-pass' | 'cedar-citadel' | 'marble-coast' | 'ember-market'
 export type BotDifficulty = 'recruit' | 'regular' | 'veteran' | 'elite'
@@ -25,6 +25,7 @@ export type WeaponDef = {
 }
 
 export const WEAPON_ORDER: WeaponId[] = ['glock', 'deagle', 'mp5', 'ak47', 'm4a4', 'awp', 'knife']
+export const GUN_GAME_ORDER: WeaponId[] = ['glock', 'mp5', 'ak47', 'm4a4', 'awp', 'deagle', 'knife']
 
 export const WEAPONS: Record<WeaponId, WeaponDef> = {
   glock: { id: 'glock', name: 'Cinder-9', short: 'C9', damage: 22, headshot: 2.4, fireRate: 8.5, magazine: 20, reload: 1.55, range: 42, spread: 0.018, recoil: 0.08, movement: 1, automatic: true, color: '#a7b2bd' },

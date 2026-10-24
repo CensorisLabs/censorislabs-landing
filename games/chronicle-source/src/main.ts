@@ -1,6 +1,7 @@
 import './styles/main.css'
 import './styles/hud.css'
 import './styles/editor.css'
+import './styles/tactical.css'
 import { Audio } from './engine/audio'
 import { Assets, CC0_GAME_MODELS } from './engine/assets'
 import { I18n, resolveLocale } from './engine/i18n'
@@ -24,6 +25,8 @@ async function boot(): Promise<void> {
     resume: () => { game?.resume(); ui.show('hud'); input.lockPointer() },
     restart: () => { if (!game) return; audio.unlock(); game.restart(); ui.show('hud'); input.lockPointer() },
     quit: () => { game?.toTitle(); input.unlockPointer(); ui.show('title') },
+    openBuy: () => { if (!game?.canOpenBuyMenu()) { ui.banner('BUY PHASE CLOSED'); return }; game.pause(); input.unlockPointer(); ui.show('buy-menu') },
+    buy: item => game?.buy(item) ?? 'ROUND NOT ACTIVE',
     settings: patch => { save.update(patch); applySettings(); ui.refreshSettings(); if (patch.locale) i18n.set(patch.locale) },
   })
   ui.show('boot'); applySettings()

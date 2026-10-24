@@ -22,6 +22,7 @@ export class Input {
   private touchButtons = new Set<Action>()
   private padPrev = new Set<Action>()
   private wheelDelta = 0
+  private fallbackLook = false
   private listeners: Array<() => void> = []
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -29,35 +30,50 @@ export class Input {
       target.addEventListener(type, fn as EventListener, opts)
       this.listeners.push(() => target.removeEventListener(type, fn as EventListener, opts))
     }
-    on(window, 'keydown', e => {
+    const keyDown = (e: KeyboardEvent) => {
       if (e.repeat) return
       this.keys.add(e.code)
       this.method = 'keyboard'
       for (const [action, codes] of Object.entries(KEY_BINDINGS) as [Action, string[]][]) if (codes.includes(e.code)) this.pressed_.add(action)
       if (e.code === 'Tab') e.preventDefault()
       if (!(e.target as HTMLElement | null)?.matches?.('input, textarea') && (e.code === 'Space' || e.code.startsWith('Arrow'))) e.preventDefault()
-    })
-    on(window, 'keyup', e => this.keys.delete(e.code))
+    }
+    const keyUp = (e: KeyboardEvent) => this.keys.delete(e.code)
+    on(window, 'keydown', keyDown)
+    on(window, 'keyup', keyUp)
+    try {
+      if (window.parent !== window && window.parent.location.origin === window.location.origin) {
+        on(window.parent, 'keydown', keyDown)
+        on(window.parent, 'keyup', keyUp)
+      }
+    } catch { /* A cross-origin embed keeps input scoped to its own focused canvas. */ }
     on(window, 'blur', () => { this.keys.clear(); this.mouse.clear() })
     on(window, 'mousedown', e => {
-      if (document.pointerLockElement !== canvas) return
+      if (document.pointerLockElement !== canvas && !this.fallbackLook) return
       this.mouse.add(e.button)
       this.method = 'keyboard'
       if (e.button === 0) this.pressed_.add('shoot')
       if (e.button === 2) this.pressed_.add('ads')
     })
     on(window, 'mouseup', e => this.mouse.delete(e.button))
-    on(window, 'contextmenu', e => { if (document.pointerLockElement === canvas) e.preventDefault() })
-    on(window, 'wheel', e => { if (document.pointerLockElement === canvas) { this.wheelDelta += Math.sign(e.deltaY); e.preventDefault() } }, { passive: false })
+    on(window, 'contextmenu', e => { if (document.pointerLockElement === canvas || this.fallbackLook) e.preventDefault() })
+    on(window, 'wheel', e => { if (document.pointerLockElement === canvas || this.fallbackLook) { this.wheelDelta += Math.sign(e.deltaY); e.preventDefault() } }, { passive: false })
     on(window, 'mousemove', e => {
-      if (document.pointerLockElement !== canvas) return
+      if (document.pointerLockElement !== canvas && !this.fallbackLook) return
       this.look.x += e.movementX * 0.0022
       this.look.y += e.movementY * 0.0022
     })
+    canvas.tabIndex = 0
+    canvas.addEventListener('pointerdown', () => { this.fallbackLook = document.pointerLockElement !== canvas })
+    document.addEventListener('pointerlockchange', () => { this.fallbackLook = document.pointerLockElement !== canvas && document.activeElement === canvas })
+    window.addEventListener('blur', () => { this.fallbackLook = false })
   }
 
   lockPointer(): void {
-    if (this.method !== 'touch' && document.pointerLockElement !== this.canvas) this.canvas.requestPointerLock?.()?.catch?.(() => undefined)
+    if (this.method === 'touch') return
+    this.canvas.focus({ preventScroll: true })
+    this.fallbackLook = true
+    if (document.pointerLockElement !== this.canvas) this.canvas.requestPointerLock?.()?.then?.(() => { this.fallbackLook = false }).catch?.(() => { this.fallbackLook = true })
   }
   unlockPointer(): void { if (document.pointerLockElement) document.exitPointerLock() }
   setTouchMove(x: number, y: number): void { this.method = 'touch'; this.touchMove.x = x; this.touchMove.y = y }

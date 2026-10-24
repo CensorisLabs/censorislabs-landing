@@ -53,6 +53,12 @@ export class Game {
   private slideLeft = 0
   private slideDirection = new THREE.Vector3()
   private bobPhase = 0
+  private readonly horizontalVelocity = new THREE.Vector3()
+  private cameraBobY = 0
+  private cameraLanding = 0
+  private weaponSwayX = 0
+  private weaponSwayY = 0
+  private sprintPose = 0
   private matchType: MatchType = 'ffa'
   private difficulty: BotDifficulty = 'regular'
   private mapId: MapId = 'aurelian-forum'
@@ -112,7 +118,12 @@ export class Game {
     const palette = palettes[this.mapId]
     this.scene.background = new THREE.Color(palette.sky)
     this.scene.fog = new THREE.Fog(palette.fog, 46, 115)
-    this.block(new THREE.Vector3(64, 0.4, 64), new THREE.Vector3(0, -0.2, 0), palette.ground)
+    const floor = this.block(new THREE.Vector3(64, 0.4, 64), new THREE.Vector3(0, -0.2, 0), '#ffffff')
+    const groundTexture = this.voxelTexture(palette.ground, palette.stone)
+    groundTexture.repeat.set(16, 16)
+    const floorMaterial = floor.material as THREE.MeshStandardMaterial
+    floorMaterial.map = groundTexture
+    floorMaterial.needsUpdate = true
     const grid = new THREE.GridHelper(64, 32, palette.trim, palette.stone); grid.position.y = 0.015; this.arenaRoot.add(grid)
     for (const [x, z, sx, sz] of [[0, -31, 64, 1], [0, 31, 64, 1], [-31, 0, 1, 64], [31, 0, 1, 64]] as const) this.block(new THREE.Vector3(sx, 6, sz), new THREE.Vector3(x, 3, z), palette.stone)
     const cover = [[-12, -12, 4, 3, 2], [-7, -12, 3, 3, 2], [10, -8, 4, 3, 3], [15, -8, 3, 3, 2], [-15, 8, 3, 4, 2], [-9, 12, 5, 3, 2], [11, 12, 3, 5, 2], [3, 19, 4, 3, 2], [-20, -1, 3, 3, 3], [20, 0, 3, 3, 3], [0, 4, 3, 6, 2], [0, -4, 3, 6, 2]] as const
@@ -148,6 +159,30 @@ export class Game {
     const points = [...this.objectivePoints, new THREE.Vector3(-24, 0, 0), new THREE.Vector3(24, 0, 0)]
     points.forEach((point, index) => { const marker = new THREE.Group(); const color = index >= 3 ? (index === 3 ? '#56b9ef' : '#e56e61') : '#e9c45b'; const ring = new THREE.Mesh(new THREE.CylinderGeometry(index >= 3 ? 2.6 : 3.8, index >= 3 ? 2.6 : 3.8, 0.12, 12), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.35, transparent: true, opacity: 0.72 })); ring.position.y = 0.08; marker.add(ring); if (index >= 3) { const pole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.2, 0.12), this.mat('#d2cbb5')); pole.position.set(0, 1.65, 0); marker.add(pole); const pennant = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.58, 0.08), this.mat(color, true)); pennant.position.set(index === 3 ? 0.56 : -0.56, 2.85, 0); marker.add(pennant) } marker.visible = false; marker.position.set(point.x, 0, point.z); this.arenaRoot.add(marker); this.objectiveMarkers.push(marker) })
   }
+  private voxelTexture(base: string, stone: string): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas')
+    canvas.width = 16; canvas.height = 16
+    const context = canvas.getContext('2d')!
+    const baseColor = new THREE.Color(base)
+    const stoneColor = new THREE.Color(stone)
+    for (let by = 0; by < 4; by += 1) for (let bx = 0; bx < 4; bx += 1) {
+      const seed = (bx * 37 + by * 19 + bx * by * 7) % 11
+      const color = seed === 0 ? stoneColor : baseColor.clone().multiplyScalar(seed > 7 ? 0.84 : 0.96 + seed * 0.006)
+      context.fillStyle = `#${color.getHexString()}`
+      context.fillRect(bx * 4, by * 4, 4, 4)
+      context.fillStyle = 'rgba(12,10,14,.12)'
+      context.fillRect(bx * 4, by * 4, 4, 1)
+      context.fillRect(bx * 4, by * 4, 1, 4)
+    }
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.magFilter = THREE.NearestFilter
+    texture.minFilter = THREE.NearestMipmapNearestFilter
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    texture.generateMipmaps = true
+    return texture
+  }
   private voxelPart(parent: THREE.Group, size: [number, number, number], pos: [number, number, number], color: string, zone: 'head' | 'body' | 'limb'): THREE.Mesh { const m = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color)); m.position.set(...pos); m.userData = { zone, botId: parent.userData.botId }; m.castShadow = false; parent.add(m); return m }
   private buildBots(): void {
     const starts = Array.from({ length: 99 }, (_, id) => { const angle = id / 99 * Math.PI * 2; const radius = 18 + (id % 5) * 1.2; return [Math.sin(angle) * radius, Math.cos(angle) * radius] as const })
@@ -168,7 +203,7 @@ export class Game {
         case 6: detail([1.08, 0.2, 0.24], [0, 2.98, 0.43], skin.accent); detail([0.3, 0.38, 0.24], [0.34, 2.55, 0.49], skin.cloth); break // visor and cheek plate
         default: detail([0.18, 0.5, 0.18], [-0.38, 3.18, 0], skin.accent); detail([0.18, 0.5, 0.18], [0.38, 3.18, 0], skin.accent); break // twin crest
       }
-      group.position.set(x, 0, z); this.scene.add(group)
+      group.scale.setScalar(0.66); group.position.set(x, 0, z); this.scene.add(group)
       const profiles = ['MICA', 'HOLLOW', 'TUNDRA', 'RUST', 'KITE', 'MALLOW', 'QUARRY', 'WISP', 'TALLOW', 'CROW', 'SABLE', 'BRAMBLE', 'OCHRE', 'NORTH', 'FLINT', 'REED', 'CIRRUS', 'CLOVE', 'BASALT', 'LARK', 'MERCURY', 'PIPER', 'CINDER', 'WREN']
       const bot: Bot = { id, name: profiles[id]!, style: id % 4, root: group, hitMeshes, health: 100, nextShot: 1 + id * 0.4, respawnAt: 0, spawn: new THREE.Vector3(x, 0, z), phase: id * 1.7, kills: 0, deaths: 0, alive: true, team: 'red', stormTime: 0 }
       this.bots.push(bot); this.hitTargets.push(...hitMeshes)
@@ -201,7 +236,7 @@ export class Game {
     if (mapId !== this.mapId) { this.mapId = mapId; this.buildArena() }
     this.matchTime = 0; this.blueScore = 0; this.redScore = 0; this.botScoreTimer = 8; this.stormDamageTimer = 0; this.battleSimTimer = 1.3; this.objectiveClock = 1; this.objectiveRotation = 0; this.zoneOwners.fill(null); this.zoneProgress.fill(0); this.flagCarried = false; this.flagScoreClock = 0; this.round = 1; this.roundClock = 0; this.roundBreak = 0; this.chargePlanted = false; this.chargeTimer = 0; this.plantProgress = 0; this.plantSite = 0
     this.objectiveMarkers.forEach((marker, index) => { marker.visible = matchType === 'domination' ? index < 3 : matchType === 'hardpoint' ? index === 0 : matchType === 'ctf' ? index >= 3 : matchType === 'search' ? index === 0 || index === 2 : false })
-    this.relics.forEach(({ mesh }) => { mesh.visible = true }); this.activeSlot = 0; this.currentWeapon = this.selectedPrimaryBase(); this.slideLeft = 0; this.ammo = WEAPONS[this.currentWeapon].magazine; this.reloadLeft = 0; this.playerDeadUntil = 0; this.run = this.newRun(); this.teleport(new THREE.Vector3(0, 0, 22 * this.mapScale)); this.yaw = Math.PI; this.pitch = -0.03; this.updateViewModel()
+    this.relics.forEach(({ mesh }) => { mesh.visible = true }); this.activeSlot = 0; this.currentWeapon = this.selectedPrimaryBase(); this.slideLeft = 0; this.ammo = WEAPONS[this.currentWeapon].magazine; this.reloadLeft = 0; this.playerDeadUntil = 0; this.run = this.newRun(); this.teleport(this.playerSpawn()); this.yaw = Math.PI; this.pitch = 0; this.updateViewModel()
     const activeCount = this.activeBotCount
     this.bots.forEach((bot, i) => {
       bot.team = teamMode && i < this.teamSize - 1 ? 'blue' : 'red'
@@ -212,14 +247,15 @@ export class Game {
     this.run.aliveBots = activeCount
     this.mode = 'playing'; this.input.endFrame(); this.input.takeLook()
     const brief = ({ ffa: 'FREE FOR ALL', tdm: 'TEAM DEATHMATCH', royale: `${this.royalePlayers}-OPERATOR FRONTIER ROYALE`, training: 'AIM RANGE', domination: 'DOMINATION', hardpoint: 'HARDPOINT', ctf: 'CAPTURE THE STANDARD', search: 'RELIC SEARCH & DEFUSE' } satisfies Record<MatchType, string>)[matchType]
-    this.hooks.banner(`${brief} // ${this.mapName()}`)
+    this.hooks.banner(`${brief} // WASD MOVE · SHIFT SPRINT · CTRL+SHIFT SLIDE · SPACE JUMP · CLICK TO AIM`)
   }
   pause(): void { if (this.mode === 'playing') this.mode = 'paused' }
   resume(): void { if (this.mode !== 'paused') return; this.mode = 'playing'; this.input.endFrame(); this.input.takeLook() }
   toTitle(): void { this.mode = 'attract'; this.run = this.newRun() }
   setQuality(quality: 'low' | 'medium' | 'high'): void { this.renderer.applyQuality(quality) }
   setFov(fov: number): void { this.cameraInternal.fov = THREE.MathUtils.clamp(fov, 70, 110); this.cameraInternal.updateProjectionMatrix() }
-  private teleport(position: THREE.Vector3): void { this.player.root.position.copy(position); this.verticalVelocity = 0 }
+  private playerSpawn(): THREE.Vector3 { return new THREE.Vector3(0, 0, -26 * this.mapScale) }
+  private teleport(position: THREE.Vector3): void { this.player.root.position.copy(position); this.verticalVelocity = 0; this.horizontalVelocity.set(0, 0, 0); this.cameraLanding = 0 }
   step(dt: number): void {
     if (this.mode !== 'playing') return
     this.matchTime += dt; this.run.elapsed = this.matchTime; this.run.timeLeft = Math.max(0, (this.matchType === 'royale' ? 360 : this.matchType === 'training' ? 0 : 240) - this.matchTime); this.reloadLeft = Math.max(0, this.reloadLeft - dt); this.fireCooldown = Math.max(0, this.fireCooldown - dt); this.recoil = Math.max(0, this.recoil - dt * 4); this.flash = Math.max(0, this.flash - dt)
@@ -229,7 +265,7 @@ export class Game {
     if (this.matchType === 'domination' || this.matchType === 'hardpoint') this.stepControlMode(dt)
     if (this.matchType === 'ctf') this.stepCaptureTheFlag(dt)
     if (this.matchType === 'search') this.stepSearch(dt)
-    if (this.playerDeadUntil && this.matchType !== 'royale' && this.matchTime >= this.playerDeadUntil) { this.run.health = 100; this.run.armor = 50; this.playerDeadUntil = 0; this.teleport(new THREE.Vector3(0, 0, 22 * this.mapScale)); this.hooks.banner('RESPAWN // BACK IN THE FIGHT') }
+    if (this.playerDeadUntil && this.matchType !== 'royale' && this.matchTime >= this.playerDeadUntil) { this.run.health = 100; this.run.armor = 50; this.playerDeadUntil = 0; this.teleport(this.playerSpawn()); this.hooks.banner('RESPAWN // BACK IN THE FIGHT') }
     if (this.matchType === 'ffa' && this.run.kills >= 12) this.finish('won')
     else if ((this.matchType === 'tdm' && this.blueScore >= 16) || ((this.matchType === 'domination' || this.matchType === 'hardpoint') && this.blueScore >= 100) || (this.matchType === 'ctf' && this.blueScore >= 3)) this.finish('won')
     else if ((this.matchType === 'tdm' && this.redScore >= 16) || ((this.matchType === 'domination' || this.matchType === 'hardpoint') && this.redScore >= 100) || (this.matchType === 'ctf' && this.redScore >= 3)) this.finish('lost')
@@ -282,10 +318,18 @@ export class Game {
       this.slideDirection.copy(forward).multiplyScalar(this.input.move.y).addScaledVector(right, this.input.move.x).normalize()
       this.audio.play('dash')
     }
-    const speed = (this.input.held('sprint') ? 8.5 : 6.2) * weapon.movement * (this.input.held('ads') ? 0.72 : 1) * (crouching ? 0.58 : 1)
-    const move = this.slideLeft > 0
-      ? this.slideDirection.clone().multiplyScalar(11.5 * dt * (0.45 + this.slideLeft))
-      : forward.multiplyScalar(this.input.move.y * speed * dt).addScaledVector(right, this.input.move.x * speed * dt)
+    const wish = forward.multiplyScalar(this.input.move.y).addScaledVector(right, this.input.move.x)
+    if (wish.lengthSq() > 1) wish.normalize()
+    const speed = (this.input.held('sprint') ? 9.6 : 7.2) * weapon.movement * (this.input.held('ads') ? 0.72 : 1) * (crouching ? 0.58 : 1)
+    if (this.slideLeft > 0) {
+      const slideSpeed = 8 + 4 * Math.min(1, this.slideLeft / 0.62)
+      this.horizontalVelocity.lerp(this.slideDirection.clone().multiplyScalar(slideSpeed), 1 - Math.exp(-3.5 * dt))
+    } else {
+      const targetVelocity = wish.multiplyScalar(speed)
+      const acceleration = grounded ? (this.input.move.x || this.input.move.y ? 24 : 15) : 8
+      this.horizontalVelocity.lerp(targetVelocity, 1 - Math.exp(-acceleration * dt))
+    }
+    const move = this.horizontalVelocity.clone().multiplyScalar(dt)
     const jumpPressed = this.input.consume('jump')
     const wasGrounded = this.player.root.position.y <= 0.03
     const moveAxis = (axis: 'x' | 'z', amount: number): void => {
@@ -303,6 +347,7 @@ export class Game {
           this.verticalVelocity = 0
           this.audio.play('jump')
         }
+        this.horizontalVelocity[axis] = 0
         return
       }
       this.player.root.position[axis] = candidate[axis]
@@ -317,13 +362,16 @@ export class Game {
     const nextY = this.player.root.position.y + this.verticalVelocity * dt
     const floor = this.supportHeight(this.player.root.position)
     if (this.verticalVelocity <= 0 && nextY <= floor) {
+      if (this.player.root.position.y > floor + 0.03 && this.verticalVelocity < -1) this.cameraLanding = -Math.min(0.15, -this.verticalVelocity * 0.008)
       this.player.root.position.y = floor
       this.verticalVelocity = 0
     } else {
       this.player.root.position.y = Math.max(floor, nextY)
     }
-    this.bobPhase += dt * (this.input.move.y ? (this.input.held('sprint') ? 13 : 9) : 2)
-    this.weaponView.position.y = Math.sin(this.bobPhase) * (this.slideLeft > 0 ? 0.06 : this.input.move.y ? 0.025 : 0.006) - (this.slideLeft > 0 ? 0.16 : 0)
+    const moveSpeed = Math.hypot(this.horizontalVelocity.x, this.horizontalVelocity.z)
+    this.bobPhase += dt * (5 + moveSpeed * 1.05)
+    this.cameraBobY = THREE.MathUtils.damp(this.cameraBobY, grounded ? Math.sin(this.bobPhase) * Math.min(0.045, moveSpeed * 0.005) : 0, 12, dt)
+    this.cameraLanding = THREE.MathUtils.damp(this.cameraLanding, 0, 17, dt)
   }
 
   private handleReload(dt: number): void { if (this.reloadLeft <= 0 && this.input.consume('reload') && this.ammo < WEAPONS[this.currentWeapon].magazine) { this.reloadLeft = WEAPONS[this.currentWeapon].reload; this.audio.play('reload') } if (this.reloadLeft > 0 && this.reloadLeft <= dt) this.ammo = WEAPONS[this.currentWeapon].magazine }
@@ -409,7 +457,7 @@ export class Game {
       this.roundBreak = Math.max(0, this.roundBreak - dt)
       this.objective = `ROUND ${this.round} · NEXT DEPLOY ${Math.ceil(this.roundBreak)}S`
       if (this.roundBreak === 0 && this.blueScore < 5 && this.redScore < 5) {
-        this.round += 1; this.roundClock = 0; this.chargePlanted = false; this.chargeTimer = 0; this.plantProgress = 0; this.playerDeadUntil = 0; this.run.health = 100; this.run.armor = 50; this.teleport(new THREE.Vector3(0, 0, 22 * this.mapScale))
+        this.round += 1; this.roundClock = 0; this.chargePlanted = false; this.chargeTimer = 0; this.plantProgress = 0; this.playerDeadUntil = 0; this.run.health = 100; this.run.armor = 50; this.teleport(this.playerSpawn())
         for (const bot of this.bots.slice(0, this.activeBotCount)) { bot.alive = true; bot.health = 100; bot.root.visible = true; bot.respawnAt = 0; bot.root.position.copy(this.botSpawn(bot)) }
       }
       return
@@ -477,7 +525,7 @@ export class Game {
   private mapName(): string { return HISTORIC_MAPS.find(map => map.id === this.mapId)?.name.toUpperCase() ?? 'AURELIAN FORUM' }
   private finish(phase: 'won' | 'lost'): void { if (this.run.phase !== 'playing') return; this.run.phase = phase; this.mode = 'ended'; this.input.unlockPointer(); const mvpBonus = phase === 'won' ? 300 : 0; const xp = Math.max(70, this.run.kills * 55 + this.run.headshots * 30 + (phase === 'won' ? 250 : 80) + mvpBonus); this.addXp(xp); this.save.update({ stats: { ...this.save.data.stats, matches: this.save.data.stats.matches + 1, wins: this.save.data.stats.wins + (phase === 'won' ? 1 : 0), shots: this.save.data.stats.shots + this.run.shots, hits: this.save.data.stats.hits + this.run.hits } }); this.hooks.end(this.snapshot()) }
   debugFinish(): void { this.run.kills = 12; this.finish('won') }
-  render(_alpha: number, frameSeconds: number): void { const look = this.mode === 'playing' ? this.input.takeLook() : { x: 0, y: 0 }; if (this.mode === 'playing') { this.yaw -= look.x; this.pitch = THREE.MathUtils.clamp(this.pitch - look.y, -1.35, 1.25) } this.cameraInternal.position.set(this.player.root.position.x, this.player.root.position.y + 1.65, this.player.root.position.z); this.cameraInternal.rotation.set(this.pitch - this.recoil * 0.16, this.yaw, 0); this.weaponView.position.z = this.recoil * 0.1; this.weaponView.rotation.x = this.recoil * 0.7; if (this.flash > 0) this.weaponView.scale.setScalar(1.04); else this.weaponView.scale.setScalar(1); this.lastFrame += frameSeconds; this.renderer.render(this.scene, this.cameraInternal) }
+  render(_alpha: number, frameSeconds: number): void { const look = this.mode === 'playing' ? this.input.takeLook() : { x: 0, y: 0 }; if (this.mode === 'playing') { this.yaw -= look.x; this.pitch = THREE.MathUtils.clamp(this.pitch - look.y, -1.35, 1.25) } const moveSpeed = Math.hypot(this.horizontalVelocity.x, this.horizontalVelocity.z); const running = this.mode === 'playing' && this.input.held('sprint') && moveSpeed > 1; this.sprintPose = THREE.MathUtils.damp(this.sprintPose, running ? 1 : 0, 9, frameSeconds); this.weaponSwayX = THREE.MathUtils.damp(this.weaponSwayX, THREE.MathUtils.clamp(-look.x * 0.32, -0.12, 0.12), 14, frameSeconds); this.weaponSwayY = THREE.MathUtils.damp(this.weaponSwayY, THREE.MathUtils.clamp(-look.y * 0.25, -0.1, 0.1), 14, frameSeconds); this.cameraInternal.position.set(this.player.root.position.x, this.player.root.position.y + 1.65 + this.cameraBobY + this.cameraLanding, this.player.root.position.z); this.cameraInternal.rotation.set(this.pitch + this.recoil * 0.16, this.yaw, 0); this.weaponView.position.set(this.weaponSwayX + this.horizontalVelocity.x * 0.005, this.cameraBobY * 0.55 - this.sprintPose * 0.24, -0.45 + this.recoil * 0.12 + this.sprintPose * 0.12); this.weaponView.rotation.set(-this.sprintPose * 0.38 + this.recoil * 0.7 + this.weaponSwayY, -this.weaponSwayX * 0.65, -this.horizontalVelocity.x * 0.012); this.weaponView.scale.setScalar(this.flash > 0 ? 0.81 : 0.78); this.lastFrame += frameSeconds; this.renderer.render(this.scene, this.cameraInternal) }
   snapshot(): GameSnapshot { return { ...this.run, matchType: this.matchType, mapId: this.mapId, blueScore: this.blueScore, redScore: this.redScore, aliveBots: this.bots.filter(bot => bot.alive && bot.id < this.activeBotCount).length, accuracy: this.run.shots ? this.run.hits / this.run.shots : 0, ammo: this.ammo, reload: this.reloadLeft, weapon: this.currentWeapon, weaponName: this.activeWeaponName(), aimed: this.input.held('ads'), level: this.save.data.level, xp: this.save.data.xp, nextXp: xpForLevel(this.save.data.level), credits: this.save.data.credits, playerX: this.player.root.position.x, playerZ: this.player.root.position.z, yaw: this.yaw, objective: this.objective, scoreboard: this.scoreboard() } }
   project(world: THREE.Vector3): { x: number; y: number } { const v = world.clone().project(this.cameraInternal); return { x: ((v.x + 1) / 2) * this.renderer.canvas.clientWidth, y: ((1 - v.y) / 2) * this.renderer.canvas.clientHeight } }
 }

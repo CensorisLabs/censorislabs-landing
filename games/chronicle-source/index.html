@@ -3,7 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#05080c" />
+    <meta name="theme-color" content="#0c0812" />
+    <script>
+      try {
+        const params = new URLSearchParams(location.search)
+        const saved = params.get('siteTheme') || localStorage.getItem('censorislabs-site-theme')
+        const theme = saved === 'imperial' ? 'obsidian' : saved === 'violet' ? 'amethyst' : saved
+        document.documentElement.dataset.siteTheme = ['obsidian', 'amethyst', 'ocean', 'ember'].includes(theme) ? theme : 'obsidian'
+      } catch {
+        document.documentElement.dataset.siteTheme = 'obsidian'
+      }
+    </script>
     <title>Chronicle Frontier · CensorisLabs</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="preload" href="./fonts/ManusCC0-Bold.ttf" as="font" type="font/ttf" crossorigin />

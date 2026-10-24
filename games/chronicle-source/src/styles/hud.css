@@ -41,6 +41,11 @@
 .aim-dot.is-aiming::before{width:12px;height:12px;background:linear-gradient(#f0f0e6,#f0f0e6) center top/1px 3px no-repeat,linear-gradient(#f0f0e6,#f0f0e6) center bottom/1px 3px no-repeat,linear-gradient(#f0f0e6,#f0f0e6) left center/3px 1px no-repeat,linear-gradient(#f0f0e6,#f0f0e6) right center/3px 1px no-repeat}
 .match-clock.is-critical strong{color:#efaa99;text-shadow:0 0 12px rgba(214,105,88,.28)}
 .screen-hud.is-low-health .hud-bottom-left{border-left-color:#cd7468}.screen-hud.is-low-health .health-fill{background:#d78376;box-shadow:0 0 9px rgba(215,131,118,.38)}
+
+/* Keep match announcements clear of the aiming lane and the first-person weapon. */
+.banner{top:clamp(128px,24vh,210px);left:50%;right:auto;width:max-content;max-width:calc(100vw - 28px);padding:9px 15px;transform:translateX(-50%);border:1px solid var(--site-line-soft);border-radius:3px;background:color-mix(in srgb,var(--site-void) 86%,transparent);backdrop-filter:blur(8px);font-size:clamp(9px,1vw,13px);line-height:1.5;letter-spacing:.08em;white-space:normal}
+.banner.show{animation:frontier-banner 1.35s ease both}
+@keyframes frontier-banner{0%{opacity:0;transform:translate(-50%,0) scale(.96)}15%{opacity:1;transform:translate(-50%,0)}78%{opacity:1}100%{opacity:0;transform:translate(-50%,-8px)}}
 .operator-swatch[data-model="0"]{clip-path:polygon(25% 0,75% 0,100% 28%,83% 39%,83% 100%,17% 100%,17% 39%,0 28%)}
 .operator-swatch[data-model="1"] i{top:0;height:22px;border-top:5px solid var(--accent)}
 .operator-swatch[data-model="2"] b{left:4px;width:46px}
@@ -70,3 +75,28 @@
 .ammo-help{display:block;margin-top:8px;line-height:1.8}.hud-level{border-top:2px solid var(--cyan)}
 .match-ribbon{box-shadow:0 8px 30px rgba(0,0,0,.2)}.killfeed .feed-item{animation:feed-in .18s ease-out both}@keyframes feed-in{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
 .screen-hud .aim-dot{transition:width .12s,height .12s,background .12s}.screen-hud.is-low-health .hud-bottom-left{border-color:var(--red);animation:low-pulse 1s ease-in-out infinite alternate}@keyframes low-pulse{to{box-shadow:0 0 22px rgba(240,84,107,.24)}}
+
+/* Match HUD palette follows the CensorisLabs site appearance setting. */
+.hud-topline{color:var(--site-text)}
+.radar-card,.match-ribbon,.hud-level,.hud-bottom-left,.hud-bottom-right,.hud-center-bottom{border-color:var(--site-line-soft);background:linear-gradient(145deg,color-mix(in srgb,var(--site-surface) 93%,transparent),color-mix(in srgb,var(--site-void) 82%,transparent));box-shadow:0 12px 34px rgba(0,0,0,.28)}
+.radar-card,.match-ribbon,.hud-level{border-top-color:var(--site-accent)}
+.radar-heading,.match-mode,.hud-label,.vital-row>b{color:var(--site-palladium)}
+.radar-heading b,.match-mode small,.level-header span,.hud-bottom-right .hud-label,.hud-center-bottom>b,.ammo-help [data-slot=hud-reload]{color:var(--site-accent)}
+.radar,.hud-level .xp-track,.health-track,.armor-track{background-color:color-mix(in srgb,var(--site-void) 82%,var(--site-surface));border-color:var(--site-line-soft)}
+.radar{background-image:linear-gradient(color-mix(in srgb,var(--site-palladium) 8%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--site-palladium) 8%,transparent) 1px,transparent 1px)}
+.radar-safe{border-color:var(--site-accent);background:color-mix(in srgb,var(--site-accent) 10%,transparent);box-shadow:0 0 16px color-mix(in srgb,var(--site-accent) 16%,transparent)}
+.radar-player,.radar-player::after{border-bottom-color:var(--site-accent);background-color:var(--site-accent)}
+.radar-footer strong,.match-stat>b,.weapon-ammo strong,.hud-center-bottom>small b{color:var(--site-text)}
+.match-mode .status-dot{background:var(--site-accent);box-shadow:0 0 8px var(--site-accent)}
+.match-stats,.match-stats>i,.vitals-caption{border-color:var(--site-line-soft);background-color:transparent}
+.team-blue b{color:#8dc9ff}.team-red b{color:#ff8d9d}
+.hud-level .xp-fill{background:linear-gradient(90deg,var(--site-accent),var(--site-secondary));box-shadow:0 0 9px color-mix(in srgb,var(--site-accent) 42%,transparent)}
+.feed-item{border-right-color:var(--site-accent);background:color-mix(in srgb,var(--site-void) 88%,transparent)}
+.feed-item.headshot{border-color:var(--site-secondary);color:var(--site-secondary)}
+.hud-bottom-left,.hud-bottom-right{border-left-color:var(--site-accent);border-right-color:var(--site-accent)}
+.health-track em{background:var(--site-accent);box-shadow:0 0 7px color-mix(in srgb,var(--site-accent) 28%,transparent)}
+.armor-track em{background:var(--site-secondary);box-shadow:0 0 7px color-mix(in srgb,var(--site-secondary) 24%,transparent)}
+.hud-center-bottom{border-bottom-color:var(--site-accent)}
+.hud-pause{color:var(--site-accent);border-color:var(--site-line);background:color-mix(in srgb,var(--site-void) 90%,transparent)}
+.scoreboard{border-color:var(--site-line);background:color-mix(in srgb,var(--site-void) 96%,transparent)}
+.operator-choice.is-selected>i,.operator-choice:focus-visible{outline-color:var(--site-accent)}

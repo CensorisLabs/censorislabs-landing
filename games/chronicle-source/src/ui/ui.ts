@@ -36,8 +36,9 @@ export class Ui {
   refreshSettings(): void { const d = this.save.data; const set = (name: string, value: string) => { const el = this.root.querySelector<HTMLInputElement>(`[name="${name}"]`); if (el) el.value = value }; set('musicVolume', String(d.musicVolume)); set('sfxVolume', String(d.sfxVolume)); set('sensitivity', String(d.sensitivity)); set('fov', String(d.fov)); this.root.querySelectorAll<HTMLButtonElement>('.toggle').forEach(button => { const key = button.dataset.setting as keyof SaveData; button.setAttribute('aria-pressed', String(d[key] === true)) }); this.root.querySelectorAll<HTMLButtonElement>('[data-setting="quality"] button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === d.quality))); this.root.querySelectorAll<HTMLButtonElement>('[data-setting="locale"] button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === this.i18n.locale))) }
   updateHud(snapshot: GameSnapshot): void {
     const mapName = HISTORIC_MAPS.find(map => map.id === snapshot.mapId)?.name.toUpperCase() ?? 'AURELIAN FORUM'
-    const minutes = Math.floor(snapshot.timeLeft / 60).toString().padStart(2, '0')
-    const seconds = Math.ceil(snapshot.timeLeft % 60).toString().padStart(2, '0')
+    const wholeSeconds = Math.ceil(snapshot.timeLeft)
+    const minutes = Math.floor(wholeSeconds / 60).toString().padStart(2, '0')
+    const seconds = (wholeSeconds % 60).toString().padStart(2, '0')
     const alive = snapshot.aliveBots + (snapshot.phase === 'playing' ? 1 : 0)
     const mode = ({ royale: 'FRONTIER ROYALE', tdm: 'TEAM DEATHMATCH', training: 'AIM RANGE', ffa: 'FREE FOR ALL', domination: 'DOMINATION', hardpoint: 'HARDPOINT', ctf: 'CAPTURE THE STANDARD', search: 'SEARCH & DEFUSE' } satisfies Record<MatchType, string>)[snapshot.matchType]
     this.setText('hud-score', String(snapshot.score).padStart(4, '0'))

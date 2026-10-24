@@ -8,8 +8,8 @@ import type { Quality } from './save'
 type Preset = { pixelRatio: number; shadows: boolean; shadowMap: number; bloom: boolean; antialias: boolean }
 export const QUALITY_PRESETS: Record<Quality, Preset> = {
   low: { pixelRatio: 1, shadows: false, shadowMap: 512, bloom: false, antialias: false },
-  medium: { pixelRatio: 1.5, shadows: true, shadowMap: 1024, bloom: false, antialias: true },
-  high: { pixelRatio: 1.5, shadows: true, shadowMap: 1536, bloom: false, antialias: true },
+  medium: { pixelRatio: 1.25, shadows: true, shadowMap: 1024, bloom: false, antialias: false },
+  high: { pixelRatio: 1.5, shadows: true, shadowMap: 1536, bloom: false, antialias: false },
 }
 
 /** Pick a starting quality from device hints; the player can override it in Settings. */
@@ -36,9 +36,9 @@ export class Renderer {
     this.preset = QUALITY_PRESETS[quality]
     this.gl = new THREE.WebGLRenderer({ canvas, antialias: this.preset.antialias, powerPreference: 'high-performance' })
     this.gl.outputColorSpace = THREE.SRGBColorSpace
-    this.gl.toneMapping = THREE.ACESFilmicToneMapping
+    this.gl.toneMapping = THREE.LinearToneMapping
     this.gl.toneMappingExposure = 1
-    this.gl.shadowMap.type = THREE.PCFSoftShadowMap
+    this.gl.shadowMap.type = THREE.BasicShadowMap
     this.applyQuality(quality)
     window.addEventListener('resize', () => this.resize())
   }

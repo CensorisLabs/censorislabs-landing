@@ -4,8 +4,9 @@ import type { Input } from '../engine/input'
 import { insertScore, type Locale, type Quality, type SaveData, type SaveStore } from '../engine/save'
 import { ARMORY_GUNS, DAILY_CONTRACTS, HISTORIC_MAPS, KNIFE_SKINS, OPERATOR_SKINS, RARITY_COLORS, SKINS, WEAPONS, WEAPON_ORDER, operatorSkinForLevel, type BotDifficulty, type MapId, type MatchSettings, type MatchType, type WeaponId } from '../game/fps'
 import type { Game, GameSnapshot } from '../game/game'
+import { DEFAULT_CUSTOM_MAP, decodeCustomMap, encodeCustomMap, MAX_CUSTOM_MAP_JSON_BYTES, readCustomMap, storeCustomMap, validateCustomMap, type CustomMap, type MapSurface } from '../game/custom-map'
 
-export type Screen = 'boot' | 'title' | 'armory' | 'hud' | 'pause' | 'settings' | 'leaderboard' | 'results'
+export type Screen = 'boot' | 'title' | 'armory' | 'map-editor' | 'hud' | 'pause' | 'settings' | 'leaderboard' | 'results'
 export type UiActions = { play(mode: MatchType, map: MapId, difficulty: BotDifficulty, settings?: MatchSettings): void; resume(): void; restart(): void; quit(): void; settings(patch: Partial<SaveData>): void }
 
 export class Ui {
@@ -14,6 +15,9 @@ export class Ui {
   private panel = 'queue'
   private selectedMode: MatchType = 'ffa'
   private selectedMap: MapId = 'aurelian-forum'
+  private customMap: CustomMap = readCustomMap()
+  private mapBrush: 'block' | 'player-spawn' | 'bot-spawn' | 'site-a' | 'site-b' = 'block'
+  private brush = { width: 4, depth: 4, height: 2, color: '#7d7467', surface: 'concrete' as MapSurface }
   private difficulty: BotDifficulty = 'regular'
   private royalePlayers: 30 | 50 | 60 | 100 = 60
   private teamSize: 1 | 4 | 5 = 5
@@ -23,19 +27,24 @@ export class Ui {
   constructor(private readonly i18n: I18n, private readonly save: SaveStore, private readonly audio: Audio, private readonly input: Input, private readonly actions: UiActions) {
     this.root = document.getElementById('ui')!
     this.root.innerHTML = this.template()
+    this.root.insertAdjacentHTML('beforeend', '<section class="screen screen-map-editor" data-screen="map-editor" aria-hidden="true"><div class="map-editor-content"></div></section>')
+    this.root.querySelector('[data-panel="queue"]')?.insertAdjacentHTML('afterend', '<button class="map-builder-nav" data-action="map-editor">⬡ <span>MAP BUILDER</span></button>')
+    const sharedMap = new URL(location.href).searchParams.get('map')
+    const importedMap = sharedMap ? decodeCustomMap(sharedMap) : null
+    if (importedMap) { this.customMap = importedMap; storeCustomMap(importedMap) }
     this.root.addEventListener('click', event => this.onClick(event))
     this.root.addEventListener('input', event => this.onInput(event))
-    this.root.addEventListener('change', event => { if (event.target instanceof HTMLSelectElement) this.onInput(event) })
+    this.root.addEventListener('change', event => { if (event.target instanceof HTMLSelectElement || event.target instanceof HTMLInputElement && event.target.name === 'customMapFile') this.onInput(event) })
     window.addEventListener('keydown', event => this.onKey(event))
     i18n.onChange(() => this.translate())
     this.translate(); this.refreshSettings()
   }
   setGame(_game: Game): void {}
-  show(screen: Screen): void { this.screen = screen; this.root.dataset.activeScreen = screen; for (const el of this.root.querySelectorAll<HTMLElement>('[data-screen]')) { const active = el.dataset.screen === screen; el.classList.toggle('is-active', active); el.setAttribute('aria-hidden', String(!active)) } if (screen === 'title') this.renderPanel(this.panel); if (screen === 'armory') this.renderArmory(); if (screen === 'leaderboard') this.renderLeaderboard(); requestAnimationFrame(() => this.root.querySelector<HTMLElement>(`[data-screen="${screen}"] [data-nav]`)?.focus({ preventScroll: true })) }
+  show(screen: Screen): void { this.screen = screen; this.root.dataset.activeScreen = screen; for (const el of this.root.querySelectorAll<HTMLElement>('[data-screen]')) { const active = el.dataset.screen === screen; el.classList.toggle('is-active', active); el.setAttribute('aria-hidden', String(!active)) } if (screen === 'title') this.renderPanel(this.panel); if (screen === 'armory') this.renderArmory(); if (screen === 'map-editor') this.renderMapEditor(); if (screen === 'leaderboard') this.renderLeaderboard(); requestAnimationFrame(() => this.root.querySelector<HTMLElement>(`[data-screen="${screen}"] [data-nav]`)?.focus({ preventScroll: true })) }
   setBootProgress(progress: number): void { const bar = this.root.querySelector<HTMLElement>('.boot-bar i'); if (bar) bar.style.transform = `scaleX(${Math.max(0.04, Math.min(1, progress))})` }
   refreshSettings(): void { const d = this.save.data; const set = (name: string, value: string) => { const el = this.root.querySelector<HTMLInputElement>(`[name="${name}"]`); if (el) el.value = value }; set('musicVolume', String(d.musicVolume)); set('sfxVolume', String(d.sfxVolume)); set('sensitivity', String(d.sensitivity)); set('fov', String(d.fov)); this.root.querySelectorAll<HTMLButtonElement>('.toggle').forEach(button => { const key = button.dataset.setting as keyof SaveData; button.setAttribute('aria-pressed', String(d[key] === true)) }); this.root.querySelectorAll<HTMLButtonElement>('[data-setting="quality"] button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === d.quality))); this.root.querySelectorAll<HTMLButtonElement>('[data-setting="locale"] button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === this.i18n.locale))) }
   updateHud(snapshot: GameSnapshot): void {
-    const mapName = HISTORIC_MAPS.find(map => map.id === snapshot.mapId)?.name.toUpperCase() ?? 'AURELIAN FORUM'
+    const mapName = snapshot.mapName || HISTORIC_MAPS.find(map => map.id === snapshot.mapId)?.name.toUpperCase() || 'AURELIAN FORUM'
     const wholeSeconds = Math.ceil(snapshot.timeLeft)
     const minutes = Math.floor(wholeSeconds / 60).toString().padStart(2, '0')
     const seconds = (wholeSeconds % 60).toString().padStart(2, '0')
@@ -102,7 +111,101 @@ export class Ui {
   }
   frame(_seconds: number): void {}
   hint(_hint: unknown): void {}
-  private onClick(event: MouseEvent): void { const target = (event.target as HTMLElement).closest<HTMLElement>('[data-action], [data-panel], [data-mode], .toggle, .seg button, .equip, .operator-choice, .knife-choice'); if (!target) return; this.audio.unlock(); if (target.dataset.mode) { this.selectedMode = target.dataset.mode as MatchType; this.renderPanel('queue'); return } const panel = target.dataset.panel; if (panel) { this.panel = panel; this.renderPanel(panel); return } if (target.classList.contains('toggle')) { const key = target.dataset.setting as keyof SaveData; this.actions.settings({ [key]: !this.save.data[key] } as Partial<SaveData>); return } if (target.matches('.seg button')) { const key = target.parentElement?.dataset.setting; if (key === 'quality') this.actions.settings({ quality: target.dataset.value as Quality }); if (key === 'locale') this.actions.settings({ locale: target.dataset.value as Locale }); return } if (target.classList.contains('equip')) { const weapon = target.dataset.weapon as WeaponId; const skin = target.dataset.skin; this.actions.settings({ equipped: { ...this.save.data.equipped, [weapon]: skin } }); this.renderPanel('loadout'); return } if (target.classList.contains('knife-choice')) { const id = target.dataset.knife; if (!id || !this.save.data.unlockedKnifeSkinIds.includes(id)) return; this.actions.settings({ knifeSkinId: id }); this.renderArmory(); return } if (target.classList.contains('operator-choice')) { const skin = OPERATOR_SKINS.find(item => item.id === target.dataset.operatorSkin); if (!skin || skin.level > this.save.data.level) return; this.actions.settings({ operatorSkinId: skin.id }); this.renderPanel('profile'); return } switch (target.dataset.action) { case 'play': this.show('armory'); break; case 'armory': this.show('armory'); break; case 'deploy': this.actions.play(this.selectedMode, this.selectedMap, this.difficulty, { royalePlayers: this.royalePlayers, teamSize: this.teamSize }); break; case 'armory-back': this.show('title'); break; case 'resume': this.actions.resume(); break; case 'restart': this.actions.play(this.selectedMode, this.selectedMap, this.difficulty, { royalePlayers: this.royalePlayers, teamSize: this.teamSize }); break; case 'quit': this.actions.quit(); break; case 'settings': this.show('settings'); break; case 'leaderboard': this.show('leaderboard'); this.renderLeaderboard(); break; case 'back': this.show(this.screen === 'settings' || this.screen === 'leaderboard' ? 'title' : 'title'); break; case 'open-case': this.openCase(); break; case 'save-score': this.saveScore(); break; case 'pause': window.dispatchEvent(new CustomEvent('game:pause')); break } }
+  private onClick(event: MouseEvent): void {
+    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-action], [data-panel], [data-mode], [data-brush], [data-cell-x], .toggle, .seg button, .equip, .operator-choice, .knife-choice')
+    if (!target) return
+    this.audio.unlock()
+    if (target.dataset.brush) { this.mapBrush = target.dataset.brush as typeof this.mapBrush; this.renderMapEditor(); return }
+    if (target.hasAttribute('data-cell-x')) { this.placeMapCell(Number(target.dataset.cellX), Number(target.dataset.cellZ)); return }
+    if (target.dataset.action?.startsWith('map-')) { void this.handleMapAction(target.dataset.action); return }
+    if (target.dataset.mode) { this.selectedMode = target.dataset.mode as MatchType; this.renderPanel('queue'); return }
+    const panel = target.dataset.panel
+    if (panel) { this.panel = panel; this.renderPanel(panel); return }
+    if (target.classList.contains('toggle')) { const key = target.dataset.setting as keyof SaveData; this.actions.settings({ [key]: !this.save.data[key] } as Partial<SaveData>); return }
+    if (target.matches('.seg button')) { const key = target.parentElement?.dataset.setting; if (key === 'quality') this.actions.settings({ quality: target.dataset.value as Quality }); if (key === 'locale') this.actions.settings({ locale: target.dataset.value as Locale }); return }
+    if (target.classList.contains('equip')) { const weapon = target.dataset.weapon as WeaponId; const skin = target.dataset.skin; this.actions.settings({ equipped: { ...this.save.data.equipped, [weapon]: skin } }); this.renderPanel('loadout'); return }
+    if (target.classList.contains('knife-choice')) { const id = target.dataset.knife; if (!id || !this.save.data.unlockedKnifeSkinIds.includes(id)) return; this.actions.settings({ knifeSkinId: id }); this.renderArmory(); return }
+    if (target.classList.contains('operator-choice')) { const skin = OPERATOR_SKINS.find(item => item.id === target.dataset.operatorSkin); if (!skin || skin.level > this.save.data.level) return; this.actions.settings({ operatorSkinId: skin.id }); this.renderPanel('profile'); return }
+    switch (target.dataset.action) {
+      case 'play': this.show('armory'); break
+      case 'armory': this.show('armory'); break
+      case 'map-editor': this.show('map-editor'); break
+      case 'deploy': this.actions.play(this.selectedMode, this.selectedMap, this.difficulty, { royalePlayers: this.royalePlayers, teamSize: this.teamSize }); break
+      case 'armory-back': this.show('title'); break
+      case 'resume': this.actions.resume(); break
+      case 'restart': this.actions.play(this.selectedMode, this.selectedMap, this.difficulty, { royalePlayers: this.royalePlayers, teamSize: this.teamSize }); break
+      case 'quit': this.actions.quit(); break
+      case 'settings': this.show('settings'); break
+      case 'leaderboard': this.show('leaderboard'); this.renderLeaderboard(); break
+      case 'back': this.show('title'); break
+      case 'open-case': this.openCase(); break
+      case 'save-score': this.saveScore(); break
+      case 'pause': window.dispatchEvent(new CustomEvent('game:pause')); break
+    }
+  }
+  private syncMapBrush(): void {
+    const value = (name: string) => this.root.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`)
+    this.customMap.name = value('customMapName')?.value.trim().slice(0, 32) || this.customMap.name
+    this.brush.width = Math.max(1, Math.min(10, Number(value('brushWidth')?.value) || 4))
+    this.brush.depth = Math.max(1, Math.min(10, Number(value('brushDepth')?.value) || 4))
+    this.brush.height = Math.max(1, Math.min(8, Number(value('brushHeight')?.value) || 2))
+    const color = value('brushColor')?.value ?? this.brush.color
+    this.brush.color = /^#[0-9a-f]{6}$/i.test(color) ? color : '#7d7467'
+    const surface = value('brushSurface')?.value
+    this.brush.surface = surface === 'metal' || surface === 'wood' || surface === 'gravel' ? surface : 'concrete'
+  }
+  private placeMapCell(column: number, row: number): void {
+    if (!Number.isInteger(column) || !Number.isInteger(row) || column < 0 || column > 12 || row < 0 || row > 12) return
+    this.syncMapBrush()
+    const x = -24 + column * 4; const z = -24 + row * 4
+    if (this.mapBrush === 'block') {
+      const existing = this.customMap.blocks.findIndex(block => block.x === x && block.z === z)
+      if (existing >= 0) this.customMap.blocks.splice(existing, 1)
+      else if (this.customMap.blocks.length < 96) this.customMap.blocks.push({ ...this.brush, x, z })
+      else { this.setMapStatus('This map reached the 96-block limit.'); return }
+    } else {
+      const kind = this.mapBrush === 'site-a' || this.mapBrush === 'site-b' ? 'site' : this.mapBrush
+      const label = this.mapBrush === 'site-b' ? 'B' : 'A'
+      const existing = this.customMap.markers.findIndex(marker => marker.kind === kind && (kind !== 'site' || marker.label === label) && marker.x === x && marker.z === z)
+      if (existing >= 0) this.customMap.markers.splice(existing, 1)
+      else if (kind === 'player-spawn') {
+        this.customMap.markers = this.customMap.markers.filter(marker => marker.kind !== kind)
+        this.customMap.markers.push({ kind, x, z })
+      } else if (this.customMap.markers.length < 24) this.customMap.markers.push({ kind, x, z, ...(kind === 'site' ? { label } : {}) })
+    }
+    this.customMap = validateCustomMap(this.customMap) ?? this.customMap
+    storeCustomMap(this.customMap); this.renderMapEditor()
+  }
+  private setMapStatus(message: string): void { const status = this.root.querySelector<HTMLElement>('[data-slot="map-editor-status"]'); if (status) status.textContent = message }
+  private async handleMapAction(action: string): Promise<void> {
+    this.syncMapBrush()
+    this.customMap = validateCustomMap(this.customMap) ?? this.customMap
+    if (action === 'map-editor') { this.show('map-editor'); return }
+    if (action === 'map-save') { storeCustomMap(this.customMap); this.setMapStatus('Saved on this device.'); return }
+    if (action === 'map-reset') { this.customMap = structuredClone(DEFAULT_CUSTOM_MAP); storeCustomMap(this.customMap); this.mapBrush = 'block'; this.renderMapEditor(); return }
+    if (action === 'map-clear') { this.customMap.blocks = []; storeCustomMap(this.customMap); this.renderMapEditor(); return }
+    if (action === 'map-export') {
+      const blob = new Blob([JSON.stringify(this.customMap, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob)
+      const link = document.createElement('a'); link.href = url; link.download = `${this.customMap.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'custom-field'}.json`; link.click(); URL.revokeObjectURL(url); this.setMapStatus('Map JSON exported.'); return
+    }
+    if (action === 'map-copy-link') {
+      const link = new URL(location.href); link.searchParams.set('map', encodeCustomMap(this.customMap))
+      try { await navigator.clipboard.writeText(link.toString()); this.setMapStatus('Share link copied. The map is encoded in the URL.'); }
+      catch { this.setMapStatus('Clipboard is unavailable. Export the JSON file instead.'); }
+      return
+    }
+    if (action === 'map-import-code') {
+      const code = this.root.querySelector<HTMLTextAreaElement>('[name="mapCode"]')?.value.trim() ?? ''
+      const decoded = decodeCustomMap(code)
+      if (!decoded) { this.setMapStatus('That map code is invalid.'); return }
+      this.customMap = decoded; storeCustomMap(decoded); this.renderMapEditor(); this.setMapStatus('Map code loaded.'); return
+    }
+    if (action === 'map-back') { this.show('title'); return }
+    if (action === 'map-deploy') {
+      storeCustomMap(this.customMap)
+      this.actions.play(this.selectedMode, this.selectedMap, this.difficulty, { royalePlayers: this.royalePlayers, teamSize: this.teamSize, customMap: this.customMap })
+    }
+  }
   private openCase(): void {
     if (this.save.data.credits < 100) { this.banner('NEED 100 CREDITS TO OPEN A CASE'); return }
     const unowned = SKINS.filter(item => item.weapon !== 'knife' && !this.save.data.inventory.some(owned => owned.id === item.id))
@@ -112,7 +215,29 @@ export class Ui {
     this.audio.play('case'); this.renderPanel('cases'); this.banner(`DROP // ${skin.rarity.toUpperCase()} ${skin.name}`)
   }
   private saveScore(): void { if (!this.lastRun || this.scoreSaved) return; const name = this.root.querySelector<HTMLInputElement>('.results-name')?.value.trim().slice(0, 16) || this.save.data.playerName; const entry = { name, score: this.lastRun.score, seconds: Math.round(this.lastRun.elapsed), at: Date.now() }; const { board } = insertScore(this.save.data.leaderboard, entry); this.save.update({ leaderboard: board, playerName: name }); this.scoreSaved = true; this.banner('SCORE SAVED TO LOCAL LEADERBOARD') }
-  private onInput(event: Event): void { const el = event.target as HTMLInputElement | HTMLSelectElement; if (el instanceof HTMLSelectElement && el.name === 'primaryGun') { this.actions.settings({ primaryGunId: el.value }); this.renderArmory(); return } if (el instanceof HTMLSelectElement && el.name === 'handgunGun') { this.actions.settings({ handgunGunId: el.value }); this.renderArmory(); return } if (el instanceof HTMLSelectElement && el.name === 'map') { this.selectedMap = el.value as MapId; return } if (el instanceof HTMLSelectElement && el.name === 'difficulty') { this.difficulty = el.value as BotDifficulty; return } if (el instanceof HTMLSelectElement && el.name === 'royalePlayers') { this.royalePlayers = Number(el.value) as 30 | 50 | 60 | 100; const card = this.root.querySelector<HTMLElement>('[data-mode="royale"] span'); if (card) card.textContent = `${this.royalePlayers} COMBATANTS`; return } if (el instanceof HTMLSelectElement && el.name === 'teamSize') { this.teamSize = Number(el.value) as 1 | 4 | 5; this.renderPanel('queue'); return } if (el.type === 'range') this.actions.settings({ [el.name]: Number(el.value) } as Partial<SaveData>) }
+  private async onInput(event: Event): Promise<void> {
+    const el = event.target as HTMLInputElement | HTMLSelectElement
+    if (el instanceof HTMLInputElement && el.name === 'customMapFile') {
+      const file = el.files?.[0]
+      if (!file) return
+      if (file.size > MAX_CUSTOM_MAP_JSON_BYTES) { this.setMapStatus('Map JSON must be 48 KB or smaller.'); return }
+      try {
+        const imported = validateCustomMap(JSON.parse(await file.text()))
+        if (!imported) { this.setMapStatus('That JSON is not a supported map.'); return }
+        this.customMap = imported; storeCustomMap(imported); this.renderMapEditor(); this.setMapStatus('JSON map loaded.')
+      } catch { this.setMapStatus('Could not read that JSON map.'); }
+      return
+    }
+    if (el.name === 'customMapName') { this.customMap.name = el.value.trim().slice(0, 32) || 'Custom Field'; storeCustomMap(this.customMap); return }
+    if (['brushWidth', 'brushDepth', 'brushHeight', 'brushColor', 'brushSurface'].includes(el.name)) { this.syncMapBrush(); return }
+    if (el instanceof HTMLSelectElement && el.name === 'primaryGun') { this.actions.settings({ primaryGunId: el.value }); this.renderArmory(); return }
+    if (el instanceof HTMLSelectElement && el.name === 'handgunGun') { this.actions.settings({ handgunGunId: el.value }); this.renderArmory(); return }
+    if (el instanceof HTMLSelectElement && el.name === 'map') { this.selectedMap = el.value as MapId; return }
+    if (el instanceof HTMLSelectElement && el.name === 'difficulty') { this.difficulty = el.value as BotDifficulty; return }
+    if (el instanceof HTMLSelectElement && el.name === 'royalePlayers') { this.royalePlayers = Number(el.value) as 30 | 50 | 60 | 100; const card = this.root.querySelector<HTMLElement>('[data-mode="royale"] span'); if (card) card.textContent = `${this.royalePlayers} COMBATANTS`; return }
+    if (el instanceof HTMLSelectElement && el.name === 'teamSize') { this.teamSize = Number(el.value) as 1 | 4 | 5; this.renderPanel('queue'); return }
+    if (el.type === 'range') this.actions.settings({ [el.name]: Number(el.value) } as Partial<SaveData>)
+  }
   private onKey(event: KeyboardEvent): void { if (event.code === 'Escape' && (this.screen === 'settings' || this.screen === 'leaderboard')) { event.preventDefault(); this.show('title') } }
   private renderLeaderboard(): void { const list = this.root.querySelector<HTMLElement>('.board'); if (!list) return; const board = this.save.data.leaderboard; list.innerHTML = board.length ? board.map((e, i) => `<li><b>${i + 1}</b><span>${this.escape(e.name)}</span><em>${e.score}</em></li>`).join('') : '<li class="empty">No local scores yet. Win a match to be first.</li>' }
   private renderPanel(panel: string): void {
@@ -145,7 +270,24 @@ export class Ui {
       const nextSkin = OPERATOR_SKINS.find(skin => skin.level > this.save.data.level)
       panelEl.innerHTML = `<div class="panel-kicker">PROFILE / ${this.save.data.playerName}</div><h2>Chronicle keeper</h2><div class="profile-level"><div><b>LEVEL ${this.save.data.level}</b><span>${this.save.data.xp} / ${this.save.data.level >= 50 ? 'MAX' : 'NEXT'} XP</span></div><i style="width:${progress}%"></i></div><div class="operator-reward"><div class="operator-swatch" data-model="${operator.model}" style="--cloth:${operator.cloth};--trim:${operator.trim};--accent:${operator.accent}"><i></i><b></b><em></em></div><div><small>ACTIVE OPERATOR SKIN</small><strong>${operator.name}</strong><span>${nextSkin ? `Next unlock · level ${nextSkin.level} · ${nextSkin.name}` : 'All operator skins unlocked'}</span></div></div><div class="operator-track">${OPERATOR_SKINS.map(skin => { const unlocked = this.save.data.level >= skin.level; const selected = this.save.data.operatorSkinId === skin.id; return `<button class="operator-choice ${unlocked ? 'is-unlocked' : 'is-locked'} ${selected ? 'is-selected' : ''}" data-operator-skin="${skin.id}" data-model="${skin.model}" aria-label="${skin.name}, level ${skin.level}${unlocked ? selected ? ', selected' : ', unlocked' : ', locked'}" title="${skin.name} · level ${skin.level}" ${unlocked ? '' : 'disabled'}><i style="--cloth:${skin.cloth};--trim:${skin.trim}"></i><small>${skin.level}</small></button>` }).join('')}</div><div class="stat-grid"><span><b>${s.kills}</b>KILLS</span><span><b>${s.headshots}</b>HEADSHOTS</span><span><b>${s.wins}</b>WINS</span><span><b>${s.matches}</b>MATCHES</span></div>`
     }
-  }  private renderArmory(): void { const root = this.root.querySelector<HTMLElement>('.armory-content'); if (!root) return; const primary = ARMORY_GUNS.filter(g => g.slot === 'primary'); const sidearms = ARMORY_GUNS.filter(g => g.slot === 'handgun'); const knives = KNIFE_SKINS; const primarySelected = this.save.data.primaryGunId; const sidearmSelected = this.save.data.handgunGunId; root.innerHTML = `<div class="panel-kicker">PRE-ROUND // FIELD ARMORY</div><h2>Lock in your kit.</h2><p>Pick a primary, sidearm, and earned knife finish. The 76 original blueprints share balanced weapon archetypes. Browse ${SKINS.length - 3} firearm and ${KNIFE_SKINS.length} knife finishes with procedural voxel patterns.</p><div class="armory-columns"><label>PRIMARY <select name="primaryGun">${primary.map(g => `<option value="${g.id}" ${g.id === primarySelected ? 'selected' : ''}>${g.name} · ${g.era}</option>`).join('')}</select><span class="weapon-preview" style="--gun:${primary.find(g => g.id === primarySelected)?.color}"></span><small>ARCHETYPE MASTERY · ${(this.save.data.weaponKills[primary.find(g => g.id === primarySelected)?.base ?? 'ak47'] ?? 0)} ELIMS</small></label><label>HANDGUN <select name="handgunGun">${sidearms.map(g => `<option value="${g.id}" ${g.id === sidearmSelected ? 'selected' : ''}>${g.name}</option>`).join('')}</select><span class="weapon-preview sidearm" style="--gun:${sidearms.find(g => g.id === sidearmSelected)?.color}"></span><small>ARCHETYPE MASTERY · ${(this.save.data.weaponKills[sidearms.find(g => g.id === sidearmSelected)?.base ?? 'glock'] ?? 0)} ELIMS</small></label></div><div class="knife-picker"><b>KNIFE FINISHES</b><div>${knives.map(k => { const unlocked = this.save.data.unlockedKnifeSkinIds.includes(k.id); return `<button class="knife-choice ${this.save.data.knifeSkinId === k.id ? 'is-selected' : ''} ${unlocked ? '' : 'is-locked'}" data-knife="${k.id}" style="--knife:${k.color}" ${unlocked ? '' : 'disabled'}><i></i><span>${unlocked ? k.name : `LEVEL ${k.level}`}</span></button>` }).join('')}</div></div><div class="armory-footer"><button class="ghost-btn" data-action="armory-back">BACK TO QUEUE</button><button class="cta" data-action="deploy">DEPLOY // ${this.selectedMode.toUpperCase()} <span>→</span></button></div><small class="armory-controls">1 PRIMARY · 2 HANDGUN · 3 KNIFE · MOUSE WHEEL SWITCHES SLOTS · CTRL + SHIFT SLIDE · Q PING</small>` }
+  }
+  private renderMapEditor(): void {
+    const name = this.escape(this.customMap.name)
+    const tiles: string[] = []
+    for (let row = 0; row < 13; row += 1) for (let column = 0; column < 13; column += 1) {
+      const x = -24 + column * 4; const z = -24 + row * 4
+      const block = this.customMap.blocks.find(item => item.x === x && item.z === z)
+      const marker = this.customMap.markers.find(item => item.x === x && item.z === z)
+      const text = block ? '■' : marker?.kind === 'player-spawn' ? 'P' : marker?.kind === 'bot-spawn' ? 'B' : marker?.kind === 'site' ? marker.label ?? 'A' : ''
+      const detail = block ? `${block.width}×${block.depth}×${block.height} ${block.surface}` : marker ? marker.kind === 'site' ? `SITE ${marker.label}` : marker.kind.toUpperCase() : 'empty'
+      tiles.push(`<button class="map-tile ${block ? 'has-block' : ''} ${marker ? `has-${marker.kind}` : ''}" data-cell-x="${column}" data-cell-z="${row}" style="--tile-color:${block?.color ?? 'transparent'}" aria-label="Grid ${x}, ${z}: ${detail}" title="${x}, ${z} · ${detail}">${text}</button>`)
+    }
+    const tool = (id: typeof this.mapBrush, label: string) => `<button class="map-tool ${this.mapBrush === id ? 'is-selected' : ''}" data-brush="${id}" aria-pressed="${this.mapBrush === id}">${label}</button>`
+    const root = this.root.querySelector<HTMLElement>('.map-editor-content')
+    if (!root) return
+    root.innerHTML = `<div class="map-editor-heading"><div><span class="panel-kicker">FIELD WORKSHOP // LOCAL EDITOR</span><h1>Build a custom arena.</h1><p>Place grid-snapped cover, spawns, and A/B sites. Up to 96 blocks, stored on this device.</p></div><label>MAP NAME<input data-nav name="customMapName" maxlength="32" value="${name}"></label></div><div class="map-editor-layout"><div class="map-editor-tools"><b>BRUSH</b><div class="map-tool-row">${tool('block', '▧ Cover')}${tool('player-spawn', 'P Player spawn')}${tool('bot-spawn', 'B Bot spawn')}${tool('site-a', 'A Site A')}${tool('site-b', 'B Site B')}</div><div class="map-brush-fields"><label>Width <input name="brushWidth" type="number" min="1" max="10" value="${this.brush.width}"></label><label>Depth <input name="brushDepth" type="number" min="1" max="10" value="${this.brush.depth}"></label><label>Height <input name="brushHeight" type="number" min="1" max="8" value="${this.brush.height}"></label><label>Color <input name="brushColor" type="color" value="${this.brush.color}"></label><label>Surface texture <select name="brushSurface"><option value="concrete" ${this.brush.surface === 'concrete' ? 'selected' : ''}>Concrete</option><option value="metal" ${this.brush.surface === 'metal' ? 'selected' : ''}>Metal</option><option value="wood" ${this.brush.surface === 'wood' ? 'selected' : ''}>Wood</option><option value="gravel" ${this.brush.surface === 'gravel' ? 'selected' : ''}>Gravel</option></select></label></div><div class="map-editor-grid" role="grid" aria-label="13 by 13 map editing grid">${tiles.join('')}</div><div class="map-legend"><span>P Player</span><span>B Bot</span><span>A/B Sites</span><span>${this.customMap.blocks.length}/96 blocks</span></div></div><aside class="map-share-panel"><b>MAP DATA</b><p>Click an occupied tile again to erase it. Imported JSON is validated and limited to the same grid.</p><button class="ghost-btn" data-action="map-save">SAVE LOCALLY</button><button class="ghost-btn" data-action="map-export">EXPORT JSON</button><label class="map-import">IMPORT JSON<input type="file" name="customMapFile" accept="application/json,.json"></label><div class="map-share-actions"><button class="ghost-btn" data-action="map-copy-link">COPY SHARE LINK</button><textarea name="mapCode" rows="4" spellcheck="false" aria-label="Paste a map code">${encodeCustomMap(this.customMap)}</textarea><button class="ghost-btn" data-action="map-import-code">LOAD MAP CODE</button></div><button class="ghost-btn" data-action="map-clear">CLEAR COVER</button><button class="ghost-btn" data-action="map-reset">RESTORE STARTER MAP</button><p class="map-editor-status" data-slot="map-editor-status" aria-live="polite">Local JSON and URL sharing; no cloud server is configured.</p><div class="map-editor-footer"><button class="ghost-btn" data-action="map-back">BACK</button><button class="cta" data-action="map-deploy">PLAY THIS MAP →</button></div></aside></div>`
+  }
+  private renderArmory(): void { const root = this.root.querySelector<HTMLElement>('.armory-content'); if (!root) return; const primary = ARMORY_GUNS.filter(g => g.slot === 'primary'); const sidearms = ARMORY_GUNS.filter(g => g.slot === 'handgun'); const knives = KNIFE_SKINS; const primarySelected = this.save.data.primaryGunId; const sidearmSelected = this.save.data.handgunGunId; root.innerHTML = `<div class="panel-kicker">PRE-ROUND // FIELD ARMORY</div><h2>Lock in your kit.</h2><p>Pick a primary, sidearm, and earned knife finish. The 76 original blueprints share balanced weapon archetypes. Browse ${SKINS.length - 3} firearm and ${KNIFE_SKINS.length} knife finishes with procedural voxel patterns.</p><div class="armory-columns"><label>PRIMARY <select name="primaryGun">${primary.map(g => `<option value="${g.id}" ${g.id === primarySelected ? 'selected' : ''}>${g.name} · ${g.era}</option>`).join('')}</select><span class="weapon-preview" style="--gun:${primary.find(g => g.id === primarySelected)?.color}"></span><small>ARCHETYPE MASTERY · ${(this.save.data.weaponKills[primary.find(g => g.id === primarySelected)?.base ?? 'ak47'] ?? 0)} ELIMS</small></label><label>HANDGUN <select name="handgunGun">${sidearms.map(g => `<option value="${g.id}" ${g.id === sidearmSelected ? 'selected' : ''}>${g.name}</option>`).join('')}</select><span class="weapon-preview sidearm" style="--gun:${sidearms.find(g => g.id === sidearmSelected)?.color}"></span><small>ARCHETYPE MASTERY · ${(this.save.data.weaponKills[sidearms.find(g => g.id === sidearmSelected)?.base ?? 'glock'] ?? 0)} ELIMS</small></label></div><div class="knife-picker"><b>KNIFE FINISHES</b><div>${knives.map(k => { const unlocked = this.save.data.unlockedKnifeSkinIds.includes(k.id); return `<button class="knife-choice ${this.save.data.knifeSkinId === k.id ? 'is-selected' : ''} ${unlocked ? '' : 'is-locked'}" data-knife="${k.id}" style="--knife:${k.color}" ${unlocked ? '' : 'disabled'}><i></i><span>${unlocked ? k.name : `LEVEL ${k.level}`}</span></button>` }).join('')}</div></div><div class="armory-footer"><button class="ghost-btn" data-action="armory-back">BACK TO QUEUE</button><button class="cta" data-action="deploy">DEPLOY // ${this.selectedMode.toUpperCase()} <span>→</span></button></div><small class="armory-controls">1 PRIMARY · 2 HANDGUN · 3 KNIFE · MOUSE WHEEL SWITCHES SLOTS · CTRL + SHIFT SLIDE · Q PING</small>` }
   private translate(): void { for (const el of this.root.querySelectorAll<HTMLElement>('[data-i18n]')) el.textContent = this.i18n.t(el.dataset.i18n!); document.title = this.i18n.t('game.title') }
   private setText(slot: string, value: string): void { const el = this.root.querySelector<HTMLElement>(`[data-slot="${slot}"]`); if (el && this.hudCache.get(slot) !== value) { el.textContent = value; this.hudCache.set(slot, value) } }
   private escape(value: string): string { return value.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c] ?? c)) }

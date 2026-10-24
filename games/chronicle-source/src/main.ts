@@ -1,6 +1,8 @@
 import './styles/main.css'
 import './styles/hud.css'
+import './styles/editor.css'
 import { Audio } from './engine/audio'
+import { Assets, CC0_GAME_MODELS } from './engine/assets'
 import { I18n, resolveLocale } from './engine/i18n'
 import { Input } from './engine/input'
 import { GameLoop } from './engine/loop'
@@ -25,12 +27,21 @@ async function boot(): Promise<void> {
     settings: patch => { save.update(patch); applySettings(); ui.refreshSettings(); if (patch.locale) i18n.set(patch.locale) },
   })
   ui.show('boot'); applySettings()
+  const assets = new Assets()
   let loaded = 0
-  const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(0.1 + loaded * 0.28); return value })
+  const bootTaskCount = 8
+  const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(Math.min(0.9, 0.08 + loaded / bootTaskCount * 0.82)); return value })
+  const optionalModel = (key: keyof typeof CC0_GAME_MODELS) => {
+    const model = CC0_GAME_MODELS[key]
+    return track(assets.gltfVerified(model.url, model.sha256, 'textures' in model ? model.textures : []).catch(error => { console.warn(`Optional model unavailable: ${model.url}`, error); return null }))
+  }
   ui.setBootProgress(0.08)
-  const [{ Game }, { Renderer }] = await Promise.all([track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready)])
+  const [{ Game }, { Renderer }, , assaultRifle, blaster, operator, mp5, sword] = await Promise.all([
+    track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready),
+    optionalModel('assaultRifle'), optionalModel('blaster'), optionalModel('operator'), optionalModel('mp5'), optionalModel('sword'),
+  ])
   const renderer = new Renderer(canvas, save.data.quality)
-  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) })
+  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { assaultRifle, blaster, operator, mp5, sword })
   game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
     step: dt => { if (input.consume('pause') && performance.now() - lockLostAt > 300) { if (game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } else if (game?.mode === 'paused') { game.resume(); ui.show('hud'); input.lockPointer() } } game?.step(dt) },

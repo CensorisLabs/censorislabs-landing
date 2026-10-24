@@ -1,6 +1,8 @@
+import type { CustomMap } from './custom-map'
+
 export type WeaponId = 'glock' | 'deagle' | 'mp5' | 'ak47' | 'm4a4' | 'awp' | 'knife'
 export type MatchType = 'ffa' | 'tdm' | 'royale' | 'training' | 'domination' | 'hardpoint' | 'ctf' | 'search'
-export type MatchSettings = { royalePlayers?: 30 | 50 | 60 | 100; teamSize?: 1 | 4 | 5 }
+export type MatchSettings = { royalePlayers?: 30 | 50 | 60 | 100; teamSize?: 1 | 4 | 5; customMap?: CustomMap }
 export type MapId = 'aurelian-forum' | 'sun-archive' | 'fjordgate' | 'stonewind-pass' | 'cedar-citadel' | 'marble-coast' | 'ember-market'
 export type BotDifficulty = 'recruit' | 'regular' | 'veteran' | 'elite'
 export type Rarity = 'Consumer' | 'Industrial' | 'Mil-Spec' | 'Restricted' | 'Classified' | 'Covert' | 'Legendary'

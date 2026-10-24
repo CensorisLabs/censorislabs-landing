@@ -107,25 +107,32 @@ export class Game {
     this.arenaRoot.clear()
     this.obstacles.length = 0
     const palettes: Record<MapId, { ground: string; stone: string; trim: string; fog: string; sky: string; name: string }> = {
-      'aurelian-forum': { ground: '#62594e', stone: '#95856e', trim: '#c69b55', fog: '#504942', sky: '#54473f', name: 'Aurelian Forum' },
-      'sun-archive': { ground: '#816a46', stone: '#c09a60', trim: '#4b9c91', fog: '#6a5a42', sky: '#766044', name: 'Sun Archive' },
-      fjordgate: { ground: '#40555b', stone: '#6a7a78', trim: '#c58b5e', fog: '#394b54', sky: '#344c57', name: 'Fjordgate' },
-      'stonewind-pass': { ground: '#69705e', stone: '#8a9275', trim: '#c8b16e', fog: '#555d54', sky: '#708078', name: 'Stonewind Pass' },
-      'cedar-citadel': { ground: '#596d5b', stone: '#88917a', trim: '#bb7650', fog: '#405348', sky: '#526b61', name: 'Cedar Citadel' },
-      'marble-coast': { ground: '#71808a', stone: '#b3b2a4', trim: '#4ba5a4', fog: '#5b707b', sky: '#647f91', name: 'Marble Coast' },
-      'ember-market': { ground: '#8b6549', stone: '#b48b5e', trim: '#d47649', fog: '#715342', sky: '#78604f', name: 'Ember Market' },
+      'aurelian-forum': { ground: '#4f8652', stone: '#d3c496', trim: '#d85d48', fog: '#a9d3e5', sky: '#78bce9', name: 'Aurelian Forum' },
+      'sun-archive': { ground: '#c49a50', stone: '#ecd18a', trim: '#2d9a91', fog: '#edc783', sky: '#7ec5ed', name: 'Sun Archive' },
+      fjordgate: { ground: '#537f83', stone: '#b5d3d4', trim: '#d57d51', fog: '#abd8e6', sky: '#75bbeb', name: 'Fjordgate' },
+      'stonewind-pass': { ground: '#668b56', stone: '#b1bd8a', trim: '#e6c56e', fog: '#b8d6d1', sky: '#78c1eb', name: 'Stonewind Pass' },
+      'cedar-citadel': { ground: '#558354', stone: '#c0bc8c', trim: '#bc6544', fog: '#a8d2c2', sky: '#80c6ed', name: 'Cedar Citadel' },
+      'marble-coast': { ground: '#59969a', stone: '#dfd9be', trim: '#337fb1', fog: '#b7d9e4', sky: '#76bbec', name: 'Marble Coast' },
+      'ember-market': { ground: '#b57e48', stone: '#e2b76b', trim: '#df6946', fog: '#e3bd87', sky: '#83c5ef', name: 'Ember Market' }
     }
     const palette = palettes[this.mapId]
     this.scene.background = new THREE.Color(palette.sky)
-    this.scene.fog = new THREE.Fog(palette.fog, 46, 115)
+    this.scene.fog = new THREE.Fog(palette.fog, 100, 210)
     const floor = this.block(new THREE.Vector3(64, 0.4, 64), new THREE.Vector3(0, -0.2, 0), '#ffffff')
     const groundTexture = this.voxelTexture(palette.ground, palette.stone)
     groundTexture.repeat.set(16, 16)
     const floorMaterial = floor.material as THREE.MeshStandardMaterial
     floorMaterial.map = groundTexture
     floorMaterial.needsUpdate = true
-    const grid = new THREE.GridHelper(64, 32, palette.trim, palette.stone); grid.position.y = 0.015; this.arenaRoot.add(grid)
-    for (const [x, z, sx, sz] of [[0, -31, 64, 1], [0, 31, 64, 1], [-31, 0, 1, 64], [31, 0, 1, 64]] as const) this.block(new THREE.Vector3(sx, 6, sz), new THREE.Vector3(x, 3, z), palette.stone)
+    const grid = new THREE.GridHelper(64, 8, '#557b72', '#668273'); grid.position.y = 0.012; this.arenaRoot.add(grid)
+    // Low broken perimeter walls leave the horizon open and create multiple arena entrances.
+    for (let lane = -24; lane <= 24; lane += 8) {
+      if (Math.abs(lane) < 5) continue
+      this.block(new THREE.Vector3(7, 4, 1.2), new THREE.Vector3(lane, 2, -30.4), palette.stone)
+      this.block(new THREE.Vector3(7, 4, 1.2), new THREE.Vector3(lane, 2, 30.4), palette.stone)
+      this.block(new THREE.Vector3(1.2, 4, 7), new THREE.Vector3(-30.4, 2, lane), palette.stone)
+      this.block(new THREE.Vector3(1.2, 4, 7), new THREE.Vector3(30.4, 2, lane), palette.stone)
+    }
     const cover = [[-12, -12, 4, 3, 2], [-7, -12, 3, 3, 2], [10, -8, 4, 3, 3], [15, -8, 3, 3, 2], [-15, 8, 3, 4, 2], [-9, 12, 5, 3, 2], [11, 12, 3, 5, 2], [3, 19, 4, 3, 2], [-20, -1, 3, 3, 3], [20, 0, 3, 3, 3], [0, 4, 3, 6, 2], [0, -4, 3, 6, 2]] as const
     for (const [x, z, sx, sz, sy] of cover) this.block(new THREE.Vector3(sx, sy, sz), new THREE.Vector3(x, sy / 2, z), palette.stone)
     if (this.mapId === 'stonewind-pass') { for (let i = 0; i < 7; i += 1) { const x = -24 + i * 8; this.block(new THREE.Vector3(4, 3 + i % 3, 5), new THREE.Vector3(x, 1.5 + i % 3 / 2, -14 + i % 2 * 26), palette.stone) } this.block(new THREE.Vector3(2, 8, 32), new THREE.Vector3(-20, 4, 0), palette.trim) }
@@ -151,6 +158,13 @@ export class Game {
         for (const x of [-18, -12, 12, 18]) this.block(new THREE.Vector3(1.2, 5.5, 1.2), new THREE.Vector3(x, 2.75, z), palette.stone)
 
       }
+    }
+    // Little landmark props add color and readable cover at the outer lanes of each historical map.
+    const propTone = this.mapId === 'fjordgate' || this.mapId === 'marble-coast' ? '#8d6748' : '#766044'
+    for (const [x, z] of [[-24, -12], [24, -12], [-24, 12], [24, 12]] as const) {
+      this.block(new THREE.Vector3(1.8, 1.2, 1.8), new THREE.Vector3(x, 0.6, z), propTone)
+      this.block(new THREE.Vector3(1.92, 0.16, 0.16), new THREE.Vector3(x, 0.62, z + 0.94), palette.trim)
+      this.block(new THREE.Vector3(0.16, 0.16, 1.92), new THREE.Vector3(x + 0.94, 0.62, z), palette.trim)
     }
     for (const [x, z, r] of [[-24, 21, 3], [23, 21, 3], [-23, -21, 3], [23, -21, 3]] as const) { const pad = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.16, 8), this.mat(palette.trim)); pad.position.set(x, 0.08, z); this.arenaRoot.add(pad) }
     const sign = this.block(new THREE.Vector3(13, 3.2, 0.18), new THREE.Vector3(0, 4.8, -30.4), '#282720'); const rune = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.12, 0.05), this.mat(palette.trim, true)); rune.position.set(0, 0.4, -0.12); sign.add(rune)
@@ -190,8 +204,20 @@ export class Game {
       const group = new THREE.Group(); group.userData.botId = id
       const skin = OPERATOR_SKINS[(id * 3) % OPERATOR_SKINS.length]!
       const head = this.voxelPart(group, [0.9, 0.9, 0.9], [0, 2.55, 0], skin.trim, 'head')
-      const hitMeshes = [head, this.voxelPart(group, [1.25, 1.35, 0.7], [0, 1.45, 0], skin.cloth, 'body'), this.voxelPart(group, [0.34, 1.25, 0.34], [-0.78, 1.42, 0], skin.accent, 'limb'), this.voxelPart(group, [0.34, 1.25, 0.34], [0.78, 1.42, 0], skin.accent, 'limb'), this.voxelPart(group, [0.42, 1.2, 0.42], [-0.38, 0.35, 0], '#202b38', 'limb'), this.voxelPart(group, [0.42, 1.2, 0.42], [0.38, 0.35, 0], '#202b38', 'limb')]
+      const hitMeshes = [head, this.voxelPart(group, [1.25, 1.35, 0.7], [0, 1.45, 0], skin.cloth, 'body'), this.voxelPart(group, [0.34, 1.25, 0.34], [-0.78, 1.42, 0], skin.accent, 'limb'), this.voxelPart(group, [0.34, 1.25, 0.34], [0.78, 1.42, 0], skin.accent, 'limb'), this.voxelPart(group, [0.42, 1.2, 0.42], [-0.38, 0.35, 0], skin.trim, 'limb'), this.voxelPart(group, [0.42, 1.2, 0.42], [0.38, 0.35, 0], skin.trim, 'limb')]
       const detail = (size: [number, number, number], pos: [number, number, number], color: string) => { const part = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color)); part.position.set(...pos); part.castShadow = false; group.add(part) }
+      // Contrasting face shield, chest rig, belt, shoulder plates and a back-mounted field pack.
+      detail([0.72, 0.22, 0.1], [0, 2.63, 0.49], skin.accent)
+      detail([0.78, 0.54, 0.12], [0, 1.58, 0.41], skin.trim)
+      detail([0.62, 0.16, 0.08], [0, 1.55, 0.49], skin.accent)
+      detail([1.08, 0.14, 0.74], [0, 1.0, 0], skin.accent)
+      detail([0.58, 0.72, 0.28], [0, 1.65, -0.48], skin.trim)
+      detail([0.44, 0.32, 0.1], [0, 1.2, 0.42], skin.cloth)
+      // Small original block carbine gives every bot a readable armed silhouette.
+      detail([0.18, 0.16, 0.72], [0.42, 1.26, 0.5], '#263c49')
+      detail([0.1, 0.1, 0.52], [0.42, 1.28, 1.08], skin.accent)
+      detail([0.14, 0.24, 0.18], [0.42, 1.08, 0.48], '#263c49')
+      detail([0.22, 0.12, 0.26], [0.42, 1.28, 0.18], skin.trim)
       // Eight handmade voxel silhouettes keep the unlocks readable at match distance.
       switch (skin.model) {
         case 0: detail([1.08, 0.26, 1.08], [0, 3.02, 0], skin.cloth); break // wrapped hood
@@ -210,13 +236,59 @@ export class Game {
     })
   }
   private updateViewModel(): void {
-    for (const part of this.viewParts) part.removeFromParent(); this.viewParts.length = 0
-    const weapon = WEAPONS[this.currentWeapon]; const selectedGun = this.currentWeapon === 'knife' ? undefined : armoryGun(this.currentWeapon === this.selectedHandgunBase() ? this.save.data.handgunGunId : this.save.data.primaryGunId); const knifeSkin = KNIFE_SKINS.find(item => item.id === this.save.data.knifeSkinId); const skin = skinFor(this.save.data.equipped[this.currentWeapon]); const primary = this.currentWeapon === 'knife' ? knifeSkin?.color ?? weapon.color : skin?.color ?? selectedGun?.color ?? weapon.color; const motif = skin?.pattern ?? knifeSkin?.id ?? 'plain'; const motifCode = [...motif].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7); const ornament = new THREE.Color(primary).lerp(new THREE.Color('#f2dfae'), 0.42).getStyle(); const operator = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
-    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.33, 0.72, 0.38), this.mat(operator.cloth)); sleeve.position.set(-0.27, -0.39, -0.53); sleeve.rotation.z = -0.22; this.weaponView.add(sleeve); this.viewParts.push(sleeve)
-    const glove = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.3), this.mat(operator.trim)); glove.position.set(-0.23, -0.68, -0.8); this.weaponView.add(glove); this.viewParts.push(glove)
-    const rightSleeve = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.76, 0.4), this.mat(operator.cloth)); rightSleeve.position.set(0.5, -0.5, -0.39); rightSleeve.rotation.z = 0.18; this.weaponView.add(rightSleeve); this.viewParts.push(rightSleeve)
-    const receiver = new THREE.Mesh(new THREE.BoxGeometry(this.currentWeapon === 'knife' ? 0.12 : 0.34, this.currentWeapon === 'knife' ? 0.18 : 0.22, this.currentWeapon === 'awp' ? 1.2 : 0.85), this.mat(primary)); receiver.position.set(0.35, -0.28, -0.65); receiver.rotation.x = 0.03; receiver.castShadow = true; this.weaponView.add(receiver); this.viewParts.push(receiver); for (let i = 0; i < 4; i += 1) { const width = 0.035 + ((motifCode >>> (i * 3)) & 3) * 0.012; const plate = new THREE.Mesh(new THREE.BoxGeometry(width, 0.034, 0.13 + (motifCode + i) % 3 * 0.035), this.mat(ornament, i === motifCode % 4)); plate.position.set(0.53 + width / 2, -0.26 + (i % 2) * 0.045, -0.42 - i * 0.11); this.weaponView.add(plate); this.viewParts.push(plate) }
-    if (this.currentWeapon === 'knife') { const blade = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.09, 0.75), this.mat(primary, true)); blade.position.set(0.25, -0.18, -1.08); blade.rotation.x = -0.18; this.weaponView.add(blade); this.viewParts.push(blade); const etch = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.018, 0.28), this.mat(ornament, true)); etch.position.set(0.25, -0.11, -1.12); etch.rotation.x = -0.18; this.weaponView.add(etch); this.viewParts.push(etch) } else { const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, this.currentWeapon === 'awp' ? 1.9 : 1.15), this.mat('#121a22')); barrel.position.set(0.35, -0.25, -1.18); this.weaponView.add(barrel); this.viewParts.push(barrel); const sight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.34), this.mat('#8cebe0', true)); sight.position.set(0.35, -0.1, -0.72); this.weaponView.add(sight); this.viewParts.push(sight); if (selectedGun && selectedGun.model % 3 !== 0) { const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1 + selectedGun.model % 3 * 0.035, 0.045, 0.35 + selectedGun.model % 4 * 0.1), this.mat(selectedGun.color)); rail.position.set(0.35, -0.095, -0.73); this.weaponView.add(rail); this.viewParts.push(rail); if (selectedGun.model % 2) { const stock = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.12, 0.32), this.mat(selectedGun.color)); stock.position.set(0.35, -0.3, -0.12); this.weaponView.add(stock); this.viewParts.push(stock) } } }
+    for (const part of this.viewParts) part.removeFromParent()
+    this.viewParts.length = 0
+    const weapon = WEAPONS[this.currentWeapon]
+    const selectedGun = this.currentWeapon === 'knife' ? undefined : armoryGun(this.currentWeapon === this.selectedHandgunBase() ? this.save.data.handgunGunId : this.save.data.primaryGunId)
+    const knifeSkin = KNIFE_SKINS.find(item => item.id === this.save.data.knifeSkinId)
+    const finish = skinFor(this.save.data.equipped[this.currentWeapon])
+    const primary = this.currentWeapon === 'knife' ? knifeSkin?.color ?? weapon.color : finish?.color ?? selectedGun?.color ?? weapon.color
+    const motif = finish?.pattern ?? knifeSkin?.id ?? 'plain'
+    const motifCode = [...motif].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7)
+    const ornament = new THREE.Color(primary).lerp(new THREE.Color('#f5deb0'), 0.48).getStyle()
+    const operator = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
+    const addBox = (size: [number, number, number], pos: [number, number, number], color: string, metal = false) => {
+      const part = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color, metal))
+      part.position.set(...pos); part.castShadow = true; this.weaponView.add(part); this.viewParts.push(part); return part
+    }
+    // Short sleeves and fitted gloves frame the weapon without hiding its silhouette.
+    const leftSleeve = addBox([0.23, 0.5, 0.22], [-0.28, -0.46, -0.34], operator.cloth); leftSleeve.rotation.z = -0.18
+    addBox([0.2, 0.15, 0.2], [-0.24, -0.69, -0.61], operator.trim)
+    const rightSleeve = addBox([0.24, 0.52, 0.24], [0.48, -0.51, -0.32], operator.cloth); rightSleeve.rotation.z = 0.16
+    addBox([0.22, 0.16, 0.24], [0.42, -0.47, -0.69], operator.trim)
+    if (this.currentWeapon === 'knife') {
+      addBox([0.12, 0.15, 0.38], [0.34, -0.48, -0.57], '#202832')
+      addBox([0.09, 0.12, 0.75], [0.34, -0.23, -0.98], primary, true)
+      addBox([0.1, 0.035, 0.28], [0.34, -0.15, -1.02], ornament, true)
+    } else {
+      const pistol = this.currentWeapon === 'glock' || this.currentWeapon === 'deagle'
+      const sniper = this.currentWeapon === 'awp'
+      const smg = this.currentWeapon === 'mp5'
+      const model = selectedGun?.model ?? 0
+      const receiverLength = pistol ? 0.54 : sniper ? 1.12 : smg ? 0.76 : 0.92
+      const receiverWidth = pistol ? 0.26 : 0.31 + model % 3 * 0.018
+      addBox([receiverWidth, pistol ? 0.17 : 0.22, receiverLength], [0.36, -0.35, -0.57], primary)
+      // Distinct pistol, compact SMG, long precision rifle and rifle proportions.
+      const barrelLength = pistol ? 0.38 : sniper ? 1.75 : smg ? 0.92 : 1.28
+      addBox([pistol ? 0.1 : 0.12, 0.1, barrelLength], [0.36, -0.31, -0.88 - barrelLength / 2], '#26313c')
+      addBox([pistol ? 0.15 : 0.2, 0.12, 0.12], [0.36, -0.31, -0.88 - barrelLength], '#121a23', true)
+      // The model index changes stock, handguard, magazine and optic outline across the armory.
+      if (!pistol && model % 4 !== 0) addBox([0.25 + model % 3 * 0.04, 0.13, model % 2 ? 0.5 : 0.34], [0.36, -0.35, -0.12], selectedGun?.color ?? primary)
+      if (model % 2 === 0 || !pistol) addBox([pistol ? 0.14 : 0.2, pistol ? 0.25 : 0.34, 0.17], [0.36, -0.58, -0.55], selectedGun?.color ?? primary)
+      addBox([0.16, pistol ? 0.1 : 0.12, 0.28], [0.36, -0.53, -0.35], '#293540')
+      if (sniper) {
+        const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.62, 8), this.mat('#27333c'))
+        scope.rotation.x = Math.PI / 2; scope.position.set(0.36, -0.17, -0.72); this.weaponView.add(scope); this.viewParts.push(scope)
+        addBox([0.23, 0.08, 0.08], [0.36, -0.22, -0.72], '#a9d7db', true)
+      } else {
+        addBox([0.12, 0.11, pistol ? 0.12 : 0.3], [0.36, -0.18, -0.62], model % 3 === 1 ? '#1e2932' : '#485965')
+      }
+      addBox([0.045, 0.035, 0.2], [0.36, -0.13, -0.85], ornament, true)
+      for (let i = 0; i < 3; i += 1) {
+        const width = 0.045 + ((motifCode >>> (i * 3)) & 3) * 0.012
+        addBox([width, 0.032, 0.12 + (motifCode + i) % 3 * 0.035], [0.36 + receiverWidth / 2 + width / 2, -0.31, -0.36 - i * 0.16], ornament, i === motifCode % 3)
+      }
+    }
   }
   private activeWeaponName(): string { if (this.currentWeapon === 'knife') return KNIFE_SKINS.find(s => s.id === this.save.data.knifeSkinId)?.name ?? 'Field Shard'; const id = this.activeSlot === 0 ? this.save.data.primaryGunId : this.save.data.handgunGunId; return armoryGun(id).name }
   private selectedPrimaryBase(): WeaponId { return armoryGun(this.save.data.primaryGunId).base }
@@ -533,7 +605,7 @@ export class Game {
   private mapName(): string { return HISTORIC_MAPS.find(map => map.id === this.mapId)?.name.toUpperCase() ?? 'AURELIAN FORUM' }
   private finish(phase: 'won' | 'lost'): void { if (this.run.phase !== 'playing') return; this.run.phase = phase; this.mode = 'ended'; this.input.unlockPointer(); const mvpBonus = phase === 'won' ? 300 : 0; const xp = Math.max(70, this.run.kills * 55 + this.run.headshots * 30 + (phase === 'won' ? 250 : 80) + mvpBonus); this.addXp(xp); this.save.update({ stats: { ...this.save.data.stats, matches: this.save.data.stats.matches + 1, wins: this.save.data.stats.wins + (phase === 'won' ? 1 : 0), shots: this.save.data.stats.shots + this.run.shots, hits: this.save.data.stats.hits + this.run.hits } }); this.hooks.end(this.snapshot()) }
   debugFinish(): void { this.run.kills = 12; this.finish('won') }
-  render(_alpha: number, frameSeconds: number): void { const look = this.mode === 'playing' ? this.input.takeLook() : { x: 0, y: 0 }; if (this.mode === 'playing') { this.yaw -= look.x; this.pitch = THREE.MathUtils.clamp(this.pitch - look.y, -1.35, 1.25) } const moveSpeed = Math.hypot(this.horizontalVelocity.x, this.horizontalVelocity.z); const running = this.mode === 'playing' && this.input.held('sprint') && moveSpeed > 1; this.sprintPose = THREE.MathUtils.damp(this.sprintPose, running ? 1 : 0, 9, frameSeconds); this.weaponSwayX = THREE.MathUtils.damp(this.weaponSwayX, THREE.MathUtils.clamp(-look.x * 0.32, -0.12, 0.12), 14, frameSeconds); this.weaponSwayY = THREE.MathUtils.damp(this.weaponSwayY, THREE.MathUtils.clamp(-look.y * 0.25, -0.1, 0.1), 14, frameSeconds); this.cameraInternal.position.set(this.player.root.position.x, this.player.root.position.y + 1.65 + this.cameraBobY + this.cameraLanding, this.player.root.position.z); this.cameraInternal.rotation.set(this.pitch + this.recoil * 0.16, this.yaw, 0); const viewFit = THREE.MathUtils.clamp(this.cameraInternal.aspect / 1.15, 0.52, 1); this.weaponView.position.set(this.weaponSwayX + this.horizontalVelocity.x * 0.005 + (1 - viewFit) * 0.28, this.cameraBobY * 0.55 - this.sprintPose * 0.24 - (1 - viewFit) * 0.16, -0.45 + this.recoil * 0.12 + this.sprintPose * 0.12); this.weaponView.rotation.set(-this.sprintPose * 0.38 + this.recoil * 0.7 + this.weaponSwayY, -this.weaponSwayX * 0.65, -this.horizontalVelocity.x * 0.012); this.weaponView.scale.setScalar((this.flash > 0 ? 0.81 : 0.78) * viewFit); this.lastFrame += frameSeconds; this.renderer.render(this.scene, this.cameraInternal) }
+  render(_alpha: number, frameSeconds: number): void { const look = this.mode === 'playing' ? this.input.takeLook() : { x: 0, y: 0 }; if (this.mode === 'playing') { this.yaw -= look.x; this.pitch = THREE.MathUtils.clamp(this.pitch - look.y, -1.35, 1.25) } const moveSpeed = Math.hypot(this.horizontalVelocity.x, this.horizontalVelocity.z); const running = this.mode === 'playing' && this.input.held('sprint') && moveSpeed > 1; this.sprintPose = THREE.MathUtils.damp(this.sprintPose, running ? 1 : 0, 9, frameSeconds); this.weaponSwayX = THREE.MathUtils.damp(this.weaponSwayX, THREE.MathUtils.clamp(-look.x * 0.32, -0.12, 0.12), 14, frameSeconds); this.weaponSwayY = THREE.MathUtils.damp(this.weaponSwayY, THREE.MathUtils.clamp(-look.y * 0.25, -0.1, 0.1), 14, frameSeconds); this.cameraInternal.position.set(this.player.root.position.x, this.player.root.position.y + 1.65 + this.cameraBobY + this.cameraLanding, this.player.root.position.z); this.cameraInternal.rotation.set(this.pitch + this.recoil * 0.16, this.yaw, 0); const viewFit = THREE.MathUtils.clamp(this.cameraInternal.aspect / 1.15, 0.52, 1); this.weaponView.position.set(0.08 + this.weaponSwayX + this.horizontalVelocity.x * 0.004 + (1 - viewFit) * 0.22, -0.04 + this.cameraBobY * 0.4 - this.sprintPose * 0.2 - (1 - viewFit) * 0.1, -0.65 + this.recoil * 0.1 + this.sprintPose * 0.1); this.weaponView.rotation.set(-this.sprintPose * 0.38 + this.recoil * 0.7 + this.weaponSwayY, -this.weaponSwayX * 0.65, -this.horizontalVelocity.x * 0.012); this.weaponView.scale.setScalar((this.flash > 0 ? 0.68 : 0.66) * viewFit); this.lastFrame += frameSeconds; this.renderer.render(this.scene, this.cameraInternal) }
   snapshot(): GameSnapshot { return { ...this.run, matchType: this.matchType, mapId: this.mapId, blueScore: this.blueScore, redScore: this.redScore, aliveBots: this.bots.filter(bot => bot.alive && bot.id < this.activeBotCount).length, accuracy: this.run.shots ? this.run.hits / this.run.shots : 0, ammo: this.ammo, reload: this.reloadLeft, weapon: this.currentWeapon, weaponName: this.activeWeaponName(), aimed: this.input.held('ads'), level: this.save.data.level, xp: this.save.data.xp, nextXp: xpForLevel(this.save.data.level), credits: this.save.data.credits, playerX: this.player.root.position.x, playerZ: this.player.root.position.z, yaw: this.yaw, objective: this.objective, scoreboard: this.scoreboard() } }
   project(world: THREE.Vector3): { x: number; y: number } { const v = world.clone().project(this.cameraInternal); return { x: ((v.x + 1) / 2) * this.renderer.canvas.clientWidth, y: ((1 - v.y) / 2) * this.renderer.canvas.clientHeight } }
 }

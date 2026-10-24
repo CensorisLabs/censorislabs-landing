@@ -18,7 +18,7 @@ async function boot(): Promise<void> {
   let lockLostAt = 0
   const applySettings = () => { input.sensitivity = save.data.sensitivity; input.invertY = save.data.invertY; audio.setVolumes(save.data.musicVolume, save.data.sfxVolume, save.data.muted); if (game) { game.setQuality(save.data.quality); game.setFov(save.data.fov) } }
   const ui = new Ui(i18n, save, audio, input, {
-    play: (mode: MatchType, map: MapId, difficulty: BotDifficulty) => { if (!game) return; audio.unlock(); audio.startMusic(); game.start(mode, map, difficulty); ui.show('hud'); input.lockPointer() },
+    play: (mode: MatchType, map: MapId, difficulty: BotDifficulty, settings) => { if (!game) return; audio.unlock(); audio.startMusic(); game.start(mode, map, difficulty, settings); ui.show('hud'); input.lockPointer() },
     resume: () => { game?.resume(); ui.show('hud'); input.lockPointer() },
     restart: () => { if (!game) return; audio.unlock(); game.start(); ui.show('hud'); input.lockPointer() },
     quit: () => { game?.toTitle(); input.unlockPointer(); ui.show('title') },

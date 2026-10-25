@@ -10,12 +10,36 @@ import { validateCustomMap, type CustomMap } from './custom-map'
 import type { KchMapData, KchSpawn } from './kch-map'
 
 export type Mode = 'attract' | 'playing' | 'paused' | 'ended'
-export type GameSnapshot = { phase: 'playing' | 'won' | 'lost'; matchType: MatchType; crosshairBloom: number; grenades: number; spectating: boolean; mapId: MapId; mapName: string; objective: string; timeLeft: number; elapsed: number; score: number; kills: number; deaths: number; headshots: number; shots: number; hits: number; accuracy: number; health: number; armor: number; ammo: number; magazine: number; weapon: WeaponId; weaponName: string; aimed: boolean; reload: number; level: number; xp: number; nextXp: number; credits: number; blueScore: number; redScore: number; round: number; roundPhase: 'buy' | 'live' | 'planted' | 'post'; spawnProtection: number; aliveBots: number; stormRadius: number; playerX: number; playerZ: number; yaw: number; scoreboard: { name: string; kills: number; deaths: number; you?: boolean; team?: 'blue' | 'red' }[] }
+export type GameSnapshot = { phase: 'playing' | 'won' | 'lost'; xpEarned: number; matchType: MatchType; crosshairBloom: number; grenades: number; spectating: boolean; mapId: MapId; mapName: string; objective: string; timeLeft: number; elapsed: number; score: number; kills: number; deaths: number; headshots: number; shots: number; hits: number; accuracy: number; health: number; armor: number; ammo: number; magazine: number; weapon: WeaponId; weaponName: string; aimed: boolean; reload: number; level: number; xp: number; nextXp: number; credits: number; blueScore: number; redScore: number; round: number; roundPhase: 'buy' | 'live' | 'planted' | 'post'; spawnProtection: number; aliveBots: number; stormRadius: number; playerX: number; playerZ: number; yaw: number; scoreboard: { name: string; kills: number; deaths: number; you?: boolean; team?: 'blue' | 'red' }[] }
 export type GameHooks = { popup(text: string, screen: { x: number; y: number }, kind: 'score' | 'hurt'): void; hitmarker(headshot: boolean): void; hurt(): void; killfeed(text: string, headshot: boolean): void; banner(text: string): void; end(run: GameSnapshot): void }
 type BotAnimation = { mixer: THREE.AnimationMixer; idle: THREE.AnimationAction; move: THREE.AnimationAction; active: THREE.AnimationAction }
-type Bot = { id: number; name: string; style: number; root: THREE.Group; hitMeshes: THREE.Object3D[]; teamMarker: THREE.Mesh; health: number; nextShot: number; respawnAt: number; spawn: THREE.Vector3; phase: number; kills: number; deaths: number; alive: boolean; team: 'blue' | 'red'; stormTime: number; spawnProtectedUntil: number; animation?: BotAnimation }
+type Bot = { id: number; name: string; style: number; root: THREE.Group; hitMeshes: THREE.Object3D[]; teamMarker: THREE.Mesh; health: number; nextShot: number; respawnAt: number; spawn: THREE.Vector3; phase: number; visualPhase: number; walking: boolean; kills: number; deaths: number; alive: boolean; team: 'blue' | 'red'; stormTime: number; spawnProtectedUntil: number; animation?: BotAnimation }
+function colorizeKchOperator(mesh: THREE.SkinnedMesh, cloth: string): void {
+  const joints = mesh.geometry.getAttribute('skinIndex')
+  const weights = mesh.geometry.getAttribute('skinWeight')
+  if (!joints || !weights) return
+  const geometry = mesh.geometry.clone()
+  const boneColors = new Map<string, THREE.Color>([
+    ['head', new THREE.Color('#cdb390')], ['body2', new THREE.Color('#26313e')],
+    ['leftArm1', new THREE.Color(cloth)], ['rightArm1', new THREE.Color(cloth)],
+    ['leftArm2', new THREE.Color('#c7cdd0')], ['rightArm2', new THREE.Color('#c7cdd0')],
+    ['leftLeg1', new THREE.Color('#202833')], ['rightLeg1', new THREE.Color('#202833')],
+    ['leftLeg2', new THREE.Color('#a9b0b4')], ['rightLeg2', new THREE.Color('#a9b0b4')],
+  ])
+  const colors = new Float32Array(joints.count * 3)
+  for (let vertex = 0; vertex < joints.count; vertex += 1) {
+    const influence = [weights.getX(vertex), weights.getY(vertex), weights.getZ(vertex), weights.getW(vertex)]
+    const index = [joints.getX(vertex), joints.getY(vertex), joints.getZ(vertex), joints.getW(vertex)]
+    const dominant = index[influence.indexOf(Math.max(...influence))] ?? 0
+    const boneName = mesh.skeleton.bones[dominant]?.name ?? ''
+    const color = boneColors.get(boneName) ?? new THREE.Color('#bfc6ca')
+    color.toArray(colors, vertex * 3)
+  }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  mesh.geometry = geometry
+}
 const SEARCH_ROUND = { buySeconds: 15, liveSeconds: 115, fuseSeconds: 45, postSeconds: 5, spawnShieldSeconds: 3, halfRounds: 12, winsRequired: 13 } as const
-export type GameModels = { player: GLTF | null; arms: GLTF | null; ar9: GLTF | null; scar: GLTF | null; lar: GLTF | null; m60: GLTF | null; mac10: GLTF | null; revolver: GLTF | null; shark: GLTF | null; vita: GLTF | null; weatie: GLTF | null; bayonet: GLTF | null; tomahawk: GLTF | null; kchMaps: Partial<Record<MapId, KchMapData>> }
+export type GameModels = { player: GLTF | null; arms: GLTF | null; ar9: GLTF | null; scar: GLTF | null; lar: GLTF | null; m60: GLTF | null; mac10: GLTF | null; revolver: GLTF | null; shark: GLTF | null; vita: GLTF | null; weatie: GLTF | null; bayonet: GLTF | null; tomahawk: GLTF | null; modelTexture: THREE.Texture | null; kchMapTexture: THREE.Texture | null; kchMaps: Partial<Record<MapId, KchMapData>> }
 
 type MutableRun = GameSnapshot & { phase: 'playing' | 'won' | 'lost' }
 
@@ -30,6 +54,14 @@ export class Game {
   private readonly raycaster = new THREE.Raycaster()
   private readonly visionRaycaster = new THREE.Raycaster()
   private readonly bots: Bot[] = []
+  private readonly previousPlayerPosition = new THREE.Vector3()
+  private readonly interpolatedPlayerPosition = new THREE.Vector3()
+  private readonly previousBotPositions = new Map<Bot, THREE.Vector3>()
+  private readonly renderBotPositions = new Map<Bot, THREE.Vector3>()
+  private readonly previousBotYaw = new Map<Bot, number>()
+  private readonly renderBotYaw = new Map<Bot, number>()
+  private previousCameraBobY = 0
+  private previousCameraLanding = 0
   private readonly hitTargets: THREE.Object3D[] = []
   private readonly obstacles: THREE.Mesh[] = []
   private readonly relics: { mesh: THREE.Mesh; at: THREE.Vector3 }[] = []
@@ -44,6 +76,7 @@ export class Game {
   private kchCellScale = 1
   private kchCenterX = 0
   private kchCenterZ = 0
+  private kchPlayerYaw = 0
   private kchColumns = new Map<string, Array<{ bottom: number; top: number }>>()
   private kchSpawnTeams: { first: THREE.Vector3[]; second: THREE.Vector3[] } = { first: [], second: [] }
   private activeKchMap: KchMapData | null = null
@@ -66,16 +99,22 @@ export class Game {
   private activeSlot: 0 | 1 | 2 = 0
   private slideLeft = 0
   private slideDirection = new THREE.Vector3()
+  private dashDirection = new THREE.Vector3()
+  private dashLeft = 0
+  private dashCooldownLeft = 0
   private bobPhase = 0
   private readonly horizontalVelocity = new THREE.Vector3()
   private cameraBobY = 0
   private cameraLanding = 0
   private weaponSwayX = 0
   private weaponSwayY = 0
+  private readonly viewSpringPosition = new THREE.Vector3(0.08, -0.04, -0.65)
+  private readonly viewSpringVelocity = new THREE.Vector3()
+  private strideTimer = 0
   private sprintPose = 0
   private matchType: MatchType = 'ffa'
   private difficulty: BotDifficulty = 'regular'
-  private mapId: MapId = 'antfarm'
+  private mapId: MapId = 'dunes'
   private activeCustomMap: CustomMap | null = null
   private blueScore = 0
   private redScore = 0
@@ -113,10 +152,10 @@ export class Game {
   private lobbyAnimation: THREE.AnimationMixer | null = null
   private readonly models: GameModels
 
-  constructor(private readonly renderer: Renderer, private readonly input: Input, private readonly audio: Audio, save: SaveStore, private readonly hooks: GameHooks, models: GameModels = { player: null, arms: null, ar9: null, scar: null, lar: null, m60: null, mac10: null, revolver: null, shark: null, vita: null, weatie: null, bayonet: null, tomahawk: null, kchMaps: {} }) {
+  constructor(private readonly renderer: Renderer, private readonly input: Input, private readonly audio: Audio, save: SaveStore, private readonly hooks: GameHooks, models: GameModels = { player: null, arms: null, ar9: null, scar: null, lar: null, m60: null, mac10: null, revolver: null, shark: null, vita: null, weatie: null, bayonet: null, tomahawk: null, modelTexture: null, kchMapTexture: null, kchMaps: {} }) {
     this.save = save
     this.models = models
-    this.scene.background = new THREE.Color('#07111c')
+    this.scene.background = new THREE.Color('#31579f')
     this.scene.fog = null
     this.cameraInternal.rotation.order = 'YXZ'
     this.cameraInternal.add(this.weaponView)
@@ -134,12 +173,15 @@ export class Game {
     this.buildLighting()
     this.buildArena()
     this.buildBots()
+    this.resetInterpolation()
     this.buildLobbyPreview()
+    this.arenaRoot.visible = false
+    this.bots.forEach(bot => { bot.root.visible = false })
     this.run = this.newRun()
     this.updateViewModel()
   }
   get camera(): THREE.PerspectiveCamera { return this.cameraInternal }
-  private newRun(): MutableRun { const w = WEAPONS[this.currentWeapon]; return { phase: 'playing', matchType: this.matchType, mapId: this.mapId, mapName: this.mapName(), objective: this.objective, timeLeft: this.matchType === 'royale' ? 360 : this.matchType === 'training' ? 0 : 240, elapsed: 0, score: 0, kills: 0, deaths: 0, headshots: 0, shots: 0, hits: 0, accuracy: 0, health: 100, armor: 50, ammo: w.magazine, magazine: w.magazine, weapon: this.currentWeapon, weaponName: w.name, aimed: false, reload: 0, level: this.save.data.level, xp: this.save.data.xp, nextXp: xpForLevel(this.save.data.level), credits: this.save.data.credits, blueScore: 0, redScore: 0, round: 1, roundPhase: 'live', spawnProtection: 0, aliveBots: 0, stormRadius: 30, playerX: 0, playerZ: 0, yaw: 0, scoreboard: [], crosshairBloom: 3, grenades: 0, spectating: false } }
+  private newRun(): MutableRun { const w = WEAPONS[this.currentWeapon]; return { phase: 'playing', matchType: this.matchType, mapId: this.mapId, mapName: this.mapName(), objective: this.objective, timeLeft: this.matchType === 'royale' ? 360 : this.matchType === 'training' ? 0 : 240, elapsed: 0, score: 0, kills: 0, deaths: 0, headshots: 0, shots: 0, hits: 0, accuracy: 0, xpEarned: 0, health: 100, armor: 50, ammo: w.magazine, magazine: w.magazine, weapon: this.currentWeapon, weaponName: w.name, aimed: false, reload: 0, level: this.save.data.level, xp: this.save.data.xp, nextXp: xpForLevel(this.save.data.level), credits: this.save.data.credits, blueScore: 0, redScore: 0, round: 1, roundPhase: 'live', spawnProtection: 0, aliveBots: 0, stormRadius: 30, playerX: 0, playerZ: 0, yaw: 0, scoreboard: [], crosshairBloom: 3, grenades: 0, spectating: false } }
   private buildLighting(): void { this.scene.add(new THREE.HemisphereLight('#e5f4ff', '#72815b', 1.0)); const sun = new THREE.DirectionalLight('#fff2d0', 1.05); sun.position.set(-20, 34, 12); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); this.scene.add(sun) }
   private mat(color: string, emissive = false): THREE.MeshLambertMaterial { return new THREE.MeshLambertMaterial({ color, emissive: emissive ? color : '#000000', emissiveIntensity: emissive ? 0.8 : 0 }) }
   private block(size: THREE.Vector3, position: THREE.Vector3, color: string, emissive = false, rotation = 0): THREE.Mesh { const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), this.mat(color, emissive)); mesh.position.copy(position); mesh.rotation.y = rotation; mesh.castShadow = true; mesh.receiveShadow = true; mesh.userData.colliderSize = size.clone(); mesh.userData.surfaceType = 'concrete'; this.arenaRoot.add(mesh); this.obstacles.push(mesh); return mesh }
@@ -228,7 +270,7 @@ export class Game {
     const width = maxX - minX + 1, depth = maxZ - minZ + 1
     this.kchCellScale = Math.min(1.2, 52 / Math.max(width, depth))
     this.kchCenterX = xCenter; this.kchCenterZ = zCenter
-    const palettes: Record<MapId, string[]> = {
+    const palettes: Partial<Record<MapId, string[]>> = {
       antfarm: ['#c79a4b', '#e4c777', '#82785d', '#6f9271', '#dbb970', '#566e72', '#f0dc9b', '#a87a50'],
       schism: ['#73838e', '#b98658', '#c3b27f', '#4f6974', '#d6c6a5', '#9b654c', '#647d62', '#b7a078'],
       labs: ['#4b9697', '#b9b7aa', '#4b6575', '#d3b764', '#83939a', '#476d5a', '#e4d6b2', '#a46a54'],
@@ -237,8 +279,8 @@ export class Game {
       skyfel: ['#5d91b5', '#d1b777', '#6c798a', '#e1d5bf', '#508c8b', '#a86852', '#879c72', '#c5a46e'],
       dethroned: ['#70815f', '#c7a260', '#837b70', '#a95e4d', '#526f70', '#d6c9a3', '#8f9d78', '#b17d4f'],
     }
-    const palette = palettes[this.mapId]
-    const grouped = new Map<string, Array<{ x: number; y: number; z: number }>>()
+    const palette = palettes[this.mapId] ?? palettes.dunes!
+    const grouped = new Map<string, { blocks: Array<{ x: number; y: number; z: number }>; texture?: number; color?: string }>()
     const fenceEdges: [Array<{ x: number; y: number; z: number }>, Array<{ x: number; y: number; z: number }>, Array<{ x: number; y: number; z: number }>] = [[], [], []]
     const fenceEdgeKeys = new Set<string>()
     const addFenceEdge = (axis: 0 | 1 | 2, x: number, y: number, z: number) => {
@@ -258,10 +300,14 @@ export class Game {
         for (const dx of [-0.5, 0.5]) for (const dz of [-0.5, 0.5]) addFenceEdge(1, block.x + dx, block.y, block.z + dz)
         for (const dx of [-0.5, 0.5]) for (const dy of [-0.5, 0.5]) addFenceEdge(2, block.x + dx, block.y + dy, block.z)
       } else {
-        const color = blockColors[block.texture] ?? palette[Math.abs(block.texture) % palette.length]!
-        const blocks = grouped.get(color) ?? []
-        blocks.push({ x, y, z })
-        grouped.set(color, blocks)
+        const color = blockColors[block.texture]
+        const hasAtlasTile = !!this.models.kchMapTexture && block.texture >= 0 && block.texture < 256
+        const key = color ? `color:${color}` : hasAtlasTile ? `texture:${block.texture}` : `color:${palette[Math.abs(block.texture) % palette.length]!}`
+        const group = grouped.get(key) ?? (color || !hasAtlasTile
+          ? { blocks: [], color: color ?? palette[Math.abs(block.texture) % palette.length]! }
+          : { blocks: [], texture: block.texture })
+        group.blocks.push({ x, y, z })
+        grouped.set(key, group)
       }
       const key = `${block.x},${block.z}`
       const column = this.kchColumns.get(key) ?? []
@@ -270,19 +316,40 @@ export class Game {
     }
     const geometry = new THREE.BoxGeometry(1, 1, 1)
     const dummy = new THREE.Object3D()
-    for (const [color, blocks] of grouped) {
-      if (!blocks.length) continue
-      const material = this.mat(color)
-      const mesh = new THREE.InstancedMesh(geometry, material, blocks.length)
-      mesh.name = `KCH ${data.mapName} voxel material ${color}`
+    const atlasGeometry = (texture: number): THREE.BufferGeometry => {
+      const tile = geometry.clone()
+      const uv = tile.getAttribute('uv')
+      const column = texture % 16
+      const row = Math.floor(texture / 16) % 16
+      const inset = 0.5 / 256
+      const u0 = column / 16 + inset, u1 = (column + 1) / 16 - inset
+      const v0 = row / 16 + inset, v1 = (row + 1) / 16 - inset
+      for (let index = 0; index < uv.count; index += 1) {
+        const u = uv.getX(index), v = uv.getY(index)
+        uv.setXY(index, u0 + u * (u1 - u0), v0 + v * (v1 - v0))
+      }
+      uv.needsUpdate = true
+      return tile
+    }
+    let usesBaseGeometry = false
+    for (const [key, group] of grouped) {
+      if (!group.blocks.length) continue
+      const color = group.color
+      const meshGeometry = group.texture === undefined ? geometry : atlasGeometry(group.texture)
+      if (meshGeometry === geometry) usesBaseGeometry = true
+      const material = group.texture !== undefined && this.models.kchMapTexture
+        ? new THREE.MeshLambertMaterial({ map: this.models.kchMapTexture, emissiveMap: this.models.kchMapTexture, emissive: '#8c8c8c', emissiveIntensity: 1.35, color: '#ffffff' })
+        : this.mat(color ?? '#c8c7c2')
+      const mesh = new THREE.InstancedMesh(meshGeometry, material, group.blocks.length)
+      mesh.name = `KCH ${data.mapName} voxel ${key}`
       mesh.userData.surfaceType = /dune|sand|antfarm/i.test(data.mapName) ? 'gravel' : /lab|collision/i.test(data.mapName) ? 'metal' : 'concrete'
       mesh.castShadow = false; mesh.receiveShadow = true
-      blocks.forEach((block, index) => { dummy.position.set(block.x, block.y, block.z); dummy.scale.setScalar(this.kchCellScale); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix) })
+      group.blocks.forEach((block, index) => { dummy.position.set(block.x, block.y, block.z); dummy.scale.setScalar(this.kchCellScale); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix) })
       mesh.instanceMatrix.needsUpdate = true
       mesh.computeBoundingSphere()
       this.arenaRoot.add(mesh)
     }
-    geometry.dispose()
+    if (!usesBaseGeometry) geometry.dispose()
     const edgeGeometries = [new THREE.BoxGeometry(1, 0.055, 0.055), new THREE.BoxGeometry(0.055, 1, 0.055), new THREE.BoxGeometry(0.055, 0.055, 1)]
     for (let axis = 0; axis < fenceEdges.length; axis += 1) {
       const edges = fenceEdges[axis]!
@@ -297,8 +364,20 @@ export class Game {
       })
       mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); this.arenaRoot.add(mesh)
     }
-    const sourceSpawns = (list: KchSpawn[]) => list.filter(spawn => spawn?.pos?.length === 3 && spawn.pos.every(Number.isFinite)).map(spawn => new THREE.Vector3((spawn.pos[0] - xCenter) * this.kchCellScale, (spawn.pos[1] - yOrigin) * this.kchCellScale, (spawn.pos[2] - zCenter) * this.kchCellScale))
-    this.kchSpawnTeams = { first: sourceSpawns(data.spawnPlaces?.firstTeam ?? []), second: sourceSpawns(data.spawnPlaces?.secondTeam ?? []) }
+    const sourceSpawnRecords = (list: KchSpawn[]) => list.filter(spawn => spawn?.pos?.length === 3 && spawn.pos.every(Number.isFinite)).map(spawn => ({
+      point: new THREE.Vector3((spawn.pos[0] - xCenter) * this.kchCellScale, (spawn.pos[1] - yOrigin) * this.kchCellScale, (spawn.pos[2] - zCenter) * this.kchCellScale),
+      yaw: Number.isFinite(spawn.rotation?.[1]) ? spawn.rotation[1] : 0,
+    }))
+    let firstRecords = sourceSpawnRecords(data.spawnPlaces?.firstTeam ?? [])
+    let secondRecords = sourceSpawnRecords(data.spawnPlaces?.secondTeam ?? [])
+    if (!firstRecords.length && secondRecords.length > 1) { firstRecords = secondRecords.filter((_, index) => index % 2 === 0); secondRecords = secondRecords.filter((_, index) => index % 2 === 1) }
+    if (!firstRecords.length && secondRecords.length) firstRecords = secondRecords.map(record => ({ point: record.point.clone(), yaw: record.yaw }))
+    if (!secondRecords.length && firstRecords.length > 1) { secondRecords = firstRecords.filter((_, index) => index % 2 === 1); firstRecords = firstRecords.filter((_, index) => index % 2 === 0) }
+    if (!secondRecords.length && firstRecords.length) secondRecords = firstRecords.map(record => ({ point: record.point.clone(), yaw: record.yaw }))
+    const firstSpawns = firstRecords.map(record => record.point)
+    const secondSpawns = secondRecords.map(record => record.point)
+    this.kchSpawnTeams = { first: firstSpawns, second: secondSpawns }
+    this.kchPlayerYaw = firstRecords[this.centralSpawnIndex(firstSpawns)]?.yaw ?? 0
     this.activeKchMap = data
     const mean = (points: THREE.Vector3[], fallback: THREE.Vector3) => points.length ? points.reduce((sum, point) => sum.add(point), new THREE.Vector3()).multiplyScalar(1 / points.length) : fallback
     const first = mean(this.kchSpawnTeams.first, new THREE.Vector3(-width * this.kchCellScale * 0.35, 0, 0))
@@ -308,7 +387,7 @@ export class Game {
     this.objectivePoints[0]!.copy(center.clone().addScaledVector(axis, -0.2))
     this.objectivePoints[1]!.copy(center)
     this.objectivePoints[2]!.copy(center.clone().addScaledVector(axis, 0.2))
-    this.scene.background = new THREE.Color(this.mapId === 'labs' ? '#87c9d8' : this.mapId === 'dunes' || this.mapId === 'antfarm' ? '#83c3ec' : '#73bce9')
+    this.scene.background = new THREE.Color(data.skyboxColor && /^#[0-9a-f]{6}$/i.test(data.skyboxColor) ? data.skyboxColor : this.mapId === 'labs' ? '#87c9d8' : this.mapId === 'dunes' || this.mapId === 'antfarm' ? '#83c3ec' : '#73bce9')
   }
   private buildFallbackArena(terrain: string): void {
     this.activeKchMap = null; this.kchColumns.clear(); this.kchSpawnTeams = { first: [], second: [] }
@@ -320,7 +399,7 @@ export class Game {
   }
   private buildArena(): void {
     this.relics.length = 0
-    this.arenaRoot.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.InstancedMesh) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => { if ('map' in material && material.map) material.map.dispose(); material.dispose() }) } })
+    this.arenaRoot.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.InstancedMesh) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => { if ('map' in material && material.map && material.map !== this.models.kchMapTexture) material.map.dispose(); material.dispose() }) } })
     this.arenaRoot.clear(); this.obstacles.length = 0; this.kchColumns.clear(); this.activeKchMap = null
     const mapInfo = HISTORIC_MAPS.find(map => map.id === this.mapId)
     const terrain = mapInfo?.terrain ?? '#b7aa88'
@@ -506,6 +585,7 @@ export class Game {
           const cloneMaterial = (material: THREE.Material) => {
             const copy = material.clone()
             if ('color' in copy && copy.color instanceof THREE.Color) copy.color.lerp(tint, 0.16)
+            if (this.models.modelTexture && 'map' in copy) { (copy as THREE.MeshStandardMaterial).map = this.models.modelTexture; copy.needsUpdate = true }
             return copy
           }
           object.material = Array.isArray(object.material) ? object.material.map(cloneMaterial) : cloneMaterial(object.material)
@@ -520,41 +600,88 @@ export class Game {
           animation = { mixer, idle, move, active: idle }
         }
       }
-      group.scale.setScalar(0.66); group.position.set(x, 0, z); this.scene.add(group)
+      // Keep the arena operators at human scale. The fallback block rig reaches
+      // 3.4 world units and the imported rig is normalized to 3.2, so 0.54
+      // keeps both silhouettes around 1.8 m instead of towering over the map.
+      group.scale.setScalar(0.54); group.position.set(x, 0, z); this.scene.add(group)
       const profiles = ['MICA', 'HOLLOW', 'TUNDRA', 'RUST', 'KITE', 'MALLOW', 'QUARRY', 'WISP', 'TALLOW', 'CROW', 'SABLE', 'BRAMBLE', 'OCHRE', 'NORTH', 'FLINT', 'REED', 'CIRRUS', 'CLOVE', 'BASALT', 'LARK', 'MERCURY', 'PIPER', 'CINDER', 'WREN']
-      const bot: Bot = { id, name: profiles[id]!, style: id % 4, root: group, hitMeshes, teamMarker, health: 100, nextShot: 1 + id * 0.4, respawnAt: 0, spawn: new THREE.Vector3(x, 0, z), phase: id * 1.7, kills: 0, deaths: 0, alive: true, team: 'red', stormTime: 0, spawnProtectedUntil: 0, animation }
+      const bot: Bot = { id, name: profiles[id]!, style: id % 4, root: group, hitMeshes, teamMarker, health: 100, nextShot: 1 + id * 0.4, respawnAt: 0, spawn: new THREE.Vector3(x, 0, z), phase: id * 1.7, visualPhase: id * 1.7, walking: false, kills: 0, deaths: 0, alive: true, team: 'red', stormTime: 0, spawnProtectedUntil: 0, animation }
       this.bots.push(bot); this.hitTargets.push(...hitMeshes)
     })
   }
   private buildLobbyPreview(): void {
     if (!this.models.player) return
     const stage = new THREE.Group()
-    stage.position.set(4.8, 0, -7.4)
-    const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.34, 2.35), this.mat('#202a31'))
-    plinth.position.y = 0.17; stage.add(plinth)
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(2.74, 0.07, 2.39), this.mat('#2db7ac', true))
-    trim.position.y = 0.36; stage.add(trim)
+    stage.position.set(0, -0.3, -4.9)
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.78, 32), new THREE.MeshBasicMaterial({ color: '#172f69', transparent: true, opacity: 0.38, depthWrite: false }))
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.025; shadow.scale.set(1.5, 0.58, 1); stage.add(shadow)
     const model = cloneSkinnedScene(this.models.player.scene)
+    // The KCH operator's face points down local +Z; turn it toward the lobby camera.
+    model.rotation.y = Math.PI
     model.updateMatrixWorld(true)
     const bounds = new THREE.Box3().setFromObject(model)
     const size = bounds.getSize(new THREE.Vector3())
-    const scale = 2.2 / Math.max(0.001, size.y)
+    // Match the reference lobby framing instead of letting the showcase model
+    // dominate the narrow game panel.
+    const scale = 3.45 / Math.max(0.001, size.y)
     const skin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
     model.scale.setScalar(scale)
-    model.position.set(-(bounds.min.x + bounds.max.x) * scale / 2, 0.39 - bounds.min.y * scale, -(bounds.min.z + bounds.max.z) * scale / 2)
+    model.position.set(-(bounds.min.x + bounds.max.x) * scale / 2, 0.045 - bounds.min.y * scale, -(bounds.min.z + bounds.max.z) * scale / 2)
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
+      if (object instanceof THREE.SkinnedMesh) colorizeKchOperator(object, skin.cloth)
       object.castShadow = false; object.receiveShadow = false
       const tint = new THREE.Color(skin.cloth)
       const colorize = (material: THREE.Material) => {
         const copy = material.clone()
-        if ('color' in copy && copy.color instanceof THREE.Color) { copy.userData.lobbyBaseColor = copy.color.clone(); copy.color.lerp(tint, 0.22) }
+        if (copy instanceof THREE.MeshStandardMaterial) {
+          copy.userData.lobbyBaseColor = new THREE.Color('#ffffff')
+          copy.color.set('#ffffff')
+          copy.vertexColors = object.geometry.hasAttribute('color')
+          copy.map = null
+        } else if ('color' in copy && copy.color instanceof THREE.Color) { copy.userData.lobbyBaseColor = copy.color.clone(); copy.color.lerp(tint, 0.08) }
+        if (this.models.modelTexture && 'map' in copy) { (copy as THREE.MeshStandardMaterial).map = this.models.modelTexture; copy.needsUpdate = true }
         return copy
       }
       object.material = Array.isArray(object.material) ? object.material.map(colorize) : colorize(object.material)
     })
+    const headBone = model.getObjectByName('head')
+    if (headBone) {
+      const face = new THREE.Group()
+      face.position.set(0, 0.1, 0.29)
+      const eyeMaterial = new THREE.MeshBasicMaterial({ color: '#121820' })
+      for (const x of [-0.085, 0.085]) {
+        const eye = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.075, 0.035), eyeMaterial)
+        eye.position.set(x, 0, 0); face.add(eye)
+      }
+      const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.035, 0.025), eyeMaterial)
+      mouth.position.set(0, -0.12, -0.008); face.add(mouth)
+      headBone.add(face)
+    }
+    const lobbyRifle = this.models.ar9 ?? this.models.lar ?? this.models.scar
+    if (lobbyRifle) {
+      const rifle = lobbyRifle.scene.clone(true)
+      // KCH rifle assets are modeled along local X. Keep that axis across the chest,
+      // with the muzzle outward and the stock near the operator's right hand.
+      rifle.rotation.y = 0.55
+      rifle.updateMatrixWorld(true)
+      const rifleBounds = new THREE.Box3().setFromObject(rifle)
+      const rifleSize = rifleBounds.getSize(new THREE.Vector3())
+      const rifleCenter = rifleBounds.getCenter(new THREE.Vector3())
+      const rifleScale = 1.12 / Math.max(0.001, rifleSize.x, rifleSize.y, rifleSize.z)
+      rifle.scale.setScalar(rifleScale)
+      rifle.position.set(-rifleCenter.x * rifleScale, 1.04 - rifleCenter.y * rifleScale, 0.65 - rifleCenter.z * rifleScale)
+      rifle.traverse(object => {
+        if (!(object instanceof THREE.Mesh)) return
+        object.castShadow = false; object.receiveShadow = false
+        object.renderOrder = 8
+        const applyTexture = (material: THREE.Material) => { const copy = material.clone(); if ('depthTest' in copy) { copy.depthTest = false; copy.depthWrite = false }; if (copy instanceof THREE.MeshStandardMaterial) { copy.color.set('#536b77'); copy.emissive.set('#101c23'); copy.metalness = 0.22; copy.roughness = 0.62 }; if (this.models.modelTexture && 'map' in copy) { (copy as THREE.MeshStandardMaterial).map = this.models.modelTexture; copy.needsUpdate = true }; return copy }
+        object.material = Array.isArray(object.material) ? object.material.map(applyTexture) : applyTexture(object.material)
+      })
+      model.add(rifle)
+    }
     stage.add(model); this.scene.add(stage); this.lobbyPreview = stage
-    const idle = this.models.player.animations.find(clip => /idle|stand/i.test(clip.name)) ?? this.models.player.animations[0]
+    const idle = this.models.player.animations.find(clip => /stand/i.test(clip.name)) ?? this.models.player.animations.find(clip => /idle/i.test(clip.name)) ?? this.models.player.animations[0]
     if (idle) { this.lobbyAnimation = new THREE.AnimationMixer(model); this.lobbyAnimation.clipAction(idle).play() }
   }
   private updateLobbyPreviewSkin(): void {
@@ -586,23 +713,31 @@ export class Game {
       object.castShadow = false; object.receiveShadow = false
       const cloneMaterial = (material: THREE.Material) => {
         const copy = material.clone()
-        if ('color' in copy && copy.color instanceof THREE.Color) {
-          copy.color.multiplyScalar(1.35)
-          copy.color.r = Math.min(1, copy.color.r); copy.color.g = Math.min(1, copy.color.g); copy.color.b = Math.min(1, copy.color.b)
-          copy.color.lerp(new THREE.Color(tint), 0.28)
-        }
+        if (copy instanceof THREE.MeshStandardMaterial) {
+          copy.color.set('#526d80').lerp(new THREE.Color(tint), 0.24)
+          copy.metalness = 0.2
+          copy.roughness = 0.58
+        } else if ('color' in copy && copy.color instanceof THREE.Color) copy.color.set('#526d80')
+        if (this.models.modelTexture && 'map' in copy) { (copy as THREE.MeshStandardMaterial).map = this.models.modelTexture; copy.needsUpdate = true }
         return copy
       }
       object.material = Array.isArray(object.material) ? object.material.map(cloneMaterial) : cloneMaterial(object.material)
     })
     wrapper.add(model)
-    wrapper.position.set(0.32, -0.35, -0.9)
+    const fit = this.currentWeapon === 'knife' ? [0.3, -0.58, -0.8] : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? [0.68, -0.84, -0.8] : this.currentWeapon === 'mp5' ? [0.82, -0.94, -0.82] : this.currentWeapon === 'awp' ? [0.94, -1.02, -0.8] : [0.94, -1.02, -0.8]
+    wrapper.position.set(fit[0]!, fit[1]!, fit[2]!)
     wrapper.userData.baseY = wrapper.position.y
+    wrapper.userData.basePosition = wrapper.position.clone()
     this.weaponView.add(wrapper)
     this.importedViewModel = wrapper
+    const muzzle = model.getObjectByName('Muzzle')
+    if (muzzle) {
+      this.weaponView.updateMatrixWorld(true)
+      this.muzzleFlashGroup.position.copy(this.weaponView.worldToLocal(muzzle.getWorldPosition(new THREE.Vector3())))
+    }
     return wrapper
   }
-  private addImportedArms(tint: string): void {
+  private addImportedArms(): void {
     if (!this.models.arms) return
     const wrapper = new THREE.Group()
     const model = this.models.arms.scene.clone(true)
@@ -610,7 +745,7 @@ export class Game {
     const bounds = new THREE.Box3().setFromObject(model)
     const size = bounds.getSize(new THREE.Vector3())
     const center = bounds.getCenter(new THREE.Vector3())
-    const scale = 1.75 / Math.max(0.001, size.x, size.y, size.z)
+    const scale = 1.45 / Math.max(0.001, size.x, size.y, size.z)
     model.scale.setScalar(scale)
     model.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
     model.traverse(object => {
@@ -618,14 +753,16 @@ export class Game {
       object.castShadow = false; object.receiveShadow = false
       const recolor = (material: THREE.Material) => {
         const copy = material.clone()
-        if ('color' in copy && copy.color instanceof THREE.Color) copy.color.lerp(new THREE.Color(tint), 0.34)
+        if ('color' in copy && copy.color instanceof THREE.Color) copy.color.set('#4b6177')
+        if (this.models.modelTexture && 'map' in copy) { (copy as THREE.MeshStandardMaterial).map = this.models.modelTexture; copy.needsUpdate = true }
         return copy
       }
       object.material = Array.isArray(object.material) ? object.material.map(recolor) : recolor(object.material)
     })
     wrapper.add(model)
-    wrapper.position.set(0.08, -0.64, -0.74)
+    wrapper.position.set(0.62, -0.96, -0.9)
     wrapper.userData.baseY = wrapper.position.y
+    wrapper.userData.basePosition = wrapper.position.clone()
     this.weaponView.add(wrapper)
     this.importedArms = wrapper
   }
@@ -642,7 +779,7 @@ export class Game {
       this.importedArms.traverse(object => { if (object instanceof THREE.Mesh) { const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()) } })
       this.importedArms = null
     }
-    this.reloadMagazine = null; this.reloadHand = null; this.muzzleFlashGroup.visible = false
+    this.reloadMagazine = null; this.reloadHand = null; this.muzzleFlashGroup.visible = false; this.muzzleFlashGroup.position.set(0, 0, 0)
     const weapon = WEAPONS[this.currentWeapon]
     const selectedGun = this.currentWeapon === 'knife' ? undefined : armoryGun(this.currentWeapon === this.selectedHandgunBase() ? this.save.data.handgunGunId : this.save.data.primaryGunId)
     const knifeSkin = KNIFE_SKINS.find(item => item.id === this.save.data.knifeSkinId)
@@ -656,7 +793,7 @@ export class Game {
       const part = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color, metal))
       part.position.set(...pos); part.castShadow = true; this.weaponView.add(part); this.viewParts.push(part); return part
     }
-    this.addImportedArms(operator.cloth)
+    this.addImportedArms()
     if (!this.importedArms) {
       const leftSleeve = addBox([0.25, 0.34, 0.62], [-0.1, -0.6, -0.72], operator.cloth); leftSleeve.rotation.z = -0.14
       this.reloadHand = addBox([0.22, 0.15, 0.25], [0.16, -0.48, -1.02], operator.trim); this.reloadHand.userData.baseY = this.reloadHand.position.y
@@ -673,9 +810,9 @@ export class Game {
           : this.currentWeapon === 'mp5' ? this.models.mac10
             : this.currentWeapon === 'awp' ? (selectedGun?.model && selectedGun.model % 2 ? this.models.weatie : this.models.vita)
               : rifleModels[(selectedGun?.model ?? 0) % rifleModels.length]
-    const importedLength = this.currentWeapon === 'knife' ? 0.9 : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? 0.84 : this.currentWeapon === 'mp5' ? 1.1 : this.currentWeapon === 'awp' ? 1.55 : 1.42
+    const importedLength = this.currentWeapon === 'knife' ? 0.76 : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? 0.72 : this.currentWeapon === 'mp5' ? 1.28 : this.currentWeapon === 'awp' ? 1.9 : 1.7
     if (importedSource) {
-      this.addImportedViewModel(importedSource, -Math.PI / 2, importedLength, primary, this.currentWeapon === 'knife' ? -Math.PI / 2 : 0)
+      this.addImportedViewModel(importedSource, -Math.PI / 4, importedLength, primary, this.currentWeapon === 'knife' ? -Math.PI / 2 : 0)
       this.muzzleFlashGroup.position.set(0.32, -0.31, -0.9 - importedLength / 2 - 0.04)
     } else if (this.currentWeapon === 'knife') {
       this.muzzleFlashGroup.position.set(0, 0, 0)
@@ -724,8 +861,12 @@ export class Game {
   private botSpawn(bot: Bot): THREE.Vector3 { return bot.spawn.clone().multiplyScalar(this.mapScale) }
   private centralSpawn(spawns: THREE.Vector3[]): THREE.Vector3 | undefined {
     if (!spawns.length) return undefined
+    return spawns[this.centralSpawnIndex(spawns)]?.clone()
+  }
+  private centralSpawnIndex(spawns: THREE.Vector3[]): number {
+    if (!spawns.length) return 0
     const center = spawns.reduce((sum, spawn) => sum.add(spawn), new THREE.Vector3()).multiplyScalar(1 / spawns.length)
-    return spawns.reduce((best, spawn) => spawn.distanceToSquared(center) < best.distanceToSquared(center) ? spawn : best).clone()
+    return spawns.reduce((bestIndex, spawn, index) => spawn.distanceToSquared(center) < spawns[bestIndex]!.distanceToSquared(center) ? index : bestIndex, 0)
   }
   private searchBlueSideIsSouth(): boolean { return this.round <= SEARCH_ROUND.halfRounds }
   private searchBase(team: 'blue' | 'red'): THREE.Vector3 {
@@ -780,7 +921,9 @@ export class Game {
     this.yaw = this.searchBlueSideIsSouth() ? Math.PI : 0
     if (this.activeKchMap && this.kchSpawnTeams.first.length && this.kchSpawnTeams.second.length) {
       const from = this.searchBase('blue'), to = this.searchBase('red')
-      this.yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z))
+      // Three.js cameras look down local -Z. Use the target delta directly so
+      // the first-person camera faces the opposite team instead of turning away.
+      this.yaw = Math.atan2(to.x - from.x, -(to.z - from.z))
     }
     this.chargePlanted = false; this.chargeTimer = 0; this.plantProgress = 0; this.defuseProgress = 0; this.plantSite = (this.round - 1) % 2
     this.playerSpawnProtectedUntil = this.matchTime + SEARCH_ROUND.buySeconds + SEARCH_ROUND.spawnShieldSeconds
@@ -793,6 +936,7 @@ export class Game {
   start(matchType: MatchType = this.matchType, mapId: MapId = this.mapId, difficulty: BotDifficulty = this.difficulty, settings: MatchSettings = {}): void {
     const previousCustomMap = this.activeCustomMap
     this.activeCustomMap = settings.customMap ? validateCustomMap(settings.customMap) : null
+    this.arenaRoot.visible = true
     this.matchType = matchType
     this.difficulty = difficulty
     this.royalePlayers = settings.royalePlayers === 30 || settings.royalePlayers === 50 || settings.royalePlayers === 100 ? settings.royalePlayers : 60
@@ -806,11 +950,7 @@ export class Game {
     this.matchTime = 0; this.blueScore = 0; this.redScore = 0; this.botScoreTimer = 8; this.stormDamageTimer = 0; this.battleSimTimer = 1.3; this.objectiveClock = 1; this.objectiveRotation = 0; this.zoneOwners.fill(null); this.zoneProgress.fill(0); this.flagCarried = false; this.flagScoreClock = 0; this.round = 1; this.roundClock = 0; this.roundBreak = 0; this.chargePlanted = false; this.chargeTimer = 0; this.plantProgress = 0; this.defuseProgress = 0; this.plantSite = 0; this.pendingSearchResult = null; this.playerSpawnProtectedUntil = 0
     this.objectiveMarkers.forEach((marker, index) => { marker.visible = matchType === 'domination' ? index < 3 : matchType === 'hardpoint' ? index === 0 : matchType === 'ctf' ? index >= 3 : matchType === 'search' ? index === 0 || index === 2 : false })
     this.relics.forEach(({ mesh }) => { mesh.visible = true }); if (this.grenadeProjectile) { this.grenadeProjectile.mesh.removeFromParent(); this.grenadeProjectile.mesh.geometry.dispose(); (this.grenadeProjectile.mesh.material as THREE.Material).dispose(); this.grenadeProjectile = null } this.grenadeCount = 0; this.inspectTime = 0; this.spectatorIndex = 0; this.activeSlot = 0; this.currentWeapon = matchType === 'gungame' ? GUN_GAME_ORDER[0]! : this.selectedPrimaryBase(); this.slideLeft = 0; this.ammo = WEAPONS[this.currentWeapon].magazine; this.reloadLeft = 0; this.playerDeadUntil = 0; this.run = this.newRun(); this.teleport(this.playerSpawn()); this.yaw = Math.PI
-    if (this.activeKchMap && this.kchSpawnTeams.first.length && this.kchSpawnTeams.second.length) {
-      const from = this.matchType === 'search' ? this.searchBase('blue') : this.player.root.position.clone().multiplyScalar(1 / this.mapScale)
-      const to = this.matchType === 'search' ? this.searchBase('red') : this.centralSpawn(this.kchSpawnTeams.second) ?? this.kchSpawnTeams.second[0]!
-      this.yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z))
-    }
+    if (this.activeKchMap && this.kchSpawnTeams.first.length) this.yaw = this.kchPlayerYaw
     this.pitch = 0; this.updateViewModel()
     this.updateLobbyPreviewSkin()
     if (this.lobbyPreview) this.lobbyPreview.visible = false
@@ -839,8 +979,10 @@ export class Game {
     if (matchType === 'search') this.resetSearchRound()
     this.run.aliveBots = activeCount
     this.mode = 'playing'; this.input.endFrame(); this.input.takeLook()
+    this.resetInterpolation()
     const brief = ({ gungame: 'GUN GAME // SEVEN-WEAPON LADDER', ffa: 'FREE FOR ALL', tdm: 'TEAM DEATHMATCH', royale: `${this.royalePlayers}-OPERATOR FRONTIER ROYALE`, training: 'AIM RANGE', domination: 'DOMINATION', hardpoint: 'HARDPOINT', ctf: 'CAPTURE THE STANDARD', search: 'RELIC SEARCH & DEFUSE' } satisfies Record<MatchType, string>)[matchType]
-    this.hooks.banner(`${brief} // WASD MOVE · SHIFT SPRINT · CTRL+SHIFT SLIDE · SPACE JUMP · CLICK TO AIM`)
+    const actionKey = matchType === 'search' || matchType === 'ctf' ? 'E INTERACT' : 'E DASH'
+    this.hooks.banner(`${brief} // WASD MOVE · SHIFT SPRINT · CTRL+SHIFT SLIDE · SPACE JUMP · ${actionKey} · CLICK TO AIM`)
   }
   restart(): void {
     this.start(this.matchType, this.mapId, this.difficulty, {
@@ -851,7 +993,7 @@ export class Game {
   }
   pause(): void { if (this.mode === 'playing') this.mode = 'paused' }
   resume(): void { if (this.mode !== 'paused') return; this.mode = 'playing'; this.input.endFrame(); this.input.takeLook() }
-  toTitle(): void { this.mode = 'attract'; this.yaw = 0; this.pitch = 0; this.teleport(new THREE.Vector3()); if (this.lobbyPreview) this.lobbyPreview.visible = true; this.run = this.newRun() }
+  toTitle(): void { this.mode = 'attract'; this.scene.background = new THREE.Color('#1d4b9b'); this.yaw = 0; this.pitch = 0; this.teleport(new THREE.Vector3()); this.arenaRoot.visible = false; this.bots.forEach(bot => { bot.root.visible = false }); if (this.lobbyPreview) this.lobbyPreview.visible = true; this.run = this.newRun() }
   private handleGrenade(): void { if (!this.input.consume('grenade') || this.matchType !== 'search' || this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0 || this.playerDeadUntil || this.grenadeCount <= 0 || this.grenadeProjectile) return; this.grenadeCount -= 1; const geometry = new THREE.IcosahedronGeometry(0.16, 0); const material = new THREE.MeshLambertMaterial({ color: '#bf6947', emissive: '#3d1207' }); const mesh = new THREE.Mesh(geometry, material); const direction = new THREE.Vector3(Math.sin(this.yaw), 0.3, -Math.cos(this.yaw)).normalize(); mesh.position.copy(this.cameraInternal.position).addScaledVector(direction, 0.7); this.scene.add(mesh); this.grenadeProjectile = { mesh, velocity: direction.multiplyScalar(14).add(new THREE.Vector3(0, 3, 0)), fuse: 1.25 }; this.audio.play('plant', mesh.position) }
   private stepGrenade(dt: number): void { const projectile = this.grenadeProjectile; if (!projectile) return; projectile.fuse -= dt; projectile.velocity.y -= 10 * dt; projectile.mesh.position.addScaledVector(projectile.velocity, dt); if (projectile.mesh.position.y < 0.18) { projectile.mesh.position.y = 0.18; projectile.velocity.y = Math.abs(projectile.velocity.y) * 0.42; projectile.velocity.x *= 0.72; projectile.velocity.z *= 0.72 } if (projectile.fuse > 0) return; const point = projectile.mesh.position.clone(); for (const bot of this.bots) { if (!bot.alive || bot.id >= this.activeBotCount || this.matchType === 'search' && this.matchTime < bot.spawnProtectedUntil) continue; const distance = bot.root.position.clone().add(new THREE.Vector3(0, 1.2, 0)).distanceTo(point); if (distance > 7) continue; const damage = 120 * (1 - distance / 8); bot.health -= damage; this.run.hits += 1; this.hooks.popup(`${Math.round(damage)} FRAG`, this.project(bot.root.position.clone().add(new THREE.Vector3(0, 1.2, 0))), 'score'); if (bot.health <= 0) this.killBot(bot, false) } this.audio.play('plant', point); projectile.mesh.removeFromParent(); projectile.mesh.geometry.dispose(); (projectile.mesh.material as THREE.Material).dispose(); this.grenadeProjectile = null }
   setQuality(quality: 'low' | 'medium' | 'high'): void { this.renderer.applyQuality(quality) }
@@ -864,9 +1006,35 @@ export class Game {
     if (spawn) return spawn.multiplyScalar(this.mapScale)
     return new THREE.Vector3(0, 0, -26 * this.mapScale)
   }
-  private teleport(position: THREE.Vector3): void { this.player.root.position.copy(position); this.verticalVelocity = 0; this.horizontalVelocity.set(0, 0, 0); this.cameraLanding = 0 }
+  private resetInterpolation(): void {
+    this.previousPlayerPosition.copy(this.player.root.position)
+    this.interpolatedPlayerPosition.copy(this.player.root.position)
+    this.previousCameraBobY = this.cameraBobY
+    this.previousCameraLanding = this.cameraLanding
+    for (const bot of this.bots) {
+      const previous = this.previousBotPositions.get(bot) ?? new THREE.Vector3()
+      previous.copy(bot.root.position)
+      this.previousBotPositions.set(bot, previous)
+      const renderPosition = this.renderBotPositions.get(bot) ?? new THREE.Vector3()
+      renderPosition.copy(bot.root.position)
+      this.renderBotPositions.set(bot, renderPosition)
+      this.previousBotYaw.set(bot, bot.root.rotation.y)
+      this.renderBotYaw.set(bot, bot.root.rotation.y)
+    }
+  }
+  private captureInterpolationState(): void {
+    this.previousPlayerPosition.copy(this.player.root.position)
+    this.previousCameraBobY = this.cameraBobY
+    this.previousCameraLanding = this.cameraLanding
+    for (const bot of this.bots) {
+      this.previousBotPositions.get(bot)?.copy(bot.root.position)
+      this.previousBotYaw.set(bot, bot.root.rotation.y)
+    }
+  }
+  private teleport(position: THREE.Vector3): void { this.player.root.position.copy(position); this.previousPlayerPosition.copy(position); this.interpolatedPlayerPosition.copy(position); this.verticalVelocity = 0; this.horizontalVelocity.set(0, 0, 0); this.dashLeft = 0; this.dashCooldownLeft = 0; this.cameraBobY = 0; this.previousCameraBobY = 0; this.cameraLanding = 0; this.previousCameraLanding = 0 }
   step(dt: number): void {
     if (this.mode !== 'playing') return
+    this.captureInterpolationState()
     this.matchTime += dt; this.run.elapsed = this.matchTime; this.run.timeLeft = this.matchType === 'search' ? this.searchTimeLeft() : Math.max(0, (this.matchType === 'royale' ? 360 : this.matchType === 'training' ? 0 : 240) - this.matchTime); this.reloadLeft = Math.max(0, this.reloadLeft - dt); this.fireCooldown = Math.max(0, this.fireCooldown - dt); this.recoil = Math.max(0, this.recoil - dt * 4); this.flash = Math.max(0, this.flash - dt)
     this.handleWeaponInput(); if (this.playerDeadUntil === Number.POSITIVE_INFINITY && this.input.consume('spectate')) this.cycleSpectator(); if (this.input.consume('ping')) this.hooks.banner(`SQUAD PING // GRID ${Math.round(this.player.root.position.x + 30)}:${Math.round(this.player.root.position.z + 30)}`); this.handleMovement(dt); this.stepFootsteps(dt); this.stepRelics(dt); this.handleReload(dt); this.handleFire(); this.stepGrenade(dt); this.handleGrenade(); this.stepBots(dt)
     if (this.matchType === 'tdm') this.stepTeamScore(dt)
@@ -962,9 +1130,12 @@ export class Game {
   }
 
   private handleMovement(dt: number): void {
+    const dashPressed = this.input.consume('dash')
     if (this.playerDeadUntil) return
-    if (this.matchType === 'search' && (this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0)) { this.horizontalVelocity.set(0, 0, 0); this.verticalVelocity = 0; this.slideLeft = 0; this.input.consume('jump'); return }
+    if (this.matchType === 'search' && (this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0)) { this.horizontalVelocity.set(0, 0, 0); this.verticalVelocity = 0; this.slideLeft = 0; this.dashLeft = 0; this.input.consume('jump'); return }
     this.slideLeft = Math.max(0, this.slideLeft - dt)
+    this.dashLeft = Math.max(0, this.dashLeft - dt)
+    this.dashCooldownLeft = Math.max(0, this.dashCooldownLeft - dt)
     const weapon = WEAPONS[this.currentWeapon]
     const crouching = this.input.held('crouch') && !this.slideLeft
     const grounded = Math.abs(this.player.root.position.y - this.supportHeight(this.player.root.position)) < 0.08 && this.verticalVelocity <= 0.1
@@ -978,17 +1149,31 @@ export class Game {
     }
     const wish = forward.multiplyScalar(this.input.move.y).addScaledVector(right, this.input.move.x)
     if (wish.lengthSq() > 1) wish.normalize()
+    if (dashPressed && this.dashCooldownLeft <= 0 && this.matchType !== 'search' && this.matchType !== 'ctf' && this.slideLeft <= 0) {
+      this.dashDirection.copy(wish.lengthSq() > 0.0025 ? wish : forward).normalize()
+      this.dashLeft = 0.18
+      this.dashCooldownLeft = 0.85
+      this.audio.play('dash')
+    }
     const speed = (this.input.held('sprint') ? 10.8 : 8) * weapon.movement * (this.input.held('ads') ? 0.72 : 1) * (crouching ? 0.58 : 1)
-    if (this.slideLeft > 0) {
+    if (this.dashLeft > 0) {
+      this.horizontalVelocity.copy(this.dashDirection).multiplyScalar(18)
+    } else if (this.slideLeft > 0) {
       const slideSpeed = 8 + 4 * Math.min(1, this.slideLeft / 0.62)
       this.horizontalVelocity.lerp(this.slideDirection.clone().multiplyScalar(slideSpeed), 1 - Math.exp(-3.5 * dt))
-    } else {
+    } else if (wish.lengthSq() > 0.0025) {
       const targetVelocity = wish.multiplyScalar(speed)
-      const acceleration = grounded ? (this.input.move.x || this.input.move.y ? 30 : 18) : 9
+      const reversing = this.horizontalVelocity.x * targetVelocity.x + this.horizontalVelocity.z * targetVelocity.z < 0
+      const acceleration = grounded ? (reversing ? 32 : 22) : 7.5
       this.horizontalVelocity.lerp(targetVelocity, 1 - Math.exp(-acceleration * dt))
+    } else {
+      // Stop cleanly on the ground, but preserve air speed for strafes and bunny hops.
+      const drag = grounded ? 11 : 0.18
+      this.horizontalVelocity.multiplyScalar(Math.exp(-drag * dt))
     }
     const move = this.horizontalVelocity.clone().multiplyScalar(dt)
     const jumpPressed = this.input.consume('jump')
+    const jumpRequested = jumpPressed || this.input.held('jump')
     const wasGrounded = Math.abs(this.player.root.position.y - this.supportHeight(this.player.root.position)) < 0.08 && this.verticalVelocity <= 0.1
     const moveAxis = (axis: 'x' | 'z', amount: number): void => {
       if (!amount) return
@@ -999,7 +1184,7 @@ export class Game {
       const hit = this.collisionAt(candidate)
       if (hit) {
         const rise = hit.top - this.player.root.position.y
-        if (jumpPressed && wasGrounded && rise > 0.08 && rise <= 2.25 * this.mapScale) {
+        if (jumpRequested && wasGrounded && rise > 0.08 && rise <= 2.25 * this.mapScale) {
           candidate.y = hit.top
           this.player.root.position.copy(candidate)
           this.verticalVelocity = 0
@@ -1012,7 +1197,7 @@ export class Game {
     }
     moveAxis('x', move.x)
     moveAxis('z', move.z)
-    if (jumpPressed && wasGrounded && this.player.root.position.y <= this.supportHeight(this.player.root.position) + 0.03) {
+    if (jumpRequested && wasGrounded && this.player.root.position.y <= this.supportHeight(this.player.root.position) + 0.03) {
       this.verticalVelocity = 7.2
       this.audio.play('jump')
     }
@@ -1028,12 +1213,37 @@ export class Game {
     }
     const moveSpeed = Math.hypot(this.horizontalVelocity.x, this.horizontalVelocity.z)
     this.bobPhase += dt * (5 + moveSpeed * 1.05)
-    this.cameraBobY = THREE.MathUtils.damp(this.cameraBobY, grounded ? Math.sin(this.bobPhase) * Math.min(0.045, moveSpeed * 0.005) : 0, 12, dt)
+    this.cameraBobY = THREE.MathUtils.damp(this.cameraBobY, grounded ? Math.sin(this.bobPhase) * Math.min(0.025, moveSpeed * 0.0027) : 0, 14, dt)
     this.cameraLanding = THREE.MathUtils.damp(this.cameraLanding, 0, 17, dt)
   }
 
   private handleReload(dt: number): void { if (this.reloadLeft <= 0 && this.input.consume('reload') && this.ammo < WEAPONS[this.currentWeapon].magazine) { this.reloadLeft = WEAPONS[this.currentWeapon].reload; this.reloadDuration = this.reloadLeft; this.audio.play('reload', this.player.root.position) } if (this.reloadLeft > 0 && this.reloadLeft <= dt) this.ammo = WEAPONS[this.currentWeapon].magazine }
-  private handleFire(): void { const weapon = WEAPONS[this.currentWeapon]; if ((this.matchType === 'search' && (this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0)) || this.reloadLeft > 0 || this.playerDeadUntil || !this.input.held('shoot') || this.fireCooldown > 0) return; if (this.ammo <= 0) { this.audio.play('empty'); this.fireCooldown = 0.18; return } this.ammo -= 1; this.run.shots += 1; this.fireCooldown = 1 / weapon.fireRate; this.recoil = weapon.recoil; this.flash = 1 / 60; this.audio.play('gunshot', { x: this.player.root.position.x, y: this.player.root.position.y + 1.3, z: this.player.root.position.z }); const spread = weapon.spread * (this.input.held('ads') ? 0.25 : 1) * (1 + this.run.shots % 4 * 0.08); this.raycaster.setFromCamera(new THREE.Vector2((Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread), this.cameraInternal); const hit = this.raycaster.intersectObjects(this.hitTargets, false)[0]; if (!hit || hit.distance > weapon.range) return; const wall = this.raycaster.intersectObjects(this.arenaRoot.children, true)[0]; if (wall && wall.distance + 0.02 < hit.distance) return; const botId = hit.object.userData.botId as number; const bot = this.bots.find(item => item.id === botId); if (!bot || !bot.alive || this.matchType === 'search' && this.matchTime < bot.spawnProtectedUntil || (['tdm', 'domination', 'hardpoint', 'ctf', 'search'].includes(this.matchType) && bot.team === 'blue')) return; const headshot = hit.object.userData.zone === 'head'; const damage = Math.max(weapon.damage * 0.48, weapon.damage * (1 - hit.distance / weapon.range * 0.46)) * (headshot ? weapon.headshot : 1); bot.health -= damage; this.run.hits += 1; this.audio.play('hit'); this.hooks.hitmarker(headshot); this.hooks.popup(`${Math.round(damage)}${headshot ? ' HS' : ''}`, this.project(hit.point), 'score'); if (bot.health <= 0) this.killBot(bot, headshot) }
+  private handleFire(): void {
+    const weapon = WEAPONS[this.currentWeapon]
+    if ((this.matchType === 'search' && (this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0)) || this.reloadLeft > 0 || this.playerDeadUntil || !this.input.held('shoot') || this.fireCooldown > 0) return
+    if (this.ammo <= 0) { this.audio.play('empty'); this.fireCooldown = 0.18; return }
+    this.ammo -= 1; this.run.shots += 1; this.fireCooldown = 1 / weapon.fireRate
+    this.recoil = weapon.recoil; this.viewSpringVelocity.x += (Math.random() - 0.5) * weapon.recoil * 0.7; this.viewSpringVelocity.y -= weapon.recoil * 0.22; this.viewSpringVelocity.z += weapon.recoil * 1.8; this.flash = 1 / 60
+    this.audio.play('gunshot', { x: this.player.root.position.x, y: this.player.root.position.y + 1.3, z: this.player.root.position.z })
+    const spread = weapon.spread * (this.input.held('ads') ? 0.25 : 1) * (1 + this.run.shots % 4 * 0.08)
+    this.raycaster.setFromCamera(new THREE.Vector2((Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread), this.cameraInternal)
+    const hit = this.raycaster.intersectObjects(this.hitTargets, false)[0]
+    if (!hit || hit.distance > weapon.range) return
+    const wall = this.raycaster.intersectObjects(this.arenaRoot.children, true)[0]
+    if (wall && wall.distance + 0.02 < hit.distance) return
+    const botId = hit.object.userData.botId as number
+    const bot = this.bots.find(item => item.id === botId)
+    if (!bot || !bot.alive || this.matchType === 'search' && this.matchTime < bot.spawnProtectedUntil || (['tdm', 'domination', 'hardpoint', 'ctf', 'search'].includes(this.matchType) && bot.team === 'blue')) return
+    const zone = hit.object.userData.zone as 'head' | 'body' | 'limb'
+    const headshot = zone === 'head'
+    const falloff = THREE.MathUtils.clamp((hit.distance - weapon.range * 0.55) / (weapon.range * 0.45), 0, 1)
+    const zoneMultiplier = headshot ? weapon.headshot : zone === 'limb' ? 0.75 : 1
+    const damage = weapon.damage * (1 - falloff * 0.4) * zoneMultiplier
+    bot.health -= damage
+    this.run.hits += 1; this.audio.play('hit'); this.hooks.hitmarker(headshot)
+    this.hooks.popup(`${Math.round(damage)}${headshot ? ' HS' : ''}`, this.project(hit.point), 'score')
+    if (bot.health <= 0) this.killBot(bot, headshot)
+  }
   private killBot(bot: Bot, headshot: boolean): void { if (['tdm', 'domination', 'hardpoint', 'ctf', 'search'].includes(this.matchType) && bot.team === 'blue') return; bot.alive = false; bot.root.visible = false; bot.deaths += 1; bot.respawnAt = this.matchType === 'royale' || this.matchType === 'search' ? Number.POSITIVE_INFINITY : this.matchTime + 2.2; const eliminatedWith = this.currentWeapon; this.run.kills += 1; if (this.matchType === 'gungame' && this.run.kills < GUN_GAME_ORDER.length) { this.currentWeapon = GUN_GAME_ORDER[this.run.kills]!; this.activeSlot = this.currentWeapon === 'knife' ? 2 : 0; this.ammo = WEAPONS[this.currentWeapon].magazine; this.reloadLeft = 0; this.updateViewModel(); this.hooks.banner(`WEAPON ADVANCED // ${WEAPONS[this.currentWeapon].name}`) } const weaponKills = { ...this.save.data.weaponKills, [eliminatedWith]: (this.save.data.weaponKills[eliminatedWith] ?? 0) + 1 }; this.save.update({ weaponKills }); this.advanceDaily(headshot, bot); this.run.aliveBots = this.bots.filter(item => item.alive && item.id < this.activeBotCount).length; if (this.matchType === 'tdm') this.blueScore += 1; if (headshot) this.run.headshots += 1; this.run.score += headshot ? 150 : 100; this.save.update({ credits: this.save.data.credits + (this.matchType === 'search' ? 300 : 100) }); this.run.credits = this.save.data.credits; this.addXp(headshot ? 85 : 55); this.save.update({ stats: { ...this.save.data.stats, kills: this.save.data.stats.kills + 1, headshots: this.save.data.stats.headshots + (headshot ? 1 : 0) } }); this.hooks.killfeed(`YOU eliminated ${bot.name}`, headshot); this.checkAchievements() }
   private stepBots(dt: number): void {
     if (this.matchType === 'search' && (this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0)) return
@@ -1045,16 +1255,12 @@ export class Game {
       const isAlly = ['tdm', 'domination', 'hardpoint', 'ctf', 'search'].includes(this.matchType) && bot.team === 'blue'
       const toPlayer = new THREE.Vector3(playerPos.x - bot.root.position.x, 0, playerPos.z - bot.root.position.z)
       const distance = toPlayer.length()
-      const rig = bot.root.userData.rig as { leftArm: THREE.Group; rightArm: THREE.Group; leftLeg: THREE.Group; rightLeg: THREE.Group }
       const walking = this.matchType === 'training' || distance > 8
+      bot.walking = walking
       if (bot.animation) {
         const action = walking ? bot.animation.move : bot.animation.idle
         if (action !== bot.animation.active) { bot.animation.active.fadeOut(0.18); action.reset().fadeIn(0.18).play(); bot.animation.active = action }
-        bot.animation.mixer.update(dt)
       }
-      const stride = walking ? Math.sin(bot.phase * 8) * 0.52 : Math.sin(bot.phase * 2) * 0.025
-      rig.leftArm.rotation.x = stride * 0.65; rig.rightArm.rotation.x = -stride * 0.65 - 0.08
-      rig.leftLeg.rotation.x = -stride; rig.rightLeg.rotation.x = stride
       bot.root.position.y = walking ? Math.max(0, Math.sin(bot.phase * 16)) * 0.035 : Math.sin(bot.phase * 2) * 0.008
       if (isAlly && this.matchType === 'tdm' && this.playerDeadUntil) { if (distance > 1.7) { bot.root.position.x += toPlayer.x / Math.max(distance, 1) * dt * 4; bot.root.position.z += toPlayer.z / Math.max(distance, 1) * dt * 4 } else if (this.matchTime - this.playerDownedAt >= 1.4) { this.playerDeadUntil = 0; this.run.health = 55; this.run.armor = 20; this.teleport(playerPos.clone().add(new THREE.Vector3(1.1, 0, 1.1))); this.hooks.banner(`${bot.name} // REVIVED YOU`) } continue }
       if (this.matchType === 'training') { bot.root.position.x = bot.spawn.x * this.mapScale + Math.sin(bot.phase * 0.6) * 1.5 * this.mapScale; bot.root.position.z = bot.spawn.z * this.mapScale + Math.cos(bot.phase * 0.7) * 1.5 * this.mapScale; continue }
@@ -1066,7 +1272,8 @@ export class Game {
       const markerMaterial = bot.teamMarker.material as THREE.MeshLambertMaterial
       markerMaterial.transparent = false; markerMaterial.opacity = 1; markerMaterial.emissive.set('#000000'); markerMaterial.emissiveIntensity = 0
       if (!isAlly && distance < 54 && !this.playerDeadUntil) {
-        bot.root.rotation.y = Math.atan2(toPlayer.x, toPlayer.z)
+        const targetYaw = Math.atan2(toPlayer.x, toPlayer.z)
+        bot.root.rotation.y = interpolateAngle(bot.root.rotation.y, targetYaw, 1 - Math.exp(-12 * dt))
         if (this.matchTime >= bot.nextShot) {
           const reaction = { recruit: 1.35, regular: 0.95, veteran: 0.7, elite: 0.52 }[this.difficulty] * (0.88 + bot.style * 0.1)
           const aim = { recruit: 0.38, regular: 0.58, veteran: 0.72, elite: 0.84 }[this.difficulty] * (0.92 + bot.style * 0.045)
@@ -1219,7 +1426,32 @@ export class Game {
     }
     this.objective = `${this.run.aliveBots + (this.playerDeadUntil ? 0 : 1)} OPERATORS REMAIN · STORM ${Math.ceil(radius)}M`
   }
-  private damagePlayer(amount: number, bot: Bot | null): void { if (this.playerDeadUntil || this.matchType === 'search' && this.matchTime < this.playerSpawnProtectedUntil) return; const armorAbsorb = Math.min(this.run.armor, amount * 0.55); this.run.armor = Math.max(0, this.run.armor - armorAbsorb); this.run.health = Math.max(0, this.run.health - (amount - armorAbsorb)); this.audio.play('hurt'); this.hooks.hurt(); this.hooks.popup(`-${Math.round(amount - armorAbsorb)}`, this.project(this.player.root.position.clone().setY(1.4)), 'hurt'); if (this.run.health <= 0) { this.run.deaths += 1; this.playerDownedAt = this.matchTime; this.playerDeadUntil = this.matchType === 'royale' || this.matchType === 'search' ? Number.POSITIVE_INFINITY : this.matchTime + (this.matchType === 'tdm' ? 4.4 : 2.2); this.save.update({ stats: { ...this.save.data.stats, deaths: this.save.data.stats.deaths + 1 } }); this.hooks.killfeed(`${bot ? bot.name : 'THE STORM'} eliminated YOU`, false); this.run.health = 0; this.run.armor = 0; if (this.matchType === 'royale') this.finish('lost') } }
+  private damagePlayer(amount: number, bot: Bot | null): void {
+    if (this.playerDeadUntil || this.matchType === 'search' && this.matchTime < this.playerSpawnProtectedUntil) return
+    const armorRatio = 0.5
+    const armorBonus = 0.5
+    let healthDamage = amount
+    if (this.run.armor > 0) {
+      const proposedHealthDamage = amount * (1 - armorRatio)
+      const armorCost = (amount - proposedHealthDamage) * armorBonus
+      if (armorCost > this.run.armor) {
+        healthDamage = amount - this.run.armor / armorBonus
+        this.run.armor = 0
+      } else {
+        healthDamage = proposedHealthDamage
+        this.run.armor = Math.max(0, this.run.armor - armorCost)
+      }
+    }
+    this.run.health = Math.max(0, this.run.health - healthDamage)
+    this.audio.play('hurt'); this.hooks.hurt()
+    this.hooks.popup(`-${Math.round(healthDamage)}`, this.project(this.player.root.position.clone().setY(1.4)), 'hurt')
+    if (this.run.health <= 0) {
+      this.run.deaths += 1; this.playerDownedAt = this.matchTime; this.playerDeadUntil = this.matchType === 'royale' || this.matchType === 'search' ? Number.POSITIVE_INFINITY : this.matchTime + (this.matchType === 'tdm' ? 4.4 : 2.2)
+      this.save.update({ stats: { ...this.save.data.stats, deaths: this.save.data.stats.deaths + 1 } })
+      this.hooks.killfeed(`${bot ? bot.name : 'THE STORM'} eliminated YOU`, false); this.run.health = 0; this.run.armor = 0
+      if (this.matchType === 'royale') this.finish('lost')
+    }
+  }
   private advanceDaily(headshot: boolean, killedBot: Bot): void { const d = this.save.data.dailyChallenge; const contract = DAILY_CONTRACTS[d.id] ?? DAILY_CONTRACTS[0]!; const kind = contract.kind; const distance = this.player.root.position.distanceTo(killedBot.root.position); const qualifies = kind === 'elim' || kind === 'headshot' && headshot || kind === 'knife' && this.currentWeapon === 'knife' || kind === 'ads' && this.input.held('ads') || kind === 'sniper' && this.currentWeapon === 'awp' || kind === 'sidearm' && (this.currentWeapon === 'glock' || this.currentWeapon === 'deagle') || kind === 'slide' && this.slideLeft > 0 || kind === 'moving' && Math.hypot(this.input.move.x, this.input.move.y) > 0.2 || kind === 'longshot' && distance > 18 || kind === 'airborne' && this.player.root.position.y > 0.2; if (!qualifies || d.claimed) return; const progress = d.progress + 1; const goal = contract.goal; const claimed = progress >= goal; this.save.update({ dailyChallenge: { ...d, progress, claimed } }); if (claimed) { this.addXp(250); this.save.update({ credits: this.save.data.credits + 200 }); this.hooks.banner('DAILY CONTRACT // +250 XP · +200 CR') } }
   private addXp(amount: number): void { let xp = this.save.data.xp + amount; let level = this.save.data.level; let leveled = false; let reward = ''
     while (level < 50 && xp >= xpForLevel(level)) {
@@ -1242,9 +1474,120 @@ export class Game {
   canOpenBuyMenu(): boolean { return this.mode === 'playing' && this.matchType === 'search' && this.roundClock < SEARCH_ROUND.buySeconds && this.roundBreak === 0 && !this.pendingSearchResult && !this.playerDeadUntil }
   buy(item: 'rifle' | 'armor' | 'grenade'): string { if (this.mode !== 'paused' || this.matchType !== 'search' || this.roundClock >= SEARCH_ROUND.buySeconds || this.roundBreak > 0 || this.pendingSearchResult) return 'BUY PHASE CLOSED'; const prices = { rifle: 1200, armor: 350, grenade: 300 }; const price = prices[item]; if (this.save.data.credits < price) return `NOT ENOUGH CREDITS // ${price} CR REQUIRED`; if (item === 'armor' && this.run.armor >= 100) return 'ARMOR ALREADY FULL'; if (item === 'grenade' && this.grenadeCount >= 2) return 'GRENADE LIMIT REACHED'; this.save.update({ credits: this.save.data.credits - price }); this.run.credits = this.save.data.credits; if (item === 'rifle') { this.currentWeapon = 'ak47'; this.activeSlot = 0; this.ammo = WEAPONS.ak47.magazine; this.reloadLeft = 0; this.updateViewModel() } else if (item === 'armor') this.run.armor = Math.min(100, this.run.armor + 50); else this.grenadeCount += 1; return `BOUGHT ${item.toUpperCase()} // -${price} CR` }
   private mapName(): string { return (this.activeCustomMap?.name || HISTORIC_MAPS.find(map => map.id === this.mapId)?.name || 'Aurelian Forum').toUpperCase() }
-  private finish(phase: 'won' | 'lost'): void { if (this.run.phase !== 'playing') return; this.run.phase = phase; this.mode = 'ended'; this.input.unlockPointer(); const mvpBonus = phase === 'won' ? 300 : 0; const xp = Math.max(70, this.run.kills * 55 + this.run.headshots * 30 + (phase === 'won' ? 250 : 80) + mvpBonus); this.addXp(xp); this.save.update({ stats: { ...this.save.data.stats, matches: this.save.data.stats.matches + 1, wins: this.save.data.stats.wins + (phase === 'won' ? 1 : 0), shots: this.save.data.stats.shots + this.run.shots, hits: this.save.data.stats.hits + this.run.hits } }); if (phase === 'won') this.unlockAchievement('champion'); if (this.matchType === 'gungame' && phase === 'won') this.unlockAchievement('arms-master'); this.hooks.end(this.snapshot()) }
+  private finish(phase: 'won' | 'lost'): void { if (this.run.phase !== 'playing') return; this.run.phase = phase; this.mode = 'ended'; this.input.unlockPointer(); const mvpBonus = phase === 'won' ? 300 : 0; const xp = Math.max(70, this.run.kills * 55 + this.run.headshots * 30 + (phase === 'won' ? 250 : 80) + mvpBonus); this.run.xpEarned = xp; this.addXp(xp); this.save.update({ stats: { ...this.save.data.stats, matches: this.save.data.stats.matches + 1, wins: this.save.data.stats.wins + (phase === 'won' ? 1 : 0), shots: this.save.data.stats.shots + this.run.shots, hits: this.save.data.stats.hits + this.run.hits } }); if (phase === 'won') this.unlockAchievement('champion'); if (this.matchType === 'gungame' && phase === 'won') this.unlockAchievement('arms-master'); this.hooks.end(this.snapshot()) }
   debugFinish(): void { this.run.kills = 12; this.finish('won') }
-  render(_alpha: number, frameSeconds: number): void { this.inspectTime = Math.max(0, this.inspectTime - frameSeconds); const look = this.mode === 'playing' ? this.input.takeLook() : { x: 0, y: 0 }; if (this.mode === 'playing') { this.yaw -= look.x; this.pitch = THREE.MathUtils.clamp(this.pitch - look.y, -1.35, 1.25) } const moveSpeed = Math.hypot(this.horizontalVelocity.x, this.horizontalVelocity.z); const running = this.mode === 'playing' && this.input.held('sprint') && moveSpeed > 1; this.sprintPose = THREE.MathUtils.damp(this.sprintPose, running ? 1 : 0, 9, frameSeconds); this.weaponSwayX = THREE.MathUtils.damp(this.weaponSwayX, THREE.MathUtils.clamp(-look.x * 0.32, -0.12, 0.12), 14, frameSeconds); this.weaponSwayY = THREE.MathUtils.damp(this.weaponSwayY, THREE.MathUtils.clamp(-look.y * 0.25, -0.1, 0.1), 14, frameSeconds); const reloadProgress = this.reloadLeft > 0 && this.reloadDuration > 0 ? THREE.MathUtils.clamp(1 - this.reloadLeft / this.reloadDuration, 0, 1) : 0; const magOut = THREE.MathUtils.smoothstep(reloadProgress, 0.12, 0.28) * (1 - THREE.MathUtils.smoothstep(reloadProgress, 0.62, 0.82)); if (this.reloadMagazine) this.reloadMagazine.position.y = Number(this.reloadMagazine.userData.baseY) - magOut * 0.46; if (this.importedViewModel) { this.importedViewModel.position.y = Number(this.importedViewModel.userData.baseY) - magOut * 0.1; this.importedViewModel.rotation.x = magOut * 0.14 } if (this.reloadHand) { const reach = THREE.MathUtils.smoothstep(reloadProgress, 0.24, 0.48) * (1 - THREE.MathUtils.smoothstep(reloadProgress, 0.65, 0.86)); this.reloadHand.position.x = 0.16 + reach * 0.18; this.reloadHand.position.y = -0.48 + reach * 0.06; this.reloadHand.position.z = -1.02 + reach * 0.34 } this.muzzleFlashGroup.visible = this.flash > 0; const spectatorTargets = this.playerDeadUntil === Number.POSITIVE_INFINITY && this.matchType === 'search' ? this.bots.filter(bot => bot.alive && bot.id < this.activeBotCount) : []; const spectator = spectatorTargets.length ? spectatorTargets[this.spectatorIndex % spectatorTargets.length] : null; this.weaponView.visible = this.mode !== 'attract' && !spectator; if (spectator) { this.cameraInternal.position.set(spectator.root.position.x, spectator.root.position.y + 1.65, spectator.root.position.z); this.cameraInternal.rotation.set(0, spectator.root.rotation.y, 0) } else { this.cameraInternal.position.set(this.player.root.position.x, this.player.root.position.y + 1.65 + this.cameraBobY + this.cameraLanding, this.player.root.position.z); this.cameraInternal.rotation.set(this.pitch + this.recoil * 0.16, this.yaw, 0) } this.audio.updateListener(this.cameraInternal.position, this.yaw, this.pitch); const viewFit = THREE.MathUtils.clamp(this.cameraInternal.aspect / 1.15, 0.52, 1); this.weaponView.position.set(0.08 + this.weaponSwayX + this.horizontalVelocity.x * 0.004 + (1 - viewFit) * 0.22, -0.04 + this.cameraBobY * 0.4 - this.sprintPose * 0.2 - (1 - viewFit) * 0.1, -0.65 + this.recoil * 0.1 + this.sprintPose * 0.1); this.weaponView.rotation.set(-this.sprintPose * 0.38 + this.recoil * 0.7 + this.weaponSwayY + Math.sin(Math.PI * reloadProgress) * 0.13, -this.weaponSwayX * 0.65 + (this.inspectTime > 0 ? (1 - this.inspectTime / 2.6) * Math.PI * 2 : 0), -this.horizontalVelocity.x * 0.012 - Math.sin(Math.PI * reloadProgress) * 0.08); this.weaponView.scale.setScalar((this.flash > 0 ? 0.68 : 0.66) * viewFit); if (this.lobbyPreview && this.mode === 'attract') { this.lobbyPreview.rotation.y = -0.5 + Math.sin(this.lastFrame * 0.32) * 0.13; this.lobbyAnimation?.update(Math.min(frameSeconds, 0.05)) } this.lastFrame += frameSeconds; this.renderer.render(this.scene, this.cameraInternal) }
+  render(alpha: number, frameSeconds: number): void {
+    const dt = Math.min(frameSeconds, 0.05)
+    const interpolation = THREE.MathUtils.clamp(alpha, 0, 1)
+    this.interpolatedPlayerPosition.lerpVectors(this.previousPlayerPosition, this.player.root.position, interpolation)
+    const cameraBobY = THREE.MathUtils.lerp(this.previousCameraBobY, this.cameraBobY, interpolation)
+    const cameraLanding = THREE.MathUtils.lerp(this.previousCameraLanding, this.cameraLanding, interpolation)
+    this.inspectTime = Math.max(0, this.inspectTime - dt)
+    const look = this.mode === 'playing' ? this.input.takeLook() : { x: 0, y: 0 }
+    if (this.mode === 'playing') { this.yaw -= look.x; this.pitch = THREE.MathUtils.clamp(this.pitch - look.y, -1.35, 1.25) }
+    const moveSpeed = Math.hypot(this.horizontalVelocity.x, this.horizontalVelocity.z)
+    const moving = this.mode === 'playing' && moveSpeed > 0.5
+    const crouching = this.mode === 'playing' && this.input.held('crouch')
+    const sliding = this.slideLeft > 0
+    const grounded = Math.abs(this.verticalVelocity) < 0.08
+    if (moving && grounded) this.strideTimer += dt * (crouching ? 2.8 + moveSpeed * 0.7 : 3.5 + moveSpeed * 0.85)
+    const bobX = moving && grounded ? Math.cos(this.strideTimer * 0.5) * 0.012 : 0
+    const bobY = moving && grounded ? Math.sin(this.strideTimer) * 0.015 : 0
+    const running = moving && this.input.held('sprint') && moveSpeed > 1
+    this.sprintPose = THREE.MathUtils.damp(this.sprintPose, running ? 1 : 0, 9, dt)
+    this.weaponSwayX = THREE.MathUtils.damp(this.weaponSwayX, THREE.MathUtils.clamp(-look.x * 0.32, -0.12, 0.12), 14, dt)
+    this.weaponSwayY = THREE.MathUtils.damp(this.weaponSwayY, THREE.MathUtils.clamp(-look.y * 0.25, -0.1, 0.1), 14, dt)
+    const reloadProgress = this.reloadLeft > 0 && this.reloadDuration > 0 ? THREE.MathUtils.clamp(1 - this.reloadLeft / this.reloadDuration, 0, 1) : 0
+    const magOut = THREE.MathUtils.smoothstep(reloadProgress, 0.12, 0.28) * (1 - THREE.MathUtils.smoothstep(reloadProgress, 0.62, 0.82))
+    if (this.reloadMagazine) this.reloadMagazine.position.y = Number(this.reloadMagazine.userData.baseY) - magOut * 0.46
+    const inspectSpin = this.inspectTime > 0 ? (1 - this.inspectTime / 2.6) * Math.PI * 2 : 0
+    if (this.importedViewModel) {
+      const base = this.importedViewModel.userData.basePosition as THREE.Vector3
+      const reloadLift = Math.sin(Math.PI * reloadProgress) * 0.1
+      this.importedViewModel.position.copy(base).add(new THREE.Vector3(0, -magOut * 0.1 - reloadLift, 0))
+      this.importedViewModel.rotation.set(magOut * 0.14 + reloadLift * 0.7, inspectSpin, 0)
+    }
+    const handReach = THREE.MathUtils.smoothstep(reloadProgress, 0.18, 0.42) * (1 - THREE.MathUtils.smoothstep(reloadProgress, 0.68, 0.88))
+    if (this.importedArms) {
+      const base = this.importedArms.userData.basePosition as THREE.Vector3
+      this.importedArms.position.copy(base).add(new THREE.Vector3(handReach * 0.035, handReach * 0.04, handReach * 0.08))
+      this.importedArms.rotation.x = handReach * 0.045
+    }
+    if (this.reloadHand) {
+      this.reloadHand.position.x = 0.16 + handReach * 0.18
+      this.reloadHand.position.y = -0.48 + handReach * 0.06
+      this.reloadHand.position.z = -1.02 + handReach * 0.34
+    }
+    this.muzzleFlashGroup.visible = this.flash > 0
+    const spectatorTargets = this.playerDeadUntil === Number.POSITIVE_INFINITY && this.matchType === 'search' ? this.bots.filter(bot => bot.alive && bot.id < this.activeBotCount) : []
+    const spectator = spectatorTargets.length ? spectatorTargets[this.spectatorIndex % spectatorTargets.length] : null
+    this.weaponView.visible = this.mode !== 'attract' && !spectator
+    if (spectator) {
+      const previous = this.previousBotPositions.get(spectator) ?? spectator.root.position
+      if (previous.distanceToSquared(spectator.root.position) > 16) previous.copy(spectator.root.position)
+      this.cameraInternal.position.set(THREE.MathUtils.lerp(previous.x, spectator.root.position.x, interpolation), THREE.MathUtils.lerp(previous.y, spectator.root.position.y, interpolation) + 1.65, THREE.MathUtils.lerp(previous.z, spectator.root.position.z, interpolation))
+      this.cameraInternal.rotation.set(0, interpolateAngle(this.previousBotYaw.get(spectator) ?? spectator.root.rotation.y, spectator.root.rotation.y, interpolation), 0)
+    } else {
+      this.cameraInternal.position.set(this.interpolatedPlayerPosition.x, this.interpolatedPlayerPosition.y + 1.65 + cameraBobY + cameraLanding, this.interpolatedPlayerPosition.z)
+      this.cameraInternal.rotation.set(this.pitch + this.recoil * 0.16, this.yaw, 0)
+    }
+    this.audio.updateListener(this.cameraInternal.position, this.yaw, this.pitch)
+    const viewFit = THREE.MathUtils.clamp(this.cameraInternal.aspect / 1.15, 0.52, 1)
+    const aiming = this.mode === 'playing' && this.input.held('ads')
+    const target = new THREE.Vector3(
+      (aiming ? -0.035 : 0.08) + bobX + this.weaponSwayX + this.horizontalVelocity.x * 0.004 + (1 - viewFit) * 0.22,
+      -0.04 + bobY + this.cameraBobY * 0.4 - this.sprintPose * 0.2 - (crouching ? 0.09 : 0) - (sliding ? 0.12 : 0) - (1 - viewFit) * 0.1,
+      -0.65 + this.recoil * 0.1 + this.sprintPose * 0.1 - (aiming ? 0.08 : 0) - (this.dashLeft > 0 ? 0.08 : 0),
+    )
+    const force = target.sub(this.viewSpringPosition).multiplyScalar(180).addScaledVector(this.viewSpringVelocity, -27)
+    this.viewSpringVelocity.addScaledVector(force, dt)
+    this.viewSpringPosition.addScaledVector(this.viewSpringVelocity, dt)
+    this.weaponView.position.copy(this.viewSpringPosition)
+    this.weaponView.rotation.set(-this.sprintPose * 0.38 + this.recoil * 0.7 + this.weaponSwayY + Math.sin(Math.PI * reloadProgress) * 0.13 - (this.dashLeft > 0 ? 0.1 : 0), -this.weaponSwayX * 0.65, -this.horizontalVelocity.x * 0.012 - Math.sin(Math.PI * reloadProgress) * 0.08)
+    this.weaponView.scale.setScalar(0.62 * viewFit)
+    if (this.lobbyPreview && this.mode === 'attract') { this.lobbyPreview.rotation.y = Math.sin(this.lastFrame * 0.32) * 0.13; this.lobbyAnimation?.update(dt) }
+    this.lastFrame += dt
+    // Blend moving bots between fixed simulation ticks while drawing, then restore the exact
+    // simulation transforms before the next input, collision, and hit-detection update.
+    for (const bot of this.bots) {
+      const previous = this.previousBotPositions.get(bot)
+      const restore = this.renderBotPositions.get(bot)
+      if (!previous || !restore) continue
+      restore.copy(bot.root.position)
+      const currentYaw = bot.root.rotation.y
+      if (previous.distanceToSquared(restore) > 16) { previous.copy(restore); this.previousBotYaw.set(bot, currentYaw) } // respawns are teleports
+      bot.root.position.lerpVectors(previous, restore, interpolation)
+      this.renderBotYaw.set(bot, currentYaw)
+      bot.root.rotation.y = interpolateAngle(this.previousBotYaw.get(bot) ?? currentYaw, currentYaw, interpolation)
+      if (bot.alive && bot.root.visible) {
+        bot.visualPhase += dt * (0.45 + bot.id * 0.04)
+        // Update skinned meshes at render cadence so their run cycle remains
+        // fluid on high-refresh displays instead of stepping at simulation Hz.
+        if (bot.animation && this.mode === 'playing') bot.animation.mixer.update(dt)
+        const rig = bot.root.userData.rig as { leftArm: THREE.Group; rightArm: THREE.Group; leftLeg: THREE.Group; rightLeg: THREE.Group } | undefined
+        if (rig) {
+          const stride = bot.walking ? Math.sin(bot.visualPhase * 8) * 0.52 : Math.sin(bot.visualPhase * 2) * 0.025
+          rig.leftArm.rotation.x = stride * 0.65; rig.rightArm.rotation.x = -stride * 0.65 - 0.08
+          rig.leftLeg.rotation.x = -stride; rig.rightLeg.rotation.x = stride
+        }
+      }
+    }
+    try {
+      this.renderer.render(this.scene, this.cameraInternal)
+    } finally {
+      for (const bot of this.bots) {
+        const restore = this.renderBotPositions.get(bot)
+        if (restore) bot.root.position.copy(restore)
+        const restoreYaw = this.renderBotYaw.get(bot)
+        if (restoreYaw !== undefined) bot.root.rotation.y = restoreYaw
+      }
+    }
+  }
   snapshot(): GameSnapshot { return { ...this.run, matchType: this.matchType, mapId: this.mapId, crosshairBloom: this.run.crosshairBloom, grenades: this.grenadeCount, spectating: this.playerDeadUntil === Number.POSITIVE_INFINITY && this.matchType === 'search', blueScore: this.blueScore, redScore: this.redScore, round: this.round, roundPhase: this.matchType === 'search' ? this.searchRoundPhase() : 'live', spawnProtection: this.matchType === 'search' && this.roundBreak === 0 && this.roundClock >= SEARCH_ROUND.buySeconds && !this.playerDeadUntil ? Math.max(0, Math.min(SEARCH_ROUND.spawnShieldSeconds, this.playerSpawnProtectedUntil - this.matchTime)) : 0, aliveBots: this.bots.filter(bot => bot.alive && bot.id < this.activeBotCount).length, accuracy: this.run.shots ? this.run.hits / this.run.shots : 0, ammo: this.ammo, reload: this.reloadLeft, weapon: this.currentWeapon, weaponName: this.activeWeaponName(), aimed: this.input.held('ads'), level: this.save.data.level, xp: this.save.data.xp, nextXp: xpForLevel(this.save.data.level), credits: this.save.data.credits, playerX: this.player.root.position.x, playerZ: this.player.root.position.z, yaw: this.yaw, objective: this.objective, scoreboard: this.scoreboard() } }
   project(world: THREE.Vector3): { x: number; y: number } { const v = world.clone().project(this.cameraInternal); return { x: ((v.x + 1) / 2) * this.renderer.canvas.clientWidth, y: ((1 - v.y) / 2) * this.renderer.canvas.clientHeight } }
+}
+
+function interpolateAngle(from: number, to: number, alpha: number): number {
+  const delta = Math.atan2(Math.sin(to - from), Math.cos(to - from))
+  return from + delta * alpha
 }

@@ -1,12 +1,12 @@
 /** Unified keyboard, mouse, gamepad and touch input for VoxelStrike. */
-export type Action = 'jump' | 'sprint' | 'crouch' | 'ping' | 'pause' | 'confirm' | 'back' | 'interact' | 'shoot' | 'ads' | 'reload' | 'scoreboard' | 'inspect' | 'weapon1' | 'weapon2' | 'weapon3' | 'weapon4' | 'weapon5' | 'weapon6' | 'weapon7' | 'spectate' | 'grenade'
+export type Action = 'jump' | 'sprint' | 'crouch' | 'ping' | 'pause' | 'confirm' | 'back' | 'interact' | 'dash' | 'shoot' | 'ads' | 'reload' | 'scoreboard' | 'inspect' | 'weapon1' | 'weapon2' | 'weapon3' | 'weapon4' | 'weapon5' | 'weapon6' | 'weapon7' | 'spectate' | 'grenade'
 export type InputMethod = 'keyboard' | 'gamepad' | 'touch'
 
 const KEY_BINDINGS: Record<Action, string[]> = {
-  jump: ['Space'], sprint: ['ShiftLeft', 'ShiftRight'], crouch: ['ControlLeft', 'ControlRight'], ping: ['KeyQ'], pause: ['Escape', 'KeyP'], confirm: ['Enter', 'NumpadEnter'], back: [], interact: ['KeyE'], shoot: [], ads: [], reload: ['KeyR'], scoreboard: ['Tab'], inspect: ['KeyT'], weapon1: ['Digit1'], weapon2: ['Digit2'], weapon3: ['Digit3'], weapon4: ['Digit4'], weapon5: ['Digit5'], weapon6: ['Digit6'], weapon7: ['Digit7'], spectate: ['KeyX'], grenade: ['KeyG'],
+  jump: ['Space'], sprint: ['ShiftLeft', 'ShiftRight'], crouch: ['ControlLeft', 'ControlRight'], ping: ['KeyQ'], pause: ['Escape', 'KeyP'], confirm: ['Enter', 'NumpadEnter'], back: [], interact: ['KeyE'], dash: ['KeyE'], shoot: [], ads: [], reload: ['KeyR'], scoreboard: ['Tab'], inspect: ['KeyT'], weapon1: ['Digit1'], weapon2: ['Digit2'], weapon3: ['Digit3'], weapon4: ['Digit4'], weapon5: ['Digit5'], weapon6: ['Digit6'], weapon7: ['Digit7'], spectate: ['KeyX'], grenade: ['KeyG'],
 }
 const MOVE_KEYS = { up: ['KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'] }
-const PAD_BINDINGS: Record<Action, number[]> = { jump: [0], sprint: [4, 10], crouch: [1], ping: [5], pause: [9], confirm: [0], back: [1], interact: [3], shoot: [7], ads: [6], reload: [2], scoreboard: [4], inspect: [3], weapon1: [], weapon2: [], weapon3: [], weapon4: [], weapon5: [], weapon6: [], weapon7: [], spectate: [], grenade: [] }
+const PAD_BINDINGS: Record<Action, number[]> = { jump: [0], sprint: [4, 10], crouch: [1], ping: [5], pause: [9], confirm: [0], back: [1], interact: [3], dash: [], shoot: [7], ads: [6], reload: [2], scoreboard: [4], inspect: [3], weapon1: [], weapon2: [], weapon3: [], weapon4: [], weapon5: [], weapon6: [], weapon7: [], spectate: [], grenade: [] }
 
 export class Input {
   readonly move = { x: 0, y: 0 }
@@ -23,6 +23,7 @@ export class Input {
   private padPrev = new Set<Action>()
   private wheelDelta = 0
   private fallbackLook = false
+  private lookRequested = false
   private listeners: Array<() => void> = []
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -47,7 +48,7 @@ export class Input {
         on(window.parent, 'keyup', keyUp)
       }
     } catch { /* A cross-origin embed keeps input scoped to its own focused canvas. */ }
-    on(window, 'blur', () => { this.keys.clear(); this.mouse.clear() })
+    on(window, 'blur', () => { this.keys.clear(); this.mouse.clear(); this.lookRequested = false; this.fallbackLook = false })
     on(window, 'mousedown', e => {
       if (document.pointerLockElement !== canvas && !this.fallbackLook) return
       this.mouse.add(e.button)
@@ -59,23 +60,29 @@ export class Input {
     on(window, 'contextmenu', e => { if (document.pointerLockElement === canvas || this.fallbackLook) e.preventDefault() })
     on(window, 'wheel', e => { if (document.pointerLockElement === canvas || this.fallbackLook) { this.wheelDelta += Math.sign(e.deltaY); e.preventDefault() } }, { passive: false })
     on(window, 'mousemove', e => {
-      if (document.pointerLockElement !== canvas && !this.fallbackLook) return
+      const fallbackCanvasLook = this.fallbackLook && e.target === canvas
+      if (document.pointerLockElement !== canvas && !fallbackCanvasLook) return
       this.look.x += e.movementX * 0.0022
       this.look.y += e.movementY * 0.0022
     })
     canvas.tabIndex = 0
-    canvas.addEventListener('pointerdown', () => { this.fallbackLook = document.pointerLockElement !== canvas })
-    document.addEventListener('pointerlockchange', () => { this.fallbackLook = document.pointerLockElement !== canvas && document.activeElement === canvas })
-    window.addEventListener('blur', () => { this.fallbackLook = false })
+    on(canvas, 'pointerdown', () => { this.lookRequested = true; this.fallbackLook = document.pointerLockElement !== canvas })
+    document.addEventListener('pointerlockchange', () => { this.fallbackLook = this.lookRequested && document.pointerLockElement !== canvas && document.activeElement === canvas })
   }
 
   lockPointer(): void {
     if (this.method === 'touch') return
+    this.lookRequested = true
     this.canvas.focus({ preventScroll: true })
     this.fallbackLook = true
     if (document.pointerLockElement !== this.canvas) this.canvas.requestPointerLock?.()?.then?.(() => { this.fallbackLook = false }).catch?.(() => { this.fallbackLook = true })
   }
-  unlockPointer(): void { if (document.pointerLockElement) document.exitPointerLock() }
+  unlockPointer(): void {
+    this.lookRequested = false
+    this.fallbackLook = false
+    if (document.pointerLockElement) document.exitPointerLock()
+    if (document.activeElement === this.canvas) this.canvas.blur()
+  }
   setTouchMove(x: number, y: number): void { this.method = 'touch'; this.touchMove.x = x; this.touchMove.y = y }
   addTouchLook(dx: number, dy: number): void { this.method = 'touch'; this.look.x += dx * 0.006; this.look.y += dy * 0.006 }
   setTouchButton(action: Action, down: boolean): void { this.method = 'touch'; if (down && !this.touchButtons.has(action)) this.pressed_.add(action); if (down) this.touchButtons.add(action); else this.touchButtons.delete(action) }

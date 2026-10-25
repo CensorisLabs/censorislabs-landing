@@ -4,10 +4,12 @@ import './styles/editor.css'
 import './styles/tactical.css'
 import './styles/lobby.css'
 import './styles/kirka-ui.css'
+import './styles/kirka-refit.css'
+import * as THREE from 'three'
 import { Audio } from './engine/audio'
-import { Assets, KCH_GAME_MAPS, KCH_GAME_MODELS } from './engine/assets'
+import { Assets, KCH_GAME_MAPS, KCH_GAME_MODELS, KCH_GAME_TEXTURES } from './engine/assets'
 import type { GameModels } from './game/game'
-import type { KchMapData } from './game/kch-map'
+import { normalizeKchMapData } from './game/kch-map'
 import { I18n, resolveLocale } from './engine/i18n'
 import { Input } from './engine/input'
 import { GameLoop } from './engine/loop'
@@ -23,9 +25,12 @@ async function boot(): Promise<void> {
   const audio = new Audio()
   let game: import('./game/game').Game | undefined
   let lockLostAt = 0
+  const kchMaps: GameModels['kchMaps'] = {}
+  let loadKchMap: (id: MapId) => Promise<boolean> = async () => false
   const applySettings = () => { input.sensitivity = save.data.sensitivity; input.invertY = save.data.invertY; audio.setVolumes(save.data.musicVolume, save.data.sfxVolume, save.data.muted); if (game) { game.setQuality(save.data.quality); game.setFov(save.data.fov) } }
   const ui = new Ui(i18n, save, audio, input, {
-    play: (mode: MatchType, map: MapId, difficulty: BotDifficulty, settings) => { if (!game) return; audio.unlock(); audio.startMusic(); game.start(mode, map, difficulty, settings); ui.show('hud'); input.lockPointer() },
+    play: async (mode: MatchType, map: MapId, difficulty: BotDifficulty, settings) => { if (!game) return; audio.unlock(); audio.startMusic(); if (!await loadKchMap(map)) { ui.banner(`KCH MAP UNAVAILABLE // ${map.toUpperCase()}`); return }; game.start(mode, map, difficulty, settings); ui.show('hud'); input.lockPointer() },
+    pause: () => { if (game?.mode !== 'playing') return; game.pause(); input.unlockPointer(); ui.show('pause') },
     resume: () => { game?.resume(); ui.show('hud'); input.lockPointer() },
     restart: () => { if (!game) return; audio.unlock(); game.restart(); ui.show('hud'); input.lockPointer() },
     quit: () => { game?.toTitle(); input.unlockPointer(); ui.show('title') },
@@ -37,8 +42,8 @@ async function boot(): Promise<void> {
   const assets = new Assets()
   let loaded = 0
   const modelKeys = Object.keys(KCH_GAME_MODELS) as Array<keyof typeof KCH_GAME_MODELS>
-  const mapIds = Object.keys(KCH_GAME_MAPS) as MapId[]
-  const bootTaskCount = 3 + modelKeys.length + mapIds.length
+  const defaultMapId: MapId = 'dunes'
+  const bootTaskCount = 5 + modelKeys.length
   const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(Math.min(0.9, 0.08 + loaded / bootTaskCount * 0.82)); return value })
   const optionalModel = (key: keyof typeof KCH_GAME_MODELS) => {
     const model = KCH_GAME_MODELS[key]
@@ -46,17 +51,39 @@ async function boot(): Promise<void> {
   }
   const optionalMap = (id: MapId) => {
     const map = KCH_GAME_MAPS[id]
-    return track(assets.jsonVerified<KchMapData>(map.url, map.sha256).catch(error => { console.warn(`Optional KCH map unavailable: ${map.url}`, error); return null }))
+    if (!map) return track(Promise.resolve(null))
+    return track(assets.jsonVerified<unknown>(map.url, map.sha256).then(normalizeKchMapData).catch(error => { console.warn(`Optional KCH map unavailable: ${map.url}`, error); return null }))
   }
+  const optionalKchTexture = () => track(assets.textureVerified(KCH_GAME_TEXTURES.mapAtlas.url, KCH_GAME_TEXTURES.mapAtlas.sha256, { color: true, flipY: false }).then(texture => {
+    texture.magFilter = THREE.NearestFilter
+    texture.minFilter = THREE.NearestFilter
+    texture.generateMipmaps = false
+    texture.needsUpdate = true
+    return texture
+  }).catch(error => { console.warn('Optional KCH map atlas unavailable', error); return null }))
   ui.setBootProgress(0.08)
-  const [{ Game }, { Renderer }, , loadedModels, loadedMaps] = await Promise.all([
+  const [{ Game }, { Renderer }, , loadedModels, defaultMap, mapAtlas] = await Promise.all([
     track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready),
-    Promise.all(modelKeys.map(optionalModel)), Promise.all(mapIds.map(optionalMap)),
+    Promise.all(modelKeys.map(optionalModel)), optionalMap(defaultMapId), optionalKchTexture(),
   ])
-  const models = Object.fromEntries(modelKeys.map((key, index) => [key, loadedModels[index] ?? null])) as unknown as Omit<GameModels, 'kchMaps'>
-  const kchMaps = Object.fromEntries(mapIds.flatMap((id, index) => loadedMaps[index] ? [[id, loadedMaps[index]!]] : [])) as GameModels['kchMaps']
+  const models = Object.fromEntries(modelKeys.map((key, index) => [key, loadedModels[index] ?? null])) as unknown as Omit<GameModels, 'kchMaps' | 'modelTexture'>
+  if (defaultMap) kchMaps[defaultMapId] = defaultMap
+  loadKchMap = async (id: MapId): Promise<boolean> => {
+    if (kchMaps[id]) return true
+    const entry = KCH_GAME_MAPS[id]
+    if (!entry) return false
+    try {
+      const map = normalizeKchMapData(await assets.jsonVerified<unknown>(entry.url, entry.sha256))
+      if (!map) return false
+      kchMaps[id] = map
+      return true
+    } catch (error) {
+      console.warn(`Optional KCH map unavailable: ${entry.url}`, error)
+      return false
+    }
+  }
   const renderer = new Renderer(canvas, save.data.quality)
-  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps })
+  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps, modelTexture: null, kchMapTexture: mapAtlas })
   game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
     step: dt => { if (input.consume('pause') && performance.now() - lockLostAt > 300) { if (game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } else if (game?.mode === 'paused') { game.resume(); ui.show('hud'); input.lockPointer() } } game?.step(dt) },

@@ -1,9 +1,10 @@
 import type { CustomMap } from './custom-map'
+import { KCH_MAP_CATALOG } from './kch-map-catalog'
 
 export type WeaponId = 'glock' | 'deagle' | 'mp5' | 'ak47' | 'm4a4' | 'awp' | 'knife'
 export type MatchType = 'ffa' | 'tdm' | 'royale' | 'training' | 'domination' | 'hardpoint' | 'ctf' | 'search' | 'gungame'
 export type MatchSettings = { royalePlayers?: 30 | 50 | 60 | 100; teamSize?: 1 | 4 | 5; customMap?: CustomMap }
-export type MapId = 'antfarm' | 'schism' | 'labs' | 'collision' | 'dunes' | 'skyfel' | 'dethroned'
+export type MapId = string
 export type BotDifficulty = 'recruit' | 'regular' | 'veteran' | 'elite'
 export type Rarity = 'Consumer' | 'Industrial' | 'Mil-Spec' | 'Restricted' | 'Classified' | 'Covert' | 'Legendary'
 
@@ -28,12 +29,12 @@ export const WEAPON_ORDER: WeaponId[] = ['glock', 'deagle', 'mp5', 'ak47', 'm4a4
 export const GUN_GAME_ORDER: WeaponId[] = ['glock', 'mp5', 'ak47', 'm4a4', 'awp', 'deagle', 'knife']
 
 export const WEAPONS: Record<WeaponId, WeaponDef> = {
-  glock: { id: 'glock', name: 'Cinder-9', short: 'C9', damage: 22, headshot: 2.4, fireRate: 8.5, magazine: 20, reload: 1.55, range: 42, spread: 0.018, recoil: 0.08, movement: 1, automatic: true, color: '#a7b2bd' },
-  deagle: { id: 'deagle', name: 'Stonehand', short: 'STONE', damage: 54, headshot: 2.7, fireRate: 2.8, magazine: 7, reload: 1.8, range: 62, spread: 0.014, recoil: 0.2, movement: 0.94, automatic: false, color: '#d5a84a' },
-  mp5: { id: 'mp5', name: 'Rivet-5', short: 'R5', damage: 19, headshot: 2.1, fireRate: 12.5, magazine: 30, reload: 1.7, range: 38, spread: 0.025, recoil: 0.055, movement: 1.02, automatic: true, color: '#8d9aa8' },
-  ak47: { id: 'ak47', name: 'Morrow-7', short: 'M7', damage: 35, headshot: 2.4, fireRate: 9.2, magazine: 30, reload: 2.15, range: 72, spread: 0.022, recoil: 0.14, movement: 0.9, automatic: true, color: '#b67546' },
-  m4a4: { id: 'm4a4', name: 'Sentinel-11', short: 'S11', damage: 30, headshot: 2.35, fireRate: 11.5, magazine: 30, reload: 1.95, range: 70, spread: 0.017, recoil: 0.095, movement: 0.94, automatic: true, color: '#7e9a9e' },
-  awp: { id: 'awp', name: 'Longwatch', short: 'LW', damage: 115, headshot: 2.2, fireRate: 0.9, magazine: 5, reload: 2.8, range: 120, spread: 0.004, recoil: 0.3, movement: 0.72, automatic: false, color: '#719dc7' },
+  glock: { id: 'glock', name: 'Cinder-9', short: 'C9', damage: 22, headshot: 4, fireRate: 8.5, magazine: 20, reload: 1.55, range: 42, spread: 0.018, recoil: 0.08, movement: 1, automatic: true, color: '#a7b2bd' },
+  deagle: { id: 'deagle', name: 'Stonehand', short: 'STONE', damage: 54, headshot: 4, fireRate: 2.8, magazine: 7, reload: 1.8, range: 62, spread: 0.014, recoil: 0.2, movement: 0.94, automatic: false, color: '#d5a84a' },
+  mp5: { id: 'mp5', name: 'Rivet-5', short: 'R5', damage: 19, headshot: 4, fireRate: 12.5, magazine: 30, reload: 1.7, range: 38, spread: 0.025, recoil: 0.055, movement: 1.02, automatic: true, color: '#8d9aa8' },
+  ak47: { id: 'ak47', name: 'Morrow-7', short: 'M7', damage: 35, headshot: 4, fireRate: 9.2, magazine: 30, reload: 2.15, range: 72, spread: 0.022, recoil: 0.14, movement: 0.9, automatic: true, color: '#b67546' },
+  m4a4: { id: 'm4a4', name: 'Sentinel-11', short: 'S11', damage: 30, headshot: 4, fireRate: 11.5, magazine: 30, reload: 1.95, range: 70, spread: 0.017, recoil: 0.095, movement: 0.94, automatic: true, color: '#7e9a9e' },
+  awp: { id: 'awp', name: 'Longwatch', short: 'LW', damage: 115, headshot: 4, fireRate: 0.9, magazine: 5, reload: 2.8, range: 120, spread: 0.004, recoil: 0.3, movement: 0.72, automatic: false, color: '#719dc7' },
   knife: { id: 'knife', name: 'Field Shard', short: 'SHARD', damage: 85, headshot: 1, fireRate: 2.2, magazine: 1, reload: 0, range: 3.2, spread: 0.04, recoil: 0.02, movement: 1.12, automatic: false, color: '#e9edf2' },
 }
 
@@ -138,15 +139,7 @@ export const KNIFE_SKINS = [
   { id: 'knife-gold', name: 'Auric Edge', color: '#f5c85a', level: 1 }, { id: 'knife-jade', name: 'Jade Oath', color: '#51b99c', level: 1 }, { id: 'knife-ivory', name: 'Ivory Vow', color: '#e9ddbe', level: 1 },
   ...Array.from({ length: 72 }, (_, i) => ({ id: `knife-reward-${i + 1}`, name: `${['Glacier Fang', 'Ember Shard', 'Basalt Talon', 'Riverglass', 'Cedar Tooth', 'Violet Relic', 'Stormglass', 'Sunken Bronze', 'Moonstone', 'Moss Edge', 'Crimson Flint', 'Star-Iron'][i % 12]} ${String(Math.floor(i / 12) + 1).padStart(2, '0')}`, color: GUN_COLORS[(i * 5 + 2) % GUN_COLORS.length]!, level: 2 + Math.floor(i * 49 / 72) })),
 ]
-export const HISTORIC_MAPS: { id: MapId; name: string; era: string; terrain: string }[] = [
-  { id: 'antfarm', name: 'Antfarm', era: 'KCH Community Map', terrain: '#bf9a50' },
-  { id: 'schism', name: 'Schism', era: 'KCH Community Map', terrain: '#73838e' },
-  { id: 'labs', name: 'Labs', era: 'KCH Community Map', terrain: '#4b9b9a' },
-  { id: 'collision', name: 'Collision', era: 'KCH Community Map', terrain: '#916c8f' },
-  { id: 'dunes', name: 'Dunes', era: 'KCH Community Map', terrain: '#c99b58' },
-  { id: 'skyfel', name: 'Skyfel', era: 'KCH Community Map', terrain: '#5688b1' },
-  { id: 'dethroned', name: 'Dethroned', era: 'KCH Community Map', terrain: '#71815f' },
-]
+export const HISTORIC_MAPS = KCH_MAP_CATALOG
 export function armoryGun(id: string | undefined): ArmoryGun { return ARMORY_GUNS.find(gun => gun.id === id) ?? ARMORY_GUNS[0]! }
 
 export type ContractKind = 'elim' | 'headshot' | 'knife' | 'ads' | 'sniper' | 'sidearm' | 'slide' | 'moving' | 'longshot' | 'airborne'

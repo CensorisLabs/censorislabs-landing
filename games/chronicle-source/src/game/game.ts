@@ -930,15 +930,48 @@ export class Game {
   private addImportedViewModel(source: GLTF, yaw: number, targetLength: number, tint: string, pitch = 0, pattern = 'industrial', seed = 0): THREE.Group {
     const wrapper = new THREE.Group()
     const model = source.scene.clone(true)
-    model.rotation.set(pitch, yaw, 0)
+    // Measure the authored model before rotating it. Rotating first makes the
+    // bounding box depend on the view angle, which shifts the grip and can
+    // change the apparent size between weapons.
+    model.position.set(0, 0, 0)
+    model.rotation.set(0, 0, 0)
+    model.scale.setScalar(1)
     model.updateMatrixWorld(true)
     const bounds = new THREE.Box3().setFromObject(model)
     const size = bounds.getSize(new THREE.Vector3())
     const center = bounds.getCenter(new THREE.Vector3())
-    const scale = targetLength / Math.max(0.001, size.x, size.y, size.z)
+    const muzzleMarker = model.getObjectByName('Muzzle')
+    const gripSource = model.getObjectByName('Lever')?.getWorldPosition(new THREE.Vector3()).clone() ?? new THREE.Vector3(0.1, -0.045, 0)
+    let weaponYaw = yaw
+    let axisLength = Math.max(size.x, size.y, size.z)
+    if (muzzleMarker) {
+      // KCH firearms expose a muzzle helper. Derive their forward direction
+      // from that authored marker instead of guessing a shared rotation; the
+      // imported gun meshes point their muzzle along local -X.
+      const muzzleDirection = muzzleMarker.getWorldPosition(new THREE.Vector3()).sub(center)
+      muzzleDirection.y = 0
+      if (muzzleDirection.lengthSq() > 1e-8) {
+        muzzleDirection.normalize()
+        weaponYaw = Math.atan2(muzzleDirection.x, -muzzleDirection.z)
+        let minAlongAxis = Number.POSITIVE_INFINITY
+        let maxAlongAxis = Number.NEGATIVE_INFINITY
+        for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+          const projection = new THREE.Vector3(x, y, z).sub(center).dot(muzzleDirection)
+          minAlongAxis = Math.min(minAlongAxis, projection)
+          maxAlongAxis = Math.max(maxAlongAxis, projection)
+        }
+        axisLength = maxAlongAxis - minAlongAxis
+      }
+    }
+    const orientation = new THREE.Euler(pitch, weaponYaw, 0)
+    const scale = targetLength / Math.max(0.001, axisLength)
     const kchFinish = this.weaponFinishTexture(tint, pattern, seed)
+    const kchTexture = this.kchTexturePack(seed)
     model.scale.setScalar(scale)
-    model.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
+    model.rotation.copy(orientation)
+    // A rotated center must be removed in the rotated basis too, or the
+    // normalized model drifts sideways when its muzzle axis is aligned.
+    model.position.copy(center.clone().multiplyScalar(-scale).applyEuler(orientation))
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
       object.castShadow = false; object.receiveShadow = false
@@ -946,14 +979,17 @@ export class Game {
         const copy = material.clone()
         if (copy instanceof THREE.MeshStandardMaterial) {
           if (object.geometry.getAttribute('uv')) {
-            copy.map = kchFinish
+            // The KCH GLBs contain UVs but no embedded base-color maps. Use
+            // the matching KCH skin atlas directly so its UV islands line up;
+            // the generic procedural finish is only a fallback.
+            copy.map = copy.map ?? kchTexture ?? kchFinish
             copy.color.set('#ffffff')
             copy.vertexColors = object.geometry.hasAttribute('color')
           } else {
             copy.color.set('#526d80').lerp(new THREE.Color(tint), 0.24)
           }
-          copy.metalness = Math.max(copy.metalness, 0.2)
-          copy.roughness = Math.min(copy.roughness, 0.58)
+          copy.metalness = Math.max(copy.metalness, 0.28)
+          copy.roughness = Math.min(copy.roughness, 0.62)
         } else if ('color' in copy && copy.color instanceof THREE.Color) copy.color.set('#526d80')
         copy.needsUpdate = true
         return copy
@@ -963,42 +999,26 @@ export class Game {
     wrapper.add(model)
     const fit = this.currentWeapon === 'knife' ? [0.3, -0.42, -0.8] : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? [0.68, -0.56, -0.8] : this.currentWeapon === 'mp5' ? [0.82, -0.64, -0.82] : this.currentWeapon === 'awp' ? [0.94, -0.68, -0.8] : [0.94, -0.68, -0.8]
     const compactView = THREE.MathUtils.clamp(1 - this.cameraInternal.aspect / 1.15, 0, 0.65)
+    let weaponGrip: THREE.Vector3 | undefined
     if (this.currentWeapon === 'knife') {
       wrapper.position.set(fit[0]! - compactView * 0.78, fit[1]!, fit[2]!)
     } else {
-      // The KCH guns use local +X for their stock-to-muzzle axis. Align the
-      // actual grip point to the glove so each imported gun sits in the hand.
-      const gripOnModel = new THREE.Vector3(0.1, -0.045, 0)
-        .applyEuler(model.rotation)
-        .multiplyScalar(scale)
-        .add(model.position)
+      // The KCH Lever helper sits by each weapon's firing grip. Account for
+      // the normalized model center so the marker lands on the same hand point
+      // across the different source mesh scales.
+      const gripOnModel = gripSource.clone().sub(center).multiplyScalar(scale).applyEuler(orientation)
       wrapper.position.copy(new THREE.Vector3(0.45, -0.53, -0.48).sub(gripOnModel))
+      weaponGrip = gripOnModel
     }
-    if (this.currentWeapon !== 'knife') {
-      const pistol = this.currentWeapon === 'glock' || this.currentWeapon === 'deagle'
-      const magazineSize = new THREE.Vector3(pistol ? 0.105 : 0.15, THREE.MathUtils.clamp(targetLength * 0.15, 0.12, 0.3), pistol ? 0.085 : 0.12)
-      const magazine = new THREE.Mesh(
-        new THREE.BoxGeometry(magazineSize.x, magazineSize.y, magazineSize.z),
-      new THREE.MeshStandardMaterial({ color: '#ffffff', map: this.weaponFinishTexture(tint, `${pattern}-magazine`, seed), metalness: 0.24, roughness: 0.62 }),
-      )
-      // These KCH weapon meshes are authored as a single object, so give the
-      // reload rig a textured, animated magazine at the receiver's grip point.
-      const magazineLocal = new THREE.Vector3(0.09, -Math.max(0.16, size.y * 0.28), 0.035)
-      magazine.position.copy(magazineLocal.multiplyScalar(scale).applyEuler(model.rotation).add(model.position))
-      magazine.rotation.copy(model.rotation)
-      magazine.castShadow = false; magazine.receiveShadow = false
-      magazine.userData.basePosition = magazine.position.clone()
-      magazine.userData.baseRotation = magazine.rotation.clone()
-      magazine.userData.generatedReloadMagazine = true
-      wrapper.add(magazine)
-      this.reloadMagazine = magazine
-    }
+    // KCH firearms are each one authored mesh. A separate box used as a
+    // detachable magazine floated outside the receiver and made the model
+    // look like unfinished geometry; keep reload motion on the full rig.
     wrapper.userData.baseY = wrapper.position.y
     wrapper.userData.basePosition = wrapper.position.clone()
     this.viewModelRig.add(wrapper)
     this.importedViewModel = wrapper
     const operatorSkin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
-    this.addImportedArms(wrapper, operatorSkin.cloth, 'field-cloth', seed + 31)
+    this.addImportedArms(wrapper, operatorSkin.cloth, 'field-cloth', seed + 31, weaponGrip)
     const muzzle = model.getObjectByName('Muzzle')
     if (muzzle) {
       this.weaponView.updateMatrixWorld(true)
@@ -1006,7 +1026,7 @@ export class Game {
     }
     return wrapper
   }
-  private addImportedArms(parent: THREE.Group, cloth: string, pattern: string, seed: number): void {
+  private addImportedArms(parent: THREE.Group, cloth: string, pattern: string, seed: number, weaponGrip?: THREE.Vector3): void {
     const source = this.models.arms
     if (!source) return
     const armRig = new THREE.Group()
@@ -1016,8 +1036,27 @@ export class Game {
     const size = bounds.getSize(new THREE.Vector3())
     const center = bounds.getCenter(new THREE.Vector3())
     const scale = 0.76 / Math.max(0.001, size.z)
+    const leftArm = model.getObjectByName('LeftArm')
+    const rightArm = model.getObjectByName('RightArm')
+    const leftBounds = leftArm ? new THREE.Box3().setFromObject(leftArm) : null
+    const rightBounds = rightArm ? new THREE.Box3().setFromObject(rightArm) : null
+    const leftHand = leftBounds ? new THREE.Vector3((leftBounds.min.x + leftBounds.max.x) * 0.5, (leftBounds.min.y + leftBounds.max.y) * 0.5, leftBounds.min.z) : null
+    const rightHand = rightBounds ? new THREE.Vector3((rightBounds.min.x + rightBounds.max.x) * 0.5, (rightBounds.min.y + rightBounds.max.y) * 0.5, rightBounds.max.z) : null
+    const handAxis = leftHand && rightHand ? leftHand.clone().sub(rightHand) : null
+    if (handAxis) handAxis.y = 0
+    // This KCH arms file is a posed pair of static meshes. Turn the wrists so
+    // they follow the rifle axis, then place the trigger wrist on its grip
+    // marker instead of relying on a guessed arm angle and offset.
+    const armYaw = handAxis && handAxis.lengthSq() > 1e-8 ? Math.atan2(handAxis.x, -handAxis.z) : Math.PI / 4
+    armRig.rotation.y = weaponGrip ? armYaw : Math.PI / 4
     model.scale.setScalar(scale)
     model.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
+    if (weaponGrip && rightHand) {
+      const triggerHandLocal = rightHand.clone().sub(center).multiplyScalar(scale).applyEuler(armRig.rotation)
+      armRig.position.copy(weaponGrip.clone().sub(triggerHandLocal))
+    } else {
+      armRig.position.set(-0.16, -0.18, -0.14)
+    }
     const sleeveTexture = this.weaponFinishTexture(cloth, pattern, seed)
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
@@ -1037,11 +1076,8 @@ export class Game {
       object.material = Array.isArray(object.material) ? object.material.map(cloneMaterial) : cloneMaterial(object.material)
     })
     armRig.add(model)
-    // Match the KCH diagonal arm spread to the support and trigger hand axis.
     // The arm rig is a child of the exact same wrapper as the weapon, so recoil,
     // aiming, inspection and reload all share one transform hierarchy.
-    armRig.position.set(-0.16, -0.18, -0.14)
-    armRig.rotation.y = Math.PI / 4
     armRig.userData.basePosition = armRig.position.clone()
     parent.add(armRig)
     this.importedArms = armRig
@@ -1051,7 +1087,7 @@ export class Game {
     this.viewParts.length = 0
     if (this.importedViewModel) {
       this.importedViewModel.removeFromParent()
-      this.importedViewModel.traverse(object => { if (object instanceof THREE.Mesh) { if (object.userData.generatedReloadMagazine === true) object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()) } })
+      this.importedViewModel.traverse(object => { if (object instanceof THREE.Mesh) { const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()) } })
       this.importedViewModel = null
     }
     this.importedArms = null

@@ -623,7 +623,7 @@ export class Game {
     const size = bounds.getSize(new THREE.Vector3())
     // Match the reference lobby framing instead of letting the showcase model
     // dominate the narrow game panel.
-    const scale = 3.45 / Math.max(0.001, size.y)
+    const scale = 2.55 / Math.max(0.001, size.y)
     const skin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
     model.scale.setScalar(scale)
     model.position.set(-(bounds.min.x + bounds.max.x) * scale / 2, 0.045 - bounds.min.y * scale, -(bounds.min.z + bounds.max.z) * scale / 2)

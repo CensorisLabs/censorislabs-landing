@@ -4,6 +4,7 @@ import type { Input } from '../engine/input'
 import { ACHIEVEMENTS, insertScore, type Locale, type Quality, type SaveData, type SaveStore } from '../engine/save'
 import { KCH_GAME_TEXTURES } from '../engine/assets'
 import { ARMORY_GUNS, HISTORIC_MAPS, KNIFE_SKINS, OPERATOR_SKINS, RARITY_COLORS, SKINS, WEAPONS, operatorSkinForLevel, type BotDifficulty, type MapId, type MatchSettings, type MatchType, type WeaponId } from '../game/fps'
+import { KCH_MAP_PREVIEWS } from '../game/kch-map-previews'
 import type { Game, GameSnapshot } from '../game/game'
 import { DEFAULT_CUSTOM_MAP, decodeCustomMap, encodeCustomMap, MAX_CUSTOM_MAP_JSON_BYTES, readCustomMap, storeCustomMap, validateCustomMap, type CustomMap, type MapSurface } from '../game/custom-map'
 
@@ -31,6 +32,7 @@ export class Ui {
   constructor(private readonly i18n: I18n, private readonly save: SaveStore, private readonly audio: Audio, private readonly input: Input, private readonly actions: UiActions) {
     this.root = document.getElementById('ui')!
     this.root.innerHTML = this.template()
+    this.root.querySelector('.scope-overlay')?.insertAdjacentHTML('beforeend', '<img class="scope-reticle" src="assets/kch-library/crosshairs/scope.png" alt="">')
     this.root.querySelector<HTMLElement>('[data-screen="hud"]')?.insertAdjacentHTML('beforeend', `
       <div class="hud-control-hints" aria-label="Movement controls"><span><kbd>SHIFT</kbd> SPRINT</span><span><kbd>CTRL + SHIFT</kbd> SLIDE</span><span><kbd>E</kbd> DASH</span><span><kbd>TAB</kbd> SCOREBOARD</span></div>
       <section class="hud-chat" aria-label="Match chat"><div class="hud-chat-log" data-slot="hud-chat-log" role="log" aria-live="polite"></div><form class="hud-chat-compose"><input name="hudChat" maxlength="120" autocomplete="off" aria-label="Match chat message" placeholder="MESSAGE..."><button type="submit">ENTER</button></form></section>`)
@@ -299,7 +301,7 @@ export class Ui {
     if (['brushWidth', 'brushDepth', 'brushHeight', 'brushColor', 'brushSurface'].includes(el.name)) { this.syncMapBrush(); return }
     if (el instanceof HTMLSelectElement && el.name === 'primaryGun') { this.actions.settings({ primaryGunId: el.value }); this.renderArmory(); return }
     if (el instanceof HTMLSelectElement && el.name === 'handgunGun') { this.actions.settings({ handgunGunId: el.value }); this.renderArmory(); return }
-    if (el instanceof HTMLSelectElement && el.name === 'map') { this.selectedMap = el.value as MapId; return }
+    if (el instanceof HTMLSelectElement && el.name === 'map') { this.selectedMap = el.value as MapId; this.renderPanel('queue'); return }
     if (el instanceof HTMLSelectElement && el.name === 'mode') { this.selectedMode = el.value as MatchType; this.renderPanel(this.panel); return }
     if (el instanceof HTMLSelectElement && el.name === 'difficulty') { this.difficulty = el.value as BotDifficulty; return }
     if (el instanceof HTMLSelectElement && el.name === 'royalePlayers') { this.royalePlayers = Number(el.value) as 30 | 50 | 60 | 100; const card = this.root.querySelector<HTMLElement>('[data-mode="royale"] span'); if (card) card.textContent = `${this.royalePlayers} COMBATANTS`; return }
@@ -327,6 +329,24 @@ export class Ui {
     this.root.querySelectorAll<HTMLButtonElement>('[data-panel]').forEach(button => button.classList.toggle('active', button.dataset.panel === panel))
     if (panel === 'queue' || panel === 'servers') {
       panelEl.innerHTML = `<div class="local-room"><span class="region-bars">▮▮▮</span><b>LOCAL ARENA</b><small>BOT ROOMS READY</small></div><div class="quick-actions"><button class="quick-create" data-action="armory">CREATE</button><button class="quick-join" data-action="quick-play">JOIN</button></div><details class="queue-settings"><summary>MODE SELECTION</summary><label>MODE<select name="mode">${[['ffa','Free for all'],['tdm','Team deathmatch'],['domination','Domination'],['hardpoint','Hardpoint'],['ctf','Capture the standard'],['search','Search & defuse'],['royale','Frontier royale'],['training','Aim range'],['gungame','Gun game']].map(([id,name]) => `<option value="${id}" ${this.selectedMode === id ? 'selected' : ''}>${name}</option>`).join('')}</select></label><div class="queue-settings-row"><label>MAP<select name="map">${HISTORIC_MAPS.map(map => `<option value="${map.id}" ${this.selectedMap === map.id ? 'selected' : ''}>${map.name}</option>`).join('')}</select></label><label>SKILL<select name="difficulty"><option value="recruit" ${this.difficulty === 'recruit' ? 'selected' : ''}>Recruit</option><option value="regular" ${this.difficulty === 'regular' ? 'selected' : ''}>Regular</option><option value="veteran" ${this.difficulty === 'veteran' ? 'selected' : ''}>Veteran</option><option value="elite" ${this.difficulty === 'elite' ? 'selected' : ''}>Elite</option></select></label>${['tdm','domination','hardpoint','ctf','search'].includes(this.selectedMode) ? `<label>TEAM<select name="teamSize"><option value="1" ${this.teamSize === 1 ? 'selected' : ''}>1 v 1</option><option value="4" ${this.teamSize === 4 ? 'selected' : ''}>4 v 4</option><option value="5" ${this.teamSize === 5 ? 'selected' : ''}>5 v 5</option></select></label>` : ''}${this.selectedMode === 'royale' ? `<label>PLAYERS<select name="royalePlayers"><option value="30" ${this.royalePlayers === 30 ? 'selected' : ''}>30</option><option value="50" ${this.royalePlayers === 50 ? 'selected' : ''}>50</option><option value="60" ${this.royalePlayers === 60 ? 'selected' : ''}>60</option><option value="100" ${this.royalePlayers === 100 ? 'selected' : ''}>100</option></select></label>` : ''}</div></details><button class="cta menu-play" data-action="quick-play">PLAY <span>▶</span></button><div class="lobby-hint"><kbd>WASD</kbd> MOVE <kbd>LMB</kbd> FIRE <kbd>SPACE</kbd> JUMP</div>`
+      const selectedMap = HISTORIC_MAPS.find(map => map.id === this.selectedMap)
+      const previewFile = KCH_MAP_PREVIEWS[this.selectedMap]
+      if (selectedMap && previewFile) {
+        const preview = document.createElement('div')
+        preview.className = 'queue-map-preview'
+        const image = document.createElement('img')
+        image.src = `assets/kch-library/map-imgs/${encodeURIComponent(previewFile)}`
+        image.alt = `${selectedMap.name} map preview`
+        image.loading = 'lazy'
+        const caption = document.createElement('div')
+        const kicker = document.createElement('small')
+        kicker.textContent = 'KCH COMMUNITY MAP'
+        const title = document.createElement('strong')
+        title.textContent = selectedMap.name
+        caption.append(kicker, title)
+        preview.append(image, caption)
+        panelEl.querySelector('.quick-actions')?.before(preview)
+      }
     } else if (panel === 'loadout') {
       const primary = ARMORY_GUNS.find(gun => gun.id === this.save.data.primaryGunId) ?? ARMORY_GUNS[0]!
       const handgun = ARMORY_GUNS.find(gun => gun.id === this.save.data.handgunGunId) ?? ARMORY_GUNS.find(gun => gun.slot === 'handgun')!

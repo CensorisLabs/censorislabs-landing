@@ -9,6 +9,7 @@ export class Audio {
   private musicTimer = 0
   private musicOn = false
   private readonly stepNoise: AudioBuffer
+  private readonly kchSamples = new Map<string, AudioBuffer>()
   constructor() {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     this.ctx = new (Ctor ?? AudioContext)()
@@ -19,6 +20,28 @@ export class Audio {
     for (let i = 0; i < channel.length; i += 1) channel[i] = (Math.random() * 2 - 1) * (1 - i / channel.length)
   }
   unlock(): void { if (this.ctx.state === 'suspended') void this.ctx.resume() }
+  async loadKchSamples(): Promise<void> {
+    const samples: Record<string, string> = {
+      gunshot: 'assets/kch-library/sounds/media%20pack-1/__use__.5421e46b.mp3',
+      hit: 'assets/kch-library/sounds/media%20pack-1/__hit__.200043fa.mp3',
+      hurt: 'assets/kch-library/sounds/media%20pack-2/__wound1__.531f0649.mp3',
+      dash: 'assets/kch-library/sounds/media%20pack-2/__whoosh__.634f7dda.mp3',
+      stepEarth: 'assets/kch-library/sounds/media%20pack-1/__Earth__.37abd171.mp3',
+      stepGrass: 'assets/kch-library/sounds/media%20pack-1/__Grass__.9d721edd.mp3',
+      stepMud: 'assets/kch-library/sounds/media%20pack-1/__Mud__.44d00950.mp3',
+      stepSand: 'assets/kch-library/sounds/media%20pack-1/__Sand__.10a59d13.mp3',
+      stepStone: 'assets/kch-library/sounds/media%20pack-1/__Stone__.a9cedce8.mp3',
+    }
+    await Promise.all(Object.entries(samples).map(async ([key, url]) => {
+      try {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(`KCH sound request failed (${response.status})`)
+        this.kchSamples.set(key, await this.ctx.decodeAudioData(await response.arrayBuffer()))
+      } catch (error) {
+        console.warn(`Optional KCH sound unavailable: ${url}`, error)
+      }
+    }))
+  }
   setVolumes(music: number, sfx: number, muted = false): void { const t = this.ctx.currentTime; this.music.gain.setTargetAtTime(muted ? 0 : music * 0.55, t, 0.05); this.sfx.gain.setTargetAtTime(muted ? 0 : sfx * 0.8, t, 0.05) }
   updateListener(position: AudioPoint, yaw: number, pitch = 0): void {
     const listener = this.ctx.listener
@@ -43,8 +66,21 @@ export class Audio {
     window.setTimeout(() => panner.disconnect(), 1800)
     return panner
   }
+  private playKchSample(key: string, position?: AudioPoint, volume = 1): boolean {
+    const buffer = this.kchSamples.get(key)
+    if (!buffer || this.ctx.state !== 'running') return false
+    const source = this.ctx.createBufferSource()
+    const gain = this.ctx.createGain()
+    source.buffer = buffer
+    gain.gain.value = volume
+    source.connect(gain).connect(this.outputAt(position))
+    source.onended = () => { source.disconnect(); gain.disconnect() }
+    source.start()
+    return true
+  }
   play(name: Sfx, position?: AudioPoint): void {
     if (this.ctx.state !== 'running') return
+    if (this.playKchSample(name, position, name === 'gunshot' ? 0.58 : 0.78)) return
     const t = this.ctx.currentTime
     const output = this.outputAt(position)
     const tone = (freq: number, end: number, dur: number, type: OscillatorType, vol: number, delay = 0, bus: AudioNode = output) => { const o = this.ctx.createOscillator(); const g = this.ctx.createGain(); o.type = type; o.frequency.setValueAtTime(freq, t + delay); o.frequency.exponentialRampToValueAtTime(Math.max(end, 20), t + delay + dur); g.gain.setValueAtTime(0.0001, t + delay); g.gain.exponentialRampToValueAtTime(vol, t + delay + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + delay + dur); o.connect(g).connect(bus); o.start(t + delay); o.stop(t + delay + dur + 0.04) }
@@ -69,6 +105,8 @@ export class Audio {
   }
   playFootstep(surface: 'concrete' | 'metal' | 'wood' | 'gravel' | 'grass', position: AudioPoint, strength = 1): void {
     if (this.ctx.state !== 'running') return
+    const kchStep = surface === 'wood' ? 'stepEarth' : surface === 'grass' ? 'stepGrass' : surface === 'gravel' ? 'stepSand' : 'stepStone'
+    if (this.playKchSample(kchStep, position, Math.max(0.35, Math.min(1.25, strength)))) return
     const profiles = {
       concrete: { frequency: 520, q: 0.65, gain: 0.16 }, metal: { frequency: 2850, q: 1.1, gain: 0.13 },
       wood: { frequency: 950, q: 0.8, gain: 0.16 }, gravel: { frequency: 1750, q: 0.55, gain: 0.19 }, grass: { frequency: 380, q: 0.45, gain: 0.1 },

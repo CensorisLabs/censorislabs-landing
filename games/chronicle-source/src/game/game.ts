@@ -45,7 +45,7 @@ const RESPAWN_SECONDS = 8
 const PLAYER_MODEL_HEIGHT = 1.84
 const BOT_EYE_HEIGHT = 1.48
 const SEARCH_ROUND = { buySeconds: 15, liveSeconds: 115, fuseSeconds: 45, postSeconds: RESPAWN_SECONDS, spawnShieldSeconds: 3, halfRounds: 12, winsRequired: 13 } as const
-export type GameModels = { player: GLTF | null; arms: GLTF | null; ar9: GLTF | null; scar: GLTF | null; lar: GLTF | null; m60: GLTF | null; mac10: GLTF | null; revolver: GLTF | null; shark: GLTF | null; vita: GLTF | null; weatie: GLTF | null; bayonet: GLTF | null; tomahawk: GLTF | null; modelTexture: THREE.Texture | null; kchMapTexture: THREE.Texture | null; kchTexturePacks: THREE.Texture[]; kchMaps: Partial<Record<MapId, KchMapData>> }
+export type GameModels = { player: GLTF | null; arms: GLTF | null; ar9: GLTF | null; scar: GLTF | null; lar: GLTF | null; m60: GLTF | null; mac10: GLTF | null; revolver: GLTF | null; shark: GLTF | null; vita: GLTF | null; weatie: GLTF | null; bayonet: GLTF | null; tomahawk: GLTF | null; modelTexture: THREE.Texture | null; kchMapTexture: THREE.Texture | null; kchTexturePacks: THREE.Texture[]; kchMaps: Partial<Record<MapId, KchMapData>>; kchSkybox?: THREE.CubeTexture | null }
 
 type MutableRun = GameSnapshot & { phase: 'playing' | 'won' | 'lost' }
 
@@ -103,6 +103,7 @@ export class Game {
   private defuseProgress = 0
   private plantSite = 0
   private readonly weaponView = new THREE.Group()
+  private readonly viewModelRig = new THREE.Group()
   private currentWeapon: WeaponId = 'glock'
   private activeSlot: 0 | 1 | 2 = 0
   private slideLeft = 0
@@ -164,10 +165,11 @@ export class Game {
   constructor(private readonly renderer: Renderer, private readonly input: Input, private readonly audio: Audio, save: SaveStore, private readonly hooks: GameHooks, models: GameModels = { player: null, arms: null, ar9: null, scar: null, lar: null, m60: null, mac10: null, revolver: null, shark: null, vita: null, weatie: null, bayonet: null, tomahawk: null, modelTexture: null, kchMapTexture: null, kchTexturePacks: [], kchMaps: {} }) {
     this.save = save
     this.models = models
-    this.scene.background = new THREE.Color('#31579f')
+    this.scene.background = this.models.kchSkybox ?? new THREE.Color('#31579f')
     this.scene.fog = null
     this.cameraInternal.rotation.order = 'YXZ'
     this.cameraInternal.add(this.weaponView)
+    this.weaponView.add(this.viewModelRig)
     const flash = new THREE.Group()
     const flashMaterial = (color: string) => new THREE.MeshBasicMaterial({ color })
     flash.add(new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.075, 0.06), flashMaterial('#ffeb3b')))
@@ -411,7 +413,7 @@ export class Game {
     this.objectivePoints[1]!.copy(center)
     this.objectivePoints[2]!.copy(center.clone().addScaledVector(axis, 0.2))
     const mapSky = this.mapId === 'pool' ? '#62b7ee' : data.skyboxColor
-    this.scene.background = new THREE.Color(mapSky && /^#[0-9a-f]{6}$/i.test(mapSky) ? mapSky : this.mapId === 'labs' ? '#87c9d8' : this.mapId === 'dunes' || this.mapId === 'antfarm' ? '#83c3ec' : '#73bce9')
+    this.scene.background = this.models.kchSkybox ?? new THREE.Color(mapSky && /^#[0-9a-f]{6}$/i.test(mapSky) ? mapSky : this.mapId === 'labs' ? '#87c9d8' : this.mapId === 'dunes' || this.mapId === 'antfarm' ? '#83c3ec' : '#73bce9')
   }
   private poolBlockTexture(textureId: number, base: string): THREE.CanvasTexture {
     const canvas = document.createElement('canvas')
@@ -451,7 +453,7 @@ export class Game {
   }
   private buildFallbackArena(terrain: string): void {
     this.activeKchMap = null; this.kchColumns.clear(); this.kchSpawnTeams = { first: [], second: [] }
-    this.scene.background = new THREE.Color('#77bde9')
+    this.scene.background = this.models.kchSkybox ?? new THREE.Color('#77bde9')
     const floor = this.block(new THREE.Vector3(64, 0.4, 64), new THREE.Vector3(0, -0.2, 0), terrain)
     floor.userData.surfaceType = 'concrete'
     for (const [x, z, sx, sz, sy] of [[-12, -12, 4, 3, 2], [-7, -12, 3, 3, 2], [10, -8, 4, 3, 3], [15, -8, 3, 3, 2], [-15, 8, 3, 4, 2], [-9, 12, 5, 3, 2], [11, 12, 3, 5, 2], [3, 19, 4, 3, 2], [-20, -1, 3, 3, 3], [20, 0, 3, 3, 3], [0, 4, 3, 6, 2], [0, -4, 3, 6, 2]] as const) this.block(new THREE.Vector3(sx, sy, sz), new THREE.Vector3(x, sy / 2, z), '#c4b384')
@@ -847,9 +849,10 @@ export class Game {
     if (cached) return cached
 
     const canvas = document.createElement('canvas')
-    canvas.width = 128; canvas.height = 128
+    canvas.width = 256; canvas.height = 256
     const context = canvas.getContext('2d')!
     context.imageSmoothingEnabled = false
+    context.scale(2, 2)
     const base = new THREE.Color(colorHex)
     const dark = base.clone().multiplyScalar(0.38)
     const mid = base.clone().multiplyScalar(0.84)
@@ -899,6 +902,18 @@ export class Game {
     context.fillStyle = paint(dark); context.fillRect(22, 112, 24, 5); context.fillRect(82, 112, 24, 5)
     context.fillStyle = paint(bright); context.font = 'bold 8px sans-serif'; context.fillText(pattern.slice(0, 12).toUpperCase(), 20, 16)
 
+    const kchImage = this.kchTexturePack(seed)?.image as CanvasImageSource | undefined
+    if (kchImage) {
+      context.save()
+      context.globalCompositeOperation = 'multiply'
+      context.globalAlpha = 0.26
+      context.drawImage(kchImage, 0, 0, 128, 128)
+      context.globalCompositeOperation = 'screen'
+      context.globalAlpha = 0.1
+      context.drawImage(kchImage, 0, 0, 128, 128)
+      context.restore()
+    }
+
     const texture = new THREE.CanvasTexture(canvas)
     texture.colorSpace = THREE.SRGBColorSpace
     texture.magFilter = THREE.LinearFilter
@@ -921,7 +936,7 @@ export class Game {
     const size = bounds.getSize(new THREE.Vector3())
     const center = bounds.getCenter(new THREE.Vector3())
     const scale = targetLength / Math.max(0.001, size.x, size.y, size.z)
-    const kchFinish = this.kchTexturePack(seed)
+    const kchFinish = this.weaponFinishTexture(tint, pattern, seed)
     model.scale.setScalar(scale)
     model.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
     model.traverse(object => {
@@ -931,7 +946,7 @@ export class Game {
         const copy = material.clone()
         if (copy instanceof THREE.MeshStandardMaterial) {
           if (object.geometry.getAttribute('uv')) {
-            copy.map = kchFinish ?? copy.map ?? this.weaponFinishTexture(tint, pattern, seed)
+            copy.map = kchFinish
             copy.color.set('#ffffff')
             copy.vertexColors = object.geometry.hasAttribute('color')
           } else {
@@ -964,7 +979,7 @@ export class Game {
       const magazineSize = new THREE.Vector3(pistol ? 0.105 : 0.15, THREE.MathUtils.clamp(targetLength * 0.15, 0.12, 0.3), pistol ? 0.085 : 0.12)
       const magazine = new THREE.Mesh(
         new THREE.BoxGeometry(magazineSize.x, magazineSize.y, magazineSize.z),
-        new THREE.MeshStandardMaterial({ color: '#ffffff', map: kchFinish ?? this.weaponFinishTexture(tint, `${pattern}-magazine`, seed), metalness: 0.24, roughness: 0.62 }),
+      new THREE.MeshStandardMaterial({ color: '#ffffff', map: this.weaponFinishTexture(tint, `${pattern}-magazine`, seed), metalness: 0.24, roughness: 0.62 }),
       )
       // These KCH weapon meshes are authored as a single object, so give the
       // reload rig a textured, animated magazine at the receiver's grip point.
@@ -980,8 +995,10 @@ export class Game {
     }
     wrapper.userData.baseY = wrapper.position.y
     wrapper.userData.basePosition = wrapper.position.clone()
-    this.weaponView.add(wrapper)
+    this.viewModelRig.add(wrapper)
     this.importedViewModel = wrapper
+    const operatorSkin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
+    this.addImportedArms(wrapper, operatorSkin.cloth, 'field-cloth', seed + 31)
     const muzzle = model.getObjectByName('Muzzle')
     if (muzzle) {
       this.weaponView.updateMatrixWorld(true)
@@ -989,10 +1006,45 @@ export class Game {
     }
     return wrapper
   }
-  private addImportedArms(): void {
-    // The supplied arms mesh fans out as two large spikes when attached to this
-    // camera rig. Leave this empty so updateViewModel builds the compact sleeves
-    // that sit correctly behind every weapon archetype.
+  private addImportedArms(parent: THREE.Group, cloth: string, pattern: string, seed: number): void {
+    const source = this.models.arms
+    if (!source) return
+    const armRig = new THREE.Group()
+    const model = source.scene.clone(true)
+    model.updateMatrixWorld(true)
+    const bounds = new THREE.Box3().setFromObject(model)
+    const size = bounds.getSize(new THREE.Vector3())
+    const center = bounds.getCenter(new THREE.Vector3())
+    const scale = 0.76 / Math.max(0.001, size.z)
+    model.scale.setScalar(scale)
+    model.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
+    const sleeveTexture = this.weaponFinishTexture(cloth, pattern, seed)
+    model.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return
+      object.castShadow = false
+      object.receiveShadow = false
+      const cloneMaterial = (material: THREE.Material) => {
+        const copy = material.clone()
+        if (copy instanceof THREE.MeshStandardMaterial) {
+          copy.map = sleeveTexture
+          copy.color.set('#ffffff')
+          copy.metalness = 0.04
+          copy.roughness = 0.78
+          copy.needsUpdate = true
+        }
+        return copy
+      }
+      object.material = Array.isArray(object.material) ? object.material.map(cloneMaterial) : cloneMaterial(object.material)
+    })
+    armRig.add(model)
+    // Match the KCH diagonal arm spread to the support and trigger hand axis.
+    // The arm rig is a child of the exact same wrapper as the weapon, so recoil,
+    // aiming, inspection and reload all share one transform hierarchy.
+    armRig.position.set(-0.16, -0.18, -0.14)
+    armRig.rotation.y = Math.PI / 4
+    armRig.userData.basePosition = armRig.position.clone()
+    parent.add(armRig)
+    this.importedArms = armRig
   }
   private updateViewModel(): void {
     for (const part of this.viewParts) { part.removeFromParent(); part.geometry.dispose(); const materials = Array.isArray(part.material) ? part.material : [part.material]; materials.forEach(material => material.dispose()) }
@@ -1002,11 +1054,7 @@ export class Game {
       this.importedViewModel.traverse(object => { if (object instanceof THREE.Mesh) { if (object.userData.generatedReloadMagazine === true) object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()) } })
       this.importedViewModel = null
     }
-    if (this.importedArms) {
-      this.importedArms.removeFromParent()
-      this.importedArms.traverse(object => { if (object instanceof THREE.Mesh) { const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()) } })
-      this.importedArms = null
-    }
+    this.importedArms = null
     this.reloadMagazine = null; this.reloadHand = null; this.muzzleFlashGroup.visible = false; this.muzzleFlashGroup.position.set(0, 0, 0)
     const weapon = WEAPONS[this.currentWeapon]
     const selectedGun = this.currentWeapon === 'knife' ? undefined : armoryGun(this.currentWeapon === this.selectedHandgunBase() ? this.save.data.handgunGunId : this.save.data.primaryGunId)
@@ -1023,19 +1071,19 @@ export class Game {
       : this.currentWeapon === 'glock' ? this.models.shark
         : this.currentWeapon === 'deagle' ? this.models.revolver
           : this.currentWeapon === 'mp5' ? this.models.mac10
-            : this.currentWeapon === 'awp' ? (selectedGun?.model && selectedGun.model % 2 ? this.models.weatie : this.models.vita)
+            : this.currentWeapon === 'awp' ? this.models.vita
               : rifleModels[(selectedGun?.model ?? 0) % rifleModels.length]
     const importedLength = this.currentWeapon === 'knife' ? 0.76 : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? 0.72 : this.currentWeapon === 'mp5' ? 1.28 : this.currentWeapon === 'awp' ? 1.9 : 1.7
     const importedGun = Boolean(importedSource && this.currentWeapon !== 'knife')
     const ornament = new THREE.Color(primary).lerp(new THREE.Color('#f5deb0'), 0.48).getStyle()
     const addBox = (size: [number, number, number], pos: [number, number, number], color: string, metal = false) => {
       const part = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color, metal))
-      part.position.set(...pos); part.castShadow = true; this.weaponView.add(part); this.viewParts.push(part); return part
+      part.position.set(...pos); part.castShadow = true; this.viewModelRig.add(part); this.viewParts.push(part); return part
     }
     const addSkinBox = (size: [number, number, number], pos: [number, number, number]) => {
       const material = new THREE.MeshStandardMaterial({ color: '#ffffff', map: this.weaponFinishTexture(primary, motif, motifCode), metalness: 0.28, roughness: 0.48 })
       const part = new THREE.Mesh(new THREE.BoxGeometry(...size), material)
-      part.position.set(...pos); part.castShadow = true; this.weaponView.add(part); this.viewParts.push(part); return part
+      part.position.set(...pos); part.castShadow = true; this.viewModelRig.add(part); this.viewParts.push(part); return part
     }
     const addSleeve = (from: [number, number, number], to: [number, number, number], radius: number) => {
       const start = new THREE.Vector3(...from), end = new THREE.Vector3(...to)
@@ -1043,10 +1091,9 @@ export class Game {
       const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.76, radius, direction.length(), 7, 1), this.mat('#282f3a'))
       sleeve.position.copy(start).add(end).multiplyScalar(0.5)
       sleeve.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize())
-      sleeve.castShadow = true; this.weaponView.add(sleeve); this.viewParts.push(sleeve)
+      sleeve.castShadow = true; this.viewModelRig.add(sleeve); this.viewParts.push(sleeve)
     }
-    this.addImportedArms()
-    if (!this.importedArms) {
+    if (!importedSource || !this.models.arms) {
       const supportHand: [number, number, number] = importedGun ? [0.1, -0.52, -0.78] : [0.36, -0.52, -0.88]
       const triggerHand: [number, number, number] = importedGun ? [0.45, -0.53, -0.48] : [0.36, -0.53, -0.38]
       addSleeve([-0.28, -0.76, 0.02], supportHand, 0.085)
@@ -1056,7 +1103,7 @@ export class Game {
       this.reloadHand.userData.basePosition = this.reloadHand.position.clone()
     }
     if (importedSource) {
-      this.addImportedViewModel(importedSource, -Math.PI / 4, importedLength, primary, this.currentWeapon === 'knife' ? -Math.PI / 2 : 0, motif, motifCode)
+      this.addImportedViewModel(importedSource, this.currentWeapon === 'knife' ? -Math.PI / 4 : Math.PI * 7 / 12, importedLength, primary, this.currentWeapon === 'knife' ? -Math.PI / 2 : 0, motif, motifCode)
     } else if (this.currentWeapon === 'knife') {
       this.muzzleFlashGroup.position.set(0, 0, 0)
       addBox([0.12, 0.15, 0.38], [0.34, -0.48, -0.57], '#202832')
@@ -1071,7 +1118,7 @@ export class Game {
         const receiverWidth = pistol ? 0.26 : 0.31 + model % 3 * 0.018
         addSkinBox([receiverWidth, pistol ? 0.17 : 0.22, receiverLength], [0.36, -0.35, -0.57])
         const portrait = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.28), new THREE.MeshStandardMaterial({ map: this.weaponFinishTexture(primary, motif, motifCode), roughness: 0.48, metalness: 0.24 }))
-        portrait.rotation.y = -Math.PI / 2; portrait.position.set(0.36 - receiverWidth / 2 - 0.012, -0.35, -0.57); this.weaponView.add(portrait); this.viewParts.push(portrait)
+        portrait.rotation.y = -Math.PI / 2; portrait.position.set(0.36 - receiverWidth / 2 - 0.012, -0.35, -0.57); this.viewModelRig.add(portrait); this.viewParts.push(portrait)
         // Distinct pistol, compact SMG, long precision rifle and rifle proportions.
         const barrelLength = pistol ? 0.38 : sniper ? 1.75 : smg ? 0.92 : 1.28
         addBox([pistol ? 0.1 : 0.12, 0.1, barrelLength], [0.36, -0.31, -0.88 - barrelLength / 2], '#26313c')
@@ -1086,7 +1133,7 @@ export class Game {
         addBox([0.16, pistol ? 0.1 : 0.12, 0.28], [0.36, -0.53, -0.35], '#293540')
         if (sniper) {
           const scope = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.62), this.mat('#27333c'))
-          scope.rotation.x = Math.PI / 2; scope.position.set(0.36, -0.17, -0.72); this.weaponView.add(scope); this.viewParts.push(scope)
+          scope.rotation.x = Math.PI / 2; scope.position.set(0.36, -0.17, -0.72); this.viewModelRig.add(scope); this.viewParts.push(scope)
           addBox([0.23, 0.08, 0.08], [0.36, -0.22, -0.72], '#a9d7db', true)
         } else {
           addBox([0.12, 0.11, pistol ? 0.12 : 0.3], [0.36, -0.18, -0.62], model % 3 === 1 ? '#1e2932' : '#485965')
@@ -1916,7 +1963,7 @@ export class Game {
       if (this.reloadMagazine) {
         this.weaponView.updateMatrixWorld(true)
         const magazineWorld = this.reloadMagazine.getWorldPosition(new THREE.Vector3())
-        target = this.weaponView.worldToLocal(magazineWorld).add(new THREE.Vector3(0, 0.04, 0.02))
+        target = this.viewModelRig.worldToLocal(magazineWorld).add(new THREE.Vector3(0, 0.04, 0.02))
       }
       this.reloadHand.position.lerpVectors(grip, target, handReach)
     }
@@ -1995,7 +2042,7 @@ export class Game {
       }
     }
   }
-  snapshot(): GameSnapshot { return { ...this.run, matchType: this.matchType, mapId: this.mapId, crosshairBloom: this.run.crosshairBloom, grenades: this.grenadeCount, spectating: this.playerDeadUntil === Number.POSITIVE_INFINITY && this.matchType === 'search', blueScore: this.blueScore, redScore: this.redScore, round: this.round, roundPhase: this.matchType === 'search' ? this.searchRoundPhase() : 'live', spawnProtection: this.matchType === 'search' && this.roundBreak === 0 && this.roundClock >= SEARCH_ROUND.buySeconds && !this.playerDeadUntil ? Math.max(0, Math.min(SEARCH_ROUND.spawnShieldSeconds, this.playerSpawnProtectedUntil - this.matchTime)) : 0, respawnIn: Number.isFinite(this.playerDeadUntil) ? Math.max(0, this.playerDeadUntil - this.matchTime) : 0, aliveBots: this.bots.filter(bot => bot.alive && bot.id < this.activeBotCount).length, accuracy: this.run.shots ? this.run.hits / this.run.shots : 0, ammo: this.ammo, reload: this.reloadLeft, weapon: this.currentWeapon, weaponName: this.activeWeaponName(), aimed: this.input.held('ads'), level: this.save.data.level, xp: this.save.data.xp, nextXp: xpForLevel(this.save.data.level), credits: this.save.data.credits, playerX: this.player.root.position.x, playerZ: this.player.root.position.z, yaw: this.yaw, objective: this.objective, scoreboard: this.scoreboard() } }
+  snapshot(): GameSnapshot { return { ...this.run, matchType: this.matchType, mapId: this.mapId, crosshairBloom: this.run.crosshairBloom, grenades: this.grenadeCount, spectating: this.playerDeadUntil === Number.POSITIVE_INFINITY && this.matchType === 'search', blueScore: this.blueScore, redScore: this.redScore, round: this.round, roundPhase: this.matchType === 'search' ? this.searchRoundPhase() : 'live', spawnProtection: this.matchType === 'search' && this.roundBreak === 0 && this.roundClock >= SEARCH_ROUND.buySeconds && !this.playerDeadUntil ? Math.max(0, Math.min(SEARCH_ROUND.spawnShieldSeconds, this.playerSpawnProtectedUntil - this.matchTime)) : 0, respawnIn: Number.isFinite(this.playerDeadUntil) ? Math.max(0, this.playerDeadUntil - this.matchTime) : 0, aliveBots: this.bots.filter(bot => bot.alive && bot.id < this.activeBotCount).length, accuracy: this.run.shots ? this.run.hits / this.run.shots : 0, ammo: this.ammo, magazine: WEAPONS[this.currentWeapon].magazine, reload: this.reloadLeft, weapon: this.currentWeapon, weaponName: this.activeWeaponName(), aimed: this.input.held('ads'), level: this.save.data.level, xp: this.save.data.xp, nextXp: xpForLevel(this.save.data.level), credits: this.save.data.credits, playerX: this.player.root.position.x, playerZ: this.player.root.position.z, yaw: this.yaw, objective: this.objective, scoreboard: this.scoreboard() } }
   project(world: THREE.Vector3): { x: number; y: number } { const v = world.clone().project(this.cameraInternal); return { x: ((v.x + 1) / 2) * this.renderer.canvas.clientWidth, y: ((1 - v.y) / 2) * this.renderer.canvas.clientHeight } }
 }
 

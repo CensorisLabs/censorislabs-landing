@@ -1,0 +1,4479 @@
+/* ==========================================================
+   rune clan css v0.2 | Credits: ONE!PRO
+   ========================================================== */
+
+:root {
+    --rune-red: rgba(255, 40, 40, 0.95);
+    --rune-red-soft: rgba(255, 40, 40, 0.25);
+    --rune-red-glow: rgba(255, 40, 40, 0.35);
+}
+
+/* GLOBAL BACKGROUND */
+.interface .background,
+#gui,
+.end-modal {
+    background:
+        radial-gradient(circle at 25% 20%, rgba(255, 40, 40, 0.20), transparent 60%),
+        radial-gradient(circle at 75% 80%, rgba(180, 0, 0, 0.12), transparent 65%),
+        linear-gradient(180deg, #050507, #0a0a0d) !important;
+}
+
+/* GLASS PANELS */
+.container,
+.container-card,
+.left-interface,
+.right-interface,
+.tab,
+.tabs,
+.tab-info,
+.tab-team-info,
+.inventory,
+.profile,
+.shop,
+.card,
+.card-profile,
+.list-container,
+.changelog-item,
+.messages,
+.chat-cont,
+.quests,
+.subjects,
+.servers,
+.clans,
+.hub-container,
+.card-cont {
+    background: rgba(12, 12, 16, 0.72) !important;
+    border: 1px solid rgba(255, 40, 40, 0.18);
+    box-shadow:
+        0 0 10px rgba(255, 40, 40, 0.10),
+        inset 0 0 12px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+}
+
+/* LEFT MENU */
+.interface .left-interface {
+    background: rgba(10, 10, 12, 0.80) !important;
+    border-right: 1px solid rgba(255, 40, 40, 0.30);
+}
+
+/* ITEMS / INVENTORY */
+.inventory .left,
+.inventory .avatar,
+.inventory .bottom,
+.item,
+.subject,
+.subjects .subject,
+.weapon,
+.weapon-cont {
+    background: rgba(18, 18, 22, 0.65) !important;
+    border: 1px solid rgba(255, 40, 40, 0.15);
+}
+/* CARDS */
+.card-cont {
+    background: rgba(15, 15, 18, 0.65) !important;
+    border: 1px solid rgba(255, 40, 40, 0.20);
+    box-shadow: 0 0 12px rgba(255, 40, 40, 0.12);
+}
+
+/* BUTTONS */
+button,
+.button,
+#play-btn,
+#join-btn,
+#create-btn,
+#ready-btn,
+#leave-btn,
+#invite-btn {
+    background: linear-gradient(180deg, rgba(35,35,40,0.9), rgba(15,15,18,0.9)) !important;
+    border: 1px solid rgba(255, 40, 40, 0.30);
+    color: #fff;
+    transition: 0.2s ease;
+}
+
+button:hover,
+.button:hover {
+    box-shadow: 0 0 14px rgba(255, 40, 40, 0.45);
+    transform: translateY(-1px);
+}
+
+/* INPUTS */
+input,
+textarea,
+.select-region,
+.select-mod,
+.input {
+    background: rgba(10, 10, 12, 0.75) !important;
+    border: 1px solid rgba(255, 40, 40, 0.18);
+    color: #fff;
+}
+
+/* CHAT */
+.chat-cont,
+.messages,
+.message {
+    background: rgba(10, 10, 12, 0.60) !important;
+    border-left: 2px solid rgba(255, 40, 40, 0.30);
+}
+
+/* HUD */
+.top-items,
+.bottom-items {
+    background: rgba(10, 10, 12, 0.65) !important;
+    border-bottom: 1px solid rgba(255, 40, 40, 0.18);
+}
+
+/* TOOLTIP */
+.tooltip,
+.alert-default {
+    background: rgba(10, 10, 12, 0.90) !important;
+    border: 1px solid rgba(255, 40, 40, 0.30);
+    box-shadow: 0 0 10px rgba(255, 40, 40, 0.25);
+}
+
+/* SEARCH BAR ANIMATION */
+.searching-game > * {
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 40, 40, 0.20),
+        rgba(255, 40, 40, 0.40),
+        rgba(255, 40, 40, 0.20),
+        transparent
+    ) !important;
+}
+
+/* PROGRESS BAR */
+.progress {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.progress2 {
+    background: linear-gradient(90deg, #ff2a2a, #8b0000) !important;
+    box-shadow: 0 0 12px rgba(255, 40, 40, 0.45);
+}
+
+/* TEXT STYLE */
+h1, h2, .title {
+    color: #fff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+h1::after {
+    content: " • rune clan";
+    color: var(--rune-red);
+    font-weight: 600;
+}
+
+/* AVATAR */
+.avatar {
+    border: 2px solid rgba(255, 40, 40, 0.30);
+    box-shadow: 0 0 10px rgba(255, 40, 40, 0.25);
+}/* REMOVE LEFT PANEL / PROFILE CARD BACKGROUNDS ONLY */
+#left-interface,
+#left-interface .profile,
+#left-interface .card-cont,
+#left-interface .card-cont.avatar-info,
+#left-interface .card-cont.user-info {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    backdrop-filter: none !important;
+}.left-icons {
+    display: flex !important;
+    position: fixed !important;
+
+    top: 0 !important;
+    left: 0 !important;
+
+    width: 100% !important;
+    height: 56px !important;
+
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    background: transparent !important;
+    z-index: 999 !important;
+}
+
+.icon-btn {
+    flex: 0 0 auto !important;
+    width: auto !important;
+
+    height: 56px !important;
+    margin: 0 !important;
+    padding: 0 26px !important;
+
+    background: transparent !important;
+    border: none !important;
+
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    cursor: pointer !important;
+    position: relative !important;
+
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+
+    color: rgba(255,255,255,0.60) !important;
+
+    transition: 0.15s;
+}
+
+.icon-btn .wrapper {
+    transform: none !important;
+    transition: none !important;
+}
+
+.icon-btn svg,
+.icon-btn img,
+.icon-btn i {
+    display: none !important;
+}
+
+.icon-btn:hover {
+    color: rgba(255,255,255,0.98) !important;
+}
+
+.icon-btn.active::after {
+    content: "";
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    bottom: 0;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.95);
+}/* Text size */
+.icon-btn {
+    font-size: 17px !important;
+    letter-spacing: 1.5px !important;
+}/* Keep the original container where the client expects it */
+.left-icons {
+    top: 0 !important;
+    left: 0 !important;
+}
+
+/* Move only the button row */
+.left-icons .icon-btn {
+    position: relative !important;
+    transform: translate(-28vw, 94vh) !important;
+}
+
+/* More spacing between buttons */
+.icon-btn {
+    padding-left: 25px !important;
+    padding-right: 23px !important;
+}/* Button setup */
+.icon-btn {
+    position: relative !important;
+    overflow: visible !important;
+}
+/* FUTURISTIC LAYER (glow + energy fade) */
+.icon-btn::after {
+    content: "";
+    position: absolute;
+    left: 25%;
+    right: 25%;
+    bottom: 6px;
+
+    height: 2px;
+    border-radius: 999px;
+
+    background: rgba(180,220,255,0.85);
+    box-shadow: 0 0 8px rgba(120,180,255,0.35);
+
+    opacity: 0;
+    transform: scaleX(0.4);
+
+    pointer-events: none;
+}
+
+/* Hover in (slight glow lag behind main line) */
+.icon-btn:hover::after {
+    opacity: 1;
+    transform: scaleX(1);
+
+    transition:
+        transform 0.28s cubic-bezier(0.2, 0.9, 0.2, 1),
+        opacity 0.35s ease-out;
+}
+
+/* Hover out = slow futuristic fade trail */
+.icon-btn::after {
+    transition:
+        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.8s ease-out;
+}/* Animation */
+@-webkit-keyframes glow {
+    from {
+        text-shadow: 0 0 5px #fff, 0 0 5px #ae50e4, 0 0 5px #ae50e4, 0 0 5px #ae50e4, 0 0 6px #ae50e4, 0 0 7px #ae50e4, 0 0 8px #ae50e4;
+    }
+}
+
+@-webkit-keyframes animate{
+    to {transform:translateY(30%);}
+}
+
+@keyframes rainbow{
+		100%,0%{
+			color: rgb(255,0,0);
+		}
+		8%{
+			color: rgb(255,127,0);
+		}
+		16%{
+			color: rgb(255,255,0);
+		}
+		25%{
+			color: rgb(127,255,0);
+		}
+		33%{
+			color: rgb(0,255,0);
+		}
+		41%{
+			color: rgb(0,255,127);
+		}
+		50%{
+			color: rgb(0,255,255);
+		}
+		58%{
+			color: rgb(0,127,255);
+		}
+		66%{
+			color: rgb(0,0,255);
+		}
+		75%{
+			color: rgb(127,0,255);
+		}
+		83%{
+			color: rgb(255,0,255);
+		}
+		91%{
+			color: rgb(255,0,127);
+		}
+}
+ .clan-tag {
+	animation: rainbow 1.3s linear infinite;
+}
+
+/* Background */
+.pattern-bg,
+.bg-radial {
+    display: none;
+}
+
+.interface .background{
+    background: url(https://imgs.search.brave.com/CZMtyr8i_FtYIdyk30v2OFjsBYkL--buObm_uz0Lu4U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJhY2Nlc3Mu/Y29tL2Z1bGwvMzk2/NzAwLmpwZw) repeat !important;
+    height: 300%;
+    background-position: 0px 0px;
+    -webkit-animation: animate 10s linear infinite!important;
+}
+
+#app > div.interface.text-2 > div.background > div.pattern-bg,
+#app > div.interface.text-2 > div.background > div.bg-radial {
+    display: none !important
+}#logo {
+    content: url("https://i.postimg.cc/KzkF17Gn/cooltext509719519471838.png") !important;
+}.card-cont.avatar-info {
+    background: rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 0, 60, 0.55) !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.25),
+        0 0 25px rgba(255, 0, 60, 0.15),
+        inset 0 0 15px rgba(0, 0, 0, 0.6);
+
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* red glow edge pulse */
+.card-cont.avatar-info::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    border-radius: 10px;
+    padding: 1px;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 0, 60, 0.8),
+        rgba(255, 0, 60, 0.1),
+        rgba(255, 0, 60, 0.6)
+    );
+
+    opacity: 0.6;
+    pointer-events: none;
+
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* hover glow intensifies */
+.card-cont.avatar-info:hover {
+    box-shadow:
+        0 0 15px rgba(255, 0, 60, 0.45),
+        0 0 40px rgba(255, 0, 60, 0.25),
+        inset 0 0 15px rgba(0, 0, 0, 0.7);
+}.card-cont.user-info {
+    background: rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 0, 60, 0.55) !important;
+
+    box-shadow:
+        0 0 12px rgba(255, 0, 60, 0.22),
+        0 0 28px rgba(255, 0, 60, 0.12),
+        inset 0 0 15px rgba(0, 0, 0, 0.6);
+
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* glowing HUD frame overlay */
+.card-cont.user-info::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    border-radius: 10px;
+    padding: 1px;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 0, 60, 0.75),
+        rgba(255, 0, 60, 0.1),
+        rgba(255, 0, 60, 0.6)
+    );
+
+    opacity: 0.55;
+    pointer-events: none;
+
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* hover intensifies glow */
+.card-cont.user-info:hover {
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.45),
+        0 0 45px rgba(255, 0, 60, 0.25),
+        inset 0 0 15px rgba(0, 0, 0, 0.7);
+}.card-cont.money {
+    background: rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 0, 60, 0.55) !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.20),
+        0 0 25px rgba(255, 0, 60, 0.12),
+        inset 0 0 15px rgba(0, 0, 0, 0.6);
+
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* HUD glow frame */
+.card-cont.money::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    border-radius: 10px;
+    padding: 1px;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 0, 60, 0.75),
+        rgba(255, 0, 60, 0.1),
+        rgba(255, 0, 60, 0.6)
+    );
+
+    opacity: 0.5;
+    pointer-events: none;
+
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* hover glow boost */
+.card-cont.money:hover {
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.45),
+        0 0 45px rgba(255, 0, 60, 0.25),
+        inset 0 0 15px rgba(0, 0, 0, 0.7);
+}.button.daily-rewards-btn {
+    background: rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 0, 60, 0.55) !important;
+
+    color: white !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.18),
+        0 0 25px rgba(255, 0, 60, 0.10),
+        inset 0 0 12px rgba(0, 0, 0, 0.6);
+
+    position: relative;
+    overflow: hidden;
+
+    transition: all 0.25s ease;
+}
+
+/* futuristic HUD frame overlay */
+.button.daily-rewards-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 0, 60, 0.75),
+        rgba(255, 0, 60, 0.1),
+        rgba(255, 0, 60, 0.6)
+    );
+
+    opacity: 0.45;
+    pointer-events: none;
+
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* hover glow upgrade */
+.button.daily-rewards-btn:hover {
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.45),
+        0 0 45px rgba(255, 0, 60, 0.25),
+        inset 0 0 12px rgba(0, 0, 0, 0.7);
+
+    transform: translateY(-1px);
+}
+
+/* keep triangle but soften it */
+.button.daily-rewards-btn .triangle {
+    filter: drop-shadow(0 0 6px rgba(255, 0, 60, 0.4));
+    opacity: 0.9;
+}
+
+/* text glow */
+.button.daily-rewards-btn .text {
+    text-shadow: 0 0 10px rgba(255, 0, 60, 0.35);
+}.button.daily-rewards-btn {
+    background: rgba(0, 0, 0, 0.38) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.65) !important;
+
+    /* REMOVE any blue variable influence */
+    --blue-4: transparent !important;
+    --blue-5: transparent !important;
+    --blue-6: transparent !important;
+    --hover-color: transparent !important;
+    --top: transparent !important;
+    --bottom: transparent !important;
+
+    box-shadow:
+        0 0 12px rgba(255, 0, 60, 0.22),
+        0 0 28px rgba(255, 0, 60, 0.12),
+        inset 0 0 15px rgba(0, 0, 0, 0.65) !important;
+}.button,
+.card-cont,
+.icon-btn {
+    position: relative !important;
+}
+
+/* CORNER FRAME (safe method - no pseudo-element conflicts) */
+.button,
+.card-cont,
+.icon-btn {
+    outline: 1px solid rgba(255, 255, 255, 0.18);
+    outline-offset: -1px;
+
+    /* fake “cut corners” glow frame */
+    box-shadow:
+        inset 10px 10px 0 -9px rgba(255,255,255,0.08),
+        inset -10px -10px 0 -9px rgba(255,255,255,0.08);
+}#juice-keybind-reminder {
+    position: absolute !important;
+
+    left: 71% !important;
+    transform: translateX(-60%) !important;
+
+    bottom: auto !important;
+    top: 100% !important;
+
+    margin-top: 1px !important;
+
+    width: max-content !important;
+
+    pointer-events: none !important;
+}.button,
+.icon-btn,
+.daily-rewards-btn,
+.card-cont,
+.card-cont.user-info,
+.card-cont.avatar-info,
+.card-cont.money,
+#left-icons,
+#right-icons > div {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    filter: none !important;
+}#left-icons .icon-btn,
+#left-icons .icon-btn * {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* removes leftover glow/edge layers */
+#left-icons .icon-btn::before,
+#left-icons .icon-btn::after,
+#left-icons .wrapper::before,
+#left-icons .wrapper::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* kills any faint line / separator effects */
+#left-icons {
+    border: none !important;
+    box-shadow: none !important;
+    background-image: none !important;
+}#left-icons .wrapper {
+    position: relative !important;
+}#left-icons .icon-btn .wrapper {
+    transition: all 0.2s ease !important;
+}
+
+/* hover / active glow */
+#left-icons .icon-btn:hover .wrapper,
+#left-icons .icon-btn:active .wrapper {
+    color: white !important;
+    text-shadow:
+        0 0 6px rgba(255, 0, 60, 0.6),
+        0 0 14px rgba(255, 0, 60, 0.45),
+        0 0 28px rgba(255, 0, 60, 0.25);
+}
+
+/* optional subtle glow behind text (no layout shift) */
+#left-icons .icon-btn:hover .wrapper {
+    filter: drop-shadow(0 0 6px rgba(255, 0, 60, 0.35));
+}#left-icons .icon-btn.active .wrapper {
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.7),
+        0 0 18px rgba(255, 0, 60, 0.45),
+        0 0 30px rgba(255, 0, 60, 0.25);
+}#invite-btn {
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.65) !important;
+
+    color: white !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.20),
+        0 0 25px rgba(255, 0, 60, 0.12),
+        inset 0 0 15px rgba(0, 0, 0, 0.75);
+
+    border-radius: 8px;
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    position: relative;
+    overflow: hidden;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+/* =========================
+   EVENT TAB (inactive)
+========================= */
+#wNWmwMn .tab.event {
+    background: rgba(0, 0, 0, 0.35) !important;
+    color: rgba(255,255,255,0.7) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.25) !important;
+
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+
+    transition: all 0.2s ease;
+}
+
+/* =========================
+   EVENT TAB (hover)
+========================= */
+#wNWmwMn .tab.event:hover {
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.5),
+        0 0 16px rgba(255, 0, 60, 0.3);
+}
+
+/* =========================
+   EVENT TAB (active / selected)
+========================= */
+#wNWmwMn .tab.event.selected {
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.7) !important;
+
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.25),
+        0 0 25px rgba(255, 0, 60, 0.15),
+        inset 0 0 10px rgba(0,0,0,0.7);
+
+    text-shadow:
+        0 0 10px rgba(255, 0, 60, 0.6);
+}
+
+/* =========================
+   OPTIONAL: EVENT QUEST CARDS MATCH STYLE
+========================= */
+#wNWmwMn .subject {
+    background: rgba(0, 0, 0, 0.35) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.15),
+        inset 0 0 15px rgba(0,0,0,0.6);
+
+    backdrop-filter: none !important;
+}
+/* =========================
+   DAILY TAB (inactive)
+========================= */
+#wNWmwMn .tab.daily {
+    background: rgba(0, 0, 0, 0.30) !important;
+    color: rgba(255,255,255,0.7) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.20) !important;
+
+    transition: all 0.2s ease;
+}
+
+/* hover */
+#wNWmwMn .tab.daily:hover {
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.5),
+        0 0 16px rgba(255, 0, 60, 0.3);
+}
+
+/* =========================
+   DAILY TAB (selected)
+========================= */
+#wNWmwMn .tab.daily.selected {
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.75) !important;
+
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.25),
+        0 0 25px rgba(255, 0, 60, 0.15),
+        inset 0 0 10px rgba(0,0,0,0.7);
+
+    text-shadow:
+        0 0 10px rgba(255, 0, 60, 0.6);
+}
+
+/* =========================
+   EVENT TAB (kept consistent)
+========================= */
+#wNWmwMn .tab.event.selected {
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.75) !important;
+
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.25),
+        0 0 25px rgba(255, 0, 60, 0.15),
+        inset 0 0 10px rgba(0,0,0,0.7);
+
+    text-shadow:
+        0 0 10px rgba(255, 0, 60, 0.6);
+}
+/* =========================
+   MAIN QUEST PANEL
+   BLACK GLASS + RED BORDER
+========================= */
+#wNWmwMn {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.75) !important;
+
+    box-shadow:
+        0 0 20px rgba(255, 0, 60, 0.18),
+        inset 0 0 25px rgba(0, 0, 0, 0.8);
+
+    backdrop-filter: none !important;
+
+    overflow: hidden !important;
+}
+
+/* =========================
+   REMOVE INTERNAL "BOX FEEL"
+   (QUEST CARDS BACKGROUND)
+========================= */
+#wNWmwMn .subject {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* =========================
+   REMOVE INNER VISUAL CLUTTER
+   KEEP ONLY TEXT/PROGRESS
+========================= */
+#wNWmwMn .quest {
+    background: transparent !important;
+}
+
+/* hide decorative fills if any */
+#wNWmwMn .left,
+#wNWmwMn .right::before,
+#wNWmwMn .quest::before,
+#wNWmwMn .quest::after {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* =========================
+   PROGRESS LINES CLEAN
+========================= */
+#wNWmwMn .progress-line {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,0,60,0.25) !important;
+}
+
+#wNWmwMn .progress {
+    background: linear-gradient(90deg,
+        rgba(255,0,60,0.9),
+        rgba(255,80,120,0.6)
+    ) !important;
+}
+
+/* =========================
+   TABS (KEEP VISIBLE ONLY TEXT STYLE)
+========================= */
+#wNWmwMn .tabs {
+    background: transparent !important;
+}
+
+#wNWmwMn .tab {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255,255,255,0.6) !important;
+}
+
+/* active tab glow */
+#wNWmwMn .tab.selected {
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    text-shadow:
+        0 0 10px rgba(255, 0, 60, 0.6),
+        0 0 20px rgba(255, 0, 60, 0.3);
+}
+
+/* hover */
+#wNWmwMn .tab:hover {
+    color: rgba(255, 0, 60, 0.9) !important;
+}
+
+/* =========================
+   EXPIRY / HEADER CLEANUP
+========================= */
+#wNWmwMn .expire {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255,255,255,0.6) !important;
+}
+/* =========================
+   BASE REWARD CONTAINER
+========================= */
+#wNWmwMn .rewards {
+    background: transparent !important;
+}
+
+/* =========================
+   EACH REWARD ITEM (XP / COINS / DIAMONDS)
+   "GLASS CHIP" STYLE
+========================= */
+#wNWmwMn .reward {
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+    padding: 4px 10px !important;
+    margin: 2px !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    border-radius: 4px !important;
+
+    box-shadow:
+        inset 0 0 10px rgba(0,0,0,0.7),
+        0 0 8px rgba(255, 0, 60, 0.08);
+
+    transition: 0.15s ease;
+}
+
+/* =========================
+   HOVER GLOW
+========================= */
+#wNWmwMn .reward:hover {
+    border: 1px solid rgba(255, 0, 60, 0.8) !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.25),
+        inset 0 0 10px rgba(0,0,0,0.8);
+
+    transform: translateY(-1px);
+}
+
+/* =========================
+   TEXT INSIDE REWARD
+========================= */
+#wNWmwMn .reward .amount {
+    color: rgba(255,255,255,0.85) !important;
+
+    text-shadow:
+        0 0 6px rgba(255, 0, 60, 0.25);
+}
+
+/* =========================
+   ICON CLEANUP
+========================= */
+#wNWmwMn .reward svg {
+    filter: drop-shadow(0 0 4px rgba(255,0,60,0.25)) !important;
+}
+
+/* =========================
+   OPTIONAL TYPE COLOR ACCENTS
+========================= */
+#wNWmwMn .reward.xp {
+    border-color: rgba(255, 0, 60, 0.35) !important;
+}
+
+#wNWmwMn .reward.coins {
+    border-color: rgba(255, 40, 80, 0.25) !important;
+}
+
+#wNWmwMn .reward.diamonds {
+    border-color: rgba(255, 80, 120, 0.25) !important;
+}
+/* =========================
+   SETTINGS CARD BASE
+========================= */
+.card-cont.settings.card-1 {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.45) !important;
+
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.8),
+        0 0 10px rgba(255, 0, 60, 0.12);
+
+    backdrop-filter: none !important;
+
+    transition: 0.15s ease;
+
+    border-radius: 4px !important;
+}
+
+/* =========================
+   HOVER GLOW
+========================= */
+.card-cont.settings.card-1:hover {
+    border: 1px solid rgba(255, 0, 60, 0.85) !important;
+
+    box-shadow:
+        0 0 14px rgba(255, 0, 60, 0.35),
+        inset 0 0 12px rgba(0,0,0,0.9);
+
+    transform: translateY(-2px);
+}
+
+/* =========================
+   ICON STYLE
+========================= */
+.card-cont.settings.card-1 svg {
+    fill: rgba(255,255,255,0.85) !important;
+
+    filter: drop-shadow(0 0 6px rgba(255, 0, 60, 0.25));
+}
+
+/* =========================
+   OPTIONAL ACTIVE CLICK FEEL
+========================= */
+.card-cont.settings.card-1:active {
+    transform: scale(0.97);
+    box-shadow:
+        0 0 8px rgba(255, 0, 60, 0.25),
+        inset 0 0 15px rgba(0,0,0,0.9);
+}
+/* =========================
+   REGION SELECTOR BASE
+========================= */
+.select-region {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.45) !important;
+
+    box-shadow:
+        inset 0 0 10px rgba(0,0,0,0.85),
+        0 0 10px rgba(255, 0, 60, 0.12);
+
+    color: rgba(255,255,255,0.85) !important;
+
+    padding: 4px 10px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+
+    transition: 0.15s ease;
+}
+
+/* =========================
+   HOVER GLOW
+========================= */
+.select-region:hover {
+    border: 1px solid rgba(255, 0, 60, 0.85) !important;
+
+    box-shadow:
+        0 0 14px rgba(255, 0, 60, 0.25),
+        inset 0 0 10px rgba(0,0,0,0.9);
+
+    transform: translateY(-1px);
+}
+
+/* =========================
+   FLAG IMAGE CLEANUP
+========================= */
+.select-region img {
+    filter: drop-shadow(0 0 4px rgba(255,0,60,0.25));
+    border-radius: 2px;
+}
+
+/* =========================
+   TEXT STYLE (NA)
+========================= */
+.select-region {
+    text-shadow: 0 0 6px rgba(255,0,60,0.15);
+}
+/* =========================
+   BASE BUTTON RESET
+========================= */
+#create-btn.button {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.45) !important;
+
+    color: rgba(255,255,255,0.85) !important;
+
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.85),
+        0 0 10px rgba(255, 0, 60, 0.12);
+
+    backdrop-filter: none !important;
+
+    transition: all 0.15s ease;
+
+    overflow: hidden !important;
+}
+
+/* =========================
+   REMOVE BLUE DEFAULT LAYERS
+========================= */
+#create-btn .triangle,
+#create-btn .border-top,
+#create-btn .border-bottom {
+    display: none !important;
+}
+
+/* =========================
+   TEXT STYLE
+========================= */
+#create-btn .text {
+    color: rgba(255,255,255,0.9) !important;
+
+    text-shadow: 0 0 6px rgba(255,0,60,0.2);
+    letter-spacing: 1px;
+}
+
+/* =========================
+   HOVER GLOW
+========================= */
+#create-btn:hover {
+    border: 1px solid rgba(255, 0, 60, 0.85) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.3),
+        inset 0 0 12px rgba(0,0,0,0.9);
+
+    transform: translateY(-1px);
+}
+
+/* =========================
+   ACTIVE CLICK FEEL
+========================= */
+#create-btn:active {
+    transform: scale(0.97);
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.25),
+        inset 0 0 18px rgba(0,0,0,0.9);
+}
+/* =========================
+   BASE BUTTON RESET
+========================= */
+#join-btn.button {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.45) !important;
+
+    color: rgba(255,255,255,0.85) !important;
+
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.85),
+        0 0 10px rgba(255, 0, 60, 0.12);
+
+    backdrop-filter: none !important;
+
+    transition: all 0.15s ease;
+
+    overflow: hidden !important;
+}
+
+/* =========================
+   REMOVE DEFAULT BLUE LAYERS
+========================= */
+#join-btn .triangle,
+#join-btn .border-top,
+#join-btn .border-bottom {
+    display: none !important;
+}
+
+/* =========================
+   TEXT STYLE
+========================= */
+#join-btn .text {
+    color: rgba(255,255,255,0.9) !important;
+
+    text-shadow: 0 0 6px rgba(255,0,60,0.2);
+    letter-spacing: 1px;
+}
+
+/* =========================
+   HOVER GLOW
+========================= */
+#join-btn:hover {
+    border: 1px solid rgba(255, 0, 60, 0.85) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.3),
+        inset 0 0 12px rgba(0,0,0,0.9);
+
+    transform: translateY(-1px);
+}
+
+/* =========================
+   ACTIVE CLICK FEEL
+========================= */
+#join-btn:active {
+    transform: scale(0.97);
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.25),
+        inset 0 0 18px rgba(0,0,0,0.9);
+}
+/* =========================
+   BASE SELECT MODULE
+========================= */
+.select-mod {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.45) !important;
+
+    color: rgba(255,255,255,0.85) !important;
+
+    padding: 6px 12px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+
+    cursor: pointer !important;
+
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.85),
+        0 0 10px rgba(255, 0, 60, 0.12);
+
+    transition: 0.15s ease;
+}
+
+/* =========================
+   TEXT STYLE
+========================= */
+.select-mod span {
+    color: rgba(255,255,255,0.9) !important;
+    text-shadow: 0 0 6px rgba(255,0,60,0.2);
+    letter-spacing: 0.5px;
+}
+
+/* =========================
+   ARROW ICON STYLE
+========================= */
+.select-mod svg {
+    filter: drop-shadow(0 0 4px rgba(255,0,60,0.3));
+    fill: rgba(255,255,255,0.8) !important;
+}
+
+/* =========================
+   HOVER GLOW
+========================= */
+.select-mod:hover {
+    border: 1px solid rgba(255, 0, 60, 0.85) !important;
+
+    box-shadow:
+        0 0 14px rgba(255, 0, 60, 0.25),
+        inset 0 0 12px rgba(0,0,0,0.9);
+
+    transform: translateY(-1px);
+}
+
+/* =========================
+   ACTIVE CLICK FEEL
+========================= */
+.select-mod:active {
+    transform: scale(0.98);
+}
+/* =========================
+   BASE PLAY BUTTON (RED HUD)
+========================= */
+#play-btn.button {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.55) !important;
+
+    color: rgba(255,255,255,0.9) !important;
+
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.85),
+        0 0 12px rgba(255, 0, 60, 0.15);
+
+    backdrop-filter: none !important;
+
+    transition: all 0.15s ease;
+
+    overflow: hidden !important;
+
+    /* 🔥 REDUCED HEIGHT */
+    height: 50px !important;
+    padding: 0 22px !important;
+}
+
+/* =========================
+   REMOVE BLUE DEFAULT LAYERS
+========================= */
+#play-btn .triangle,
+#play-btn .border-top,
+#play-btn .border-bottom {
+    display: none !important;
+}
+
+/* =========================
+   TEXT CENTER FIX (IMPORTANT)
+========================= */
+#play-btn .text {
+    font-size: 13px !important;
+    letter-spacing: 1px;
+
+    color: rgba(255,255,255,0.9) !important;
+
+    text-shadow: 0 0 6px rgba(255,0,60,0.25);
+}
+
+/* =========================
+   HOVER GLOW
+========================= */
+#play-btn:hover {
+    border: 1px solid rgba(255, 0, 60, 0.9) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.3),
+        inset 0 0 12px rgba(0,0,0,0.9);
+
+    transform: translateY(-1px);
+}
+
+/* =========================
+   ACTIVE CLICK FEEL
+========================= */
+#play-btn:active {
+    transform: scale(0.97);
+}/* Slightly move PLAY button to the right */
+#play-btn {
+    position: relative !important;
+    left: 10px !important; /* adjust: 3–10px range */
+}/* =========================
+   STRAIGHT PLAY BUTTON FIX
+========================= */
+
+#play-btn,
+#play-btn * {
+    transform: none !important;
+    clip-path: none !important;
+}
+
+/* remove shiny/angle effects */
+#play-btn {
+    border-radius: 0px !important;
+    background-image: none !important;
+}
+
+/* kill decorative borders that cause "curve illusion" */
+#play-btn .WwNwmM,
+#play-btn .border-top,
+#play-btn .border-bottom {
+    display: none !important;
+}
+
+/* ensure text stays clean */
+#play-btn .text {
+    letter-spacing: 1px !important;
+    transform: none !important;
+}:root {
+  /* main accent */
+  --primary-1: hsl(0, 84%, 56%);
+
+  /* backgrounds */
+  --bg-1: hsl(160, 6%, 9%);
+  --bg-2: hsl(340, 7%, 18%);
+  --bg-3: hsl(160, 5%, 11%);
+
+  /* hover */
+  --hover: hsla(0, 0%, 100%, 0.06);
+
+  /* text */
+  --text: #ffffff;
+}
+/* ==========================================================
+   CLEAN ITEM CARD - NO LAYOUT CHANGES
+   ONLY VISUAL IMPROVEMENTS
+   ========================================================== */
+
+/* ITEM CONTAINER (kept untouched structure) */
+.subject {
+    border-radius: 10px;
+    background: rgba(10, 10, 12, 0.72);
+    border: 1px solid rgba(255, 40, 40, 0.18);
+    box-shadow:
+        0 0 10px rgba(255, 40, 40, 0.10),
+        inset 0 0 10px rgba(0,0,0,0.6);
+}
+
+/* IMAGE (NO SIZE OR POSITION CHANGE) */
+.subject .subj-img {
+    filter: brightness(1.05) contrast(1.1);
+}
+
+/* COIN / COUNT AREA */
+.bottom-subj .count {
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255, 40, 40, 0.25);
+}
+
+/* ==========================================================
+   FUTURISTIC RED BUTTONS (BUY / INSPECT)
+   ========================================================== */
+
+/* shared button base */
+button.take-btn.rectangle {
+    position: relative;
+    overflow: hidden;
+
+    border: 1px solid rgba(255, 40, 40, 0.35) !important;
+
+    background: linear-gradient(
+        180deg,
+        rgba(35, 0, 0, 0.85),
+        rgba(10, 0, 0, 0.85)
+    ) !important;
+
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    box-shadow:
+        0 0 10px rgba(255, 40, 40, 0.15),
+        inset 0 0 10px rgba(0,0,0,0.6);
+
+    transition: 0.25s ease;
+}
+
+/* RED FUTURISTIC GLOW EDGE */
+button.take-btn.rectangle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 40, 40, 0.25),
+        rgba(255, 0, 0, 0.45),
+        rgba(255, 40, 40, 0.25),
+        transparent
+    );
+
+    opacity: 0.4;
+    transform: translateX(-60%);
+    transition: 0.4s ease;
+}
+
+/* HOVER EFFECT */
+button.take-btn.rectangle:hover {
+    border-color: rgba(255, 40, 40, 0.7) !important;
+    box-shadow:
+        0 0 18px rgba(255, 40, 40, 0.45),
+        0 0 40px rgba(255, 0, 0, 0.15),
+        inset 0 0 12px rgba(0,0,0,0.7);
+    transform: translateY(-1px);
+}
+
+/* animated glow sweep */
+button.take-btn.rectangle:hover::before {
+    transform: translateX(60%);
+    opacity: 0.8;
+}
+
+/* BUY ITEM = stronger red core */
+button.take-btn.rectangle .text:contains("BUY ITEM") {
+    color: #ff3b3b;
+}
+
+/* INSPECT = cooler red-blue futuristic tint */
+button.take-btn.rectangle .text:contains("INSPECT") {
+    color: #ff5555;
+}
+
+/* fallback text styling (works in most engines) */
+button.take-btn.rectangle .text {
+    font-weight: 600;
+    text-shadow: 0 0 6px rgba(255, 40, 40, 0.25);
+}
+
+/* TRIANGLE ICON */
+button.take-btn.rectangle .triangle {
+    border-color: rgba(255, 40, 40, 0.6);
+    filter: drop-shadow(0 0 4px rgba(255, 40, 40, 0.4));
+}
+
+/* BORDER LINES INSIDE BUTTON */
+button.take-btn.rectangle .border-top,
+button.take-btn.rectangle .border-bottom {
+    background: rgba(255, 40, 40, 0.25) !important;
+}
+/* ==========================================================
+   CONFIRM BUTTON - FUTURISTIC GREEN TRANSPARENT STYLE
+   (NO LAYOUT CHANGES)
+   ========================================================== */
+
+button.btn-WwWnNmw-add.rectangle {
+    position: relative;
+    overflow: hidden;
+
+    /* transparent futuristic green base */
+    background: linear-gradient(
+        180deg,
+        rgba(0, 255, 140, 0.18),
+        rgba(0, 120, 70, 0.12)
+    ) !important;
+
+    border: 1px solid rgba(0, 255, 140, 0.35) !important;
+
+    color: #d8ffe9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    backdrop-filter: blur(8px);
+
+    box-shadow:
+        0 0 10px rgba(0, 255, 140, 0.15),
+        inset 0 0 10px rgba(0, 0, 0, 0.5);
+
+    transition: 0.25s ease;
+}
+
+/* GREEN ENERGY GLOW OVERLAY */
+button.btn-WwWnNmw-add.rectangle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 255, 140, 0.25),
+        rgba(0, 255, 200, 0.35),
+        rgba(0, 255, 140, 0.25),
+        transparent
+    );
+
+    opacity: 0.35;
+    transform: translateX(-70%);
+    transition: 0.45s ease;
+}
+
+/* HOVER STATE */
+button.btn-WwWnNmw-add.rectangle:hover {
+    border-color: rgba(0, 255, 140, 0.7) !important;
+
+    box-shadow:
+        0 0 18px rgba(0, 255, 140, 0.35),
+        0 0 40px rgba(0, 255, 140, 0.15),
+        inset 0 0 12px rgba(0, 0, 0, 0.6);
+
+    transform: translateY(-1px);
+}
+
+/* animated green sweep on hover */
+button.btn-WwWnNmw-add.rectangle:hover::before {
+    transform: translateX(70%);
+    opacity: 0.75;
+}
+
+/* TEXT GLOW */
+button.btn-WwWnNmw-add.rectangle .text {
+    color: #bfffe3;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(0, 255, 140, 0.25);
+}
+
+/* TRIANGLE ICON */
+button.btn-WwWnNmw-add.rectangle .triangle {
+    border-color: rgba(0, 255, 140, 0.6);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 140, 0.4));
+}
+
+/* INNER BORDER LINES */
+button.btn-WwWnNmw-add.rectangle .border-top,
+button.btn-WwWnNmw-add.rectangle .border-bottom {
+    background: rgba(0, 255, 140, 0.25) !important;
+}
+/* ==========================================================
+   CANCEL BUTTON - FUTURISTIC RED (DANGER / RUNE STYLE)
+   ========================================================== */
+
+button.btn-WwWnNmw-remove.rectangle {
+    position: relative;
+    overflow: hidden;
+
+    /* transparent dark red base */
+    background: linear-gradient(
+        180deg,
+        rgba(255, 30, 30, 0.20),
+        rgba(120, 0, 0, 0.15)
+    ) !important;
+
+    border: 1px solid rgba(255, 40, 40, 0.45) !important;
+
+    color: #ffe5e5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    backdrop-filter: blur(8px);
+
+    box-shadow:
+        0 0 10px rgba(255, 40, 40, 0.18),
+        inset 0 0 10px rgba(0, 0, 0, 0.6);
+
+    transition: 0.25s ease;
+}
+
+/* ENERGY RUNE SWEEP */
+button.btn-WwWnNmw-remove.rectangle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 40, 40, 0.25),
+        rgba(255, 0, 0, 0.45),
+        rgba(255, 40, 40, 0.25),
+        transparent
+    );
+
+    opacity: 0.35;
+    transform: translateX(-70%);
+    transition: 0.45s ease;
+}
+
+/* HOVER STATE (INTENSIFY DANGER FEEL) */
+button.btn-WwWnNmw-remove.rectangle:hover {
+    border-color: rgba(255, 40, 40, 0.75) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 40, 40, 0.45),
+        0 0 45px rgba(255, 0, 0, 0.20),
+        inset 0 0 12px rgba(0, 0, 0, 0.7);
+
+    transform: translateY(-1px);
+}
+
+/* ANIMATED RED SWEEP */
+button.btn-WwWnNmw-remove.rectangle:hover::before {
+    transform: translateX(70%);
+    opacity: 0.85;
+}
+
+/* TEXT GLOW */
+button.btn-WwWnNmw-remove.rectangle .text {
+    color: #ffd6d6;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(255, 40, 40, 0.25);
+}
+
+/* TRIANGLE ICON */
+button.btn-WwWnNmw-remove.rectangle .triangle {
+    border-color: rgba(255, 40, 40, 0.65);
+    filter: drop-shadow(0 0 4px rgba(255, 40, 40, 0.4));
+}
+
+/* INNER BORDER LINES */
+button.btn-WwWnNmw-remove.rectangle .border-top,
+button.btn-WwWnNmw-remove.rectangle .border-bottom {
+    background: rgba(255, 40, 40, 0.25) !important;
+}
+/* ==========================================================
+   FUTURISTIC CLOSE BUTTON - CORNER FRAME STYLE
+   ========================================================== */
+
+div.close {
+    position: relative;
+
+    /* remove any circular feel */
+    border-radius: 0 !important;
+
+    background: transparent !important;
+
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+/* ICON COLOR + GLOW */
+div.close .close-icon {
+    fill: rgba(255, 60, 60, 0.85);
+    filter: drop-shadow(0 0 6px rgba(255, 40, 40, 0.35));
+    transition: 0.25s ease;
+}
+
+/* =========================
+   CORNER FRAME EFFECT
+   ========================= */
+div.close::before,
+div.close::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* TOP-LEFT + BOTTOM-RIGHT CORNERS */
+div.close::before {
+    inset: 0;
+
+    background:
+        linear-gradient(to right, rgba(255, 40, 40, 0.6), transparent 35%) top left,
+        linear-gradient(to bottom, rgba(255, 40, 40, 0.6), transparent 35%) top left;
+
+    background-size: 12px 2px, 2px 12px;
+    background-repeat: no-repeat;
+
+    opacity: 0.8;
+}
+
+/* TOP-RIGHT + BOTTOM-LEFT CORNERS */
+div.close::after {
+    inset: 0;
+
+    background:
+        linear-gradient(to left, rgba(255, 40, 40, 0.6), transparent 35%) top right,
+        linear-gradient(to bottom, rgba(255, 40, 40, 0.6), transparent 35%) top right;
+
+    background-size: 12px 2px, 2px 12px;
+    background-repeat: no-repeat;
+
+    opacity: 0.8;
+}
+
+/* HOVER STATE */
+div.close:hover .close-icon {
+    fill: rgba(255, 80, 80, 1);
+    filter:
+        drop-shadow(0 0 8px rgba(255, 40, 40, 0.6))
+        drop-shadow(0 0 14px rgba(255, 0, 0, 0.3));
+    transform: scale(1.05);
+}
+
+/* HOVER CORNER PULSE */
+div.close:hover::before,
+div.close:hover::after {
+    opacity: 1;
+    filter: brightness(1.3);
+}
+/* ==========================================================
+   CLOSE BUTTON - FUTURISTIC RED BACKGROUND + CORNER HUD
+   ========================================================== */
+
+div.close {
+    position: relative;
+
+    border-radius: 0 !important;
+
+    /* futuristic red glass background */
+    background: linear-gradient(
+        135deg,
+        rgba(255, 40, 40, 0.22),
+        rgba(120, 0, 0, 0.12),
+        rgba(255, 0, 0, 0.18)
+    ) !important;
+
+    backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 40, 40, 0.35);
+
+    cursor: pointer;
+    transition: 0.25s ease;
+
+    box-shadow:
+        0 0 12px rgba(255, 40, 40, 0.15),
+        inset 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+/* ICON */
+div.close .close-icon {
+    fill: rgba(255, 70, 70, 0.9);
+    filter: drop-shadow(0 0 6px rgba(255, 40, 40, 0.35));
+    transition: 0.25s ease;
+}
+
+/* CORNER HUD FRAME */
+div.close::before,
+div.close::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* TOP-LEFT + BOTTOM-RIGHT */
+div.close::before {
+    background:
+        linear-gradient(to right, rgba(255, 40, 40, 0.7), transparent 40%) top left,
+        linear-gradient(to bottom, rgba(255, 40, 40, 0.7), transparent 40%) top left;
+    background-size: 14px 2px, 2px 14px;
+    background-repeat: no-repeat;
+    opacity: 0.85;
+}
+
+/* TOP-RIGHT + BOTTOM-LEFT */
+div.close::after {
+    background:
+        linear-gradient(to left, rgba(255, 40, 40, 0.7), transparent 40%) top right,
+        linear-gradient(to bottom, rgba(255, 40, 40, 0.7), transparent 40%) top right;
+    background-size: 14px 2px, 2px 14px;
+    background-repeat: no-repeat;
+    opacity: 0.85;
+}
+
+/* HOVER STATE */
+div.close:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 60, 60, 0.30),
+        rgba(140, 0, 0, 0.18),
+        rgba(255, 20, 20, 0.22)
+    ) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 40, 40, 0.35),
+        0 0 40px rgba(255, 0, 0, 0.15),
+        inset 0 0 14px rgba(0, 0, 0, 0.7);
+
+    transform: scale(1.03);
+}
+
+/* ICON HOVER GLOW */
+div.close:hover .close-icon {
+    fill: rgba(255, 100, 100, 1);
+    filter:
+        drop-shadow(0 0 10px rgba(255, 40, 40, 0.6))
+        drop-shadow(0 0 18px rgba(255, 0, 0, 0.3));
+}
+/* ==========================================================
+   TOP BAR - FUTURISTIC RED / BLACK GLASS HUD
+   ========================================================== */
+
+.top-bar {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.85),
+        rgba(10, 0, 0, 0.75),
+        rgba(0, 0, 0, 0.85)
+    ) !important;
+
+    backdrop-filter: blur(12px);
+
+    border-bottom: 1px solid rgba(255, 40, 40, 0.25);
+
+    box-shadow:
+        0 0 15px rgba(255, 40, 40, 0.10),
+        inset 0 0 12px rgba(0, 0, 0, 0.8);
+}
+
+/* LEFT SECTION */
+.top-bar .left {
+    display: flex;
+    align-items: center;
+
+    background: rgba(0, 0, 0, 0.35) !important;
+}
+
+/* HOME BUTTON */
+.top-bar .home {
+    background: rgba(255, 40, 40, 0.08);
+    border: 1px solid rgba(255, 40, 40, 0.25);
+
+    box-shadow:
+        0 0 10px rgba(255, 40, 40, 0.15),
+        inset 0 0 10px rgba(0, 0, 0, 0.6);
+
+    transition: 0.25s ease;
+}
+
+/* HOME ICON */
+.top-bar .home .icon-home {
+    fill: rgba(255, 70, 70, 0.9);
+    filter: drop-shadow(0 0 6px rgba(255, 40, 40, 0.35));
+}
+
+/* HOME HOVER */
+.top-bar .home:hover {
+    background: rgba(255, 40, 40, 0.18);
+    box-shadow:
+        0 0 18px rgba(255, 40, 40, 0.35),
+        inset 0 0 12px rgba(0, 0, 0, 0.7);
+}
+
+/* PAGE TITLE */
+.top-bar .name-page {
+    color: #ffb3b3;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+
+    text-shadow:
+        0 0 8px rgba(255, 40, 40, 0.25),
+        0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+/* CLOSE BUTTON */
+.top-bar .close {
+    background: rgba(255, 0, 0, 0.08);
+    border: 1px solid rgba(255, 40, 40, 0.25);
+
+    backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 0 12px rgba(255, 40, 40, 0.15),
+        inset 0 0 10px rgba(0, 0, 0, 0.7);
+
+    transition: 0.25s ease;
+}
+
+/* CLOSE ICON */
+.top-bar .close .icon-close {
+    fill: rgba(255, 60, 60, 0.95);
+    filter: drop-shadow(0 0 8px rgba(255, 40, 40, 0.4));
+}
+
+/* CLOSE HOVER (DANGER FEEL) */
+.top-bar .close:hover {
+    background: rgba(255, 0, 0, 0.18);
+
+    box-shadow:
+        0 0 20px rgba(255, 40, 40, 0.4),
+        0 0 50px rgba(255, 0, 0, 0.2),
+        inset 0 0 12px rgba(0, 0, 0, 0.8);
+}
+/* ==========================================================
+   PROFILE LABEL - FUTURISTIC RED GLASS BADGE
+   ========================================================== */
+
+.name-page {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+
+    padding: 4px 10px;
+
+    background: linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.18),
+        rgba(120, 0, 0, 0.12),
+        rgba(255, 40, 40, 0.18)
+    ) !important;
+
+    border: 1px solid rgba(255, 40, 40, 0.35);
+
+    backdrop-filter: blur(10px);
+
+    color: #ffb3b3 !important;
+
+    letter-spacing: 2px;
+    text-transform: uppercase;
+
+    text-shadow:
+        0 0 8px rgba(255, 40, 40, 0.25),
+        0 0 18px rgba(0, 0, 0, 0.6);
+
+    box-shadow:
+        0 0 12px rgba(255, 40, 40, 0.18),
+        inset 0 0 10px rgba(0, 0, 0, 0.6);
+
+    overflow: hidden;
+}
+
+/* ENERGY SCAN EFFECT */
+.name-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(255, 40, 40, 0.25),
+        transparent
+    );
+
+    transform: translateX(-60%);
+    animation: profileScan 3s infinite ease-in-out;
+    opacity: 0.6;
+}
+
+/* SCAN ANIMATION */
+@keyframes profileScan {
+    0% {
+        transform: translateX(-60%);
+    }
+    50% {
+        transform: translateX(60%);
+    }
+    100% {
+        transform: translateX(-60%);
+    }
+}
+/* ==========================================================
+   LEADERBOARD ITEM - CLEAN FUTURISTIC RED CARD
+   ========================================================== */
+
+.item {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 0, 0, 0.10),
+        rgba(20, 0, 0, 0.75),
+        rgba(255, 40, 40, 0.08)
+    ) !important;
+
+    border: 1px solid rgba(255, 40, 40, 0.25);
+
+    backdrop-filter: blur(10px);
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 0 12px rgba(255, 40, 40, 0.12),
+        inset 0 0 10px rgba(0, 0, 0, 0.7);
+
+    transition: 0.25s ease;
+}
+
+/* HOVER STATE */
+.item:hover {
+    border-color: rgba(255, 40, 40, 0.55);
+
+    box-shadow:
+        0 0 18px rgba(255, 40, 40, 0.35),
+        0 0 40px rgba(255, 0, 0, 0.15),
+        inset 0 0 12px rgba(0, 0, 0, 0.8);
+
+    transform: translateY(-1px);
+}
+
+/* LEFT SIDE (RANK + NAME) */
+.item .left {
+    color: #ffd6d6;
+}
+
+/* RANK NUMBER */
+.item .number-player {
+    text-shadow:
+        0 0 8px rgba(255, 40, 40, 0.35);
+}
+
+/* PLAYER NAME */
+.item .nickname.profile {
+    color: #ffb3b3;
+    text-shadow:
+        0 0 10px rgba(255, 40, 40, 0.25);
+}
+
+/* SCORE */
+.item .right span {
+    color: #ffffff;
+    text-shadow:
+        0 0 8px rgba(255, 40, 40, 0.15);
+}
+
+/* SHOW BUTTON (FUTURISTIC RED VERSION) */
+.item button.btn.rectangle {
+    background: linear-gradient(
+        180deg,
+        rgba(40, 0, 0, 0.85),
+        rgba(10, 0, 0, 0.85)
+    ) !important;
+
+    border: 1px solid rgba(255, 40, 40, 0.35) !important;
+
+    color: #ffd6d6;
+
+    box-shadow:
+        0 0 10px rgba(255, 40, 40, 0.15),
+        inset 0 0 10px rgba(0, 0, 0, 0.7);
+
+    transition: 0.25s ease;
+}
+
+/* BUTTON HOVER */
+.item button.btn.rectangle:hover {
+    border-color: rgba(255, 40, 40, 0.7) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 40, 40, 0.45),
+        0 0 40px rgba(255, 0, 0, 0.2);
+
+    transform: scale(1.03);
+}
+
+/* BUTTON TEXT */
+.item button .text {
+    color: #ffb3b3;
+    text-shadow: 0 0 8px rgba(255, 40, 40, 0.25);
+}
+
+/* TRIANGLE ICON */
+.item button .triangle {
+    border-color: rgba(255, 60, 60, 0.8);
+    filter: drop-shadow(0 0 6px rgba(255, 40, 40, 0.5));
+}
+/* ==========================================================
+   SHOW BUTTON - CLEAN FUTURISTIC RED (NO EDGE BLEED FIX)
+   ========================================================== */
+
+.item button.btn.rectangle {
+    position: relative;
+    overflow: hidden;
+
+    /* REMOVE INLINE BLUE BACKGROUND COMPLETELY */
+    background: linear-gradient(
+        180deg,
+        rgba(30, 0, 0, 0.85),
+        rgba(10, 0, 0, 0.9)
+    ) !important;
+
+    background-color: transparent !important;
+
+    border: 1px solid rgba(255, 50, 50, 0.45) !important;
+
+    border-radius: 0 !important;
+
+    height: 2rem;
+
+    box-shadow:
+        0 0 10px rgba(255, 40, 40, 0.18),
+        inset 0 0 10px rgba(0, 0, 0, 0.8);
+
+    backdrop-filter: blur(10px);
+
+    transition: 0.25s ease;
+}
+
+/* KILL THE INNER BLUE STRUCTURE LAYERS */
+.item button.btn.rectangle .WwNwmM,
+.item button.btn.rectangle .border-top,
+.item button.btn.rectangle .border-bottom {
+    background: transparent !important;
+    display: none !important;
+}
+
+/* TEXT CLEAN FUTURISTIC RED */
+.item button.btn.rectangle .text {
+    color: #ffb3b3 !important;
+    text-shadow: 0 0 8px rgba(255, 40, 40, 0.35);
+    letter-spacing: 1px;
+}
+
+/* TRIANGLE ICON FIX */
+.item button.btn.rectangle .triangle {
+    border-color: rgba(255, 60, 60, 0.9) !important;
+    filter: drop-shadow(0 0 6px rgba(255, 40, 40, 0.5));
+}
+
+/* HOVER - STRONG RED ENERGY */
+.item button.btn.rectangle:hover {
+    border-color: rgba(255, 40, 40, 0.8) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 40, 40, 0.45),
+        0 0 50px rgba(255, 0, 0, 0.25),
+        inset 0 0 12px rgba(0, 0, 0, 0.9);
+
+    transform: translateY(-1px);
+}.champions-list,
+.champions-list * {
+  background: transparent !important;
+}.list-champions,
+.list-champions * {
+  background: transparent !important;
+}.info-awards {
+  background: rgba(255, 0, 60, 0.08) !important;
+  border: 1px solid rgba(255, 0, 60, 0.35);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 12px rgba(255, 0, 60, 0.35),
+    inset 0 0 10px rgba(255, 0, 60, 0.15);
+}
+
+/* Neon label styling */
+.info-awards .awards-label {
+  color: #ff2a55;
+  text-shadow:
+    0 0 6px rgba(255, 0, 60, 0.8),
+    0 0 12px rgba(255, 0, 60, 0.4);
+}
+
+/* "AWARDS" highlight */
+.info-awards .awards-span {
+  color: #ff1744;
+  letter-spacing: 2px;
+  text-shadow:
+    0 0 8px rgba(255, 0, 60, 1),
+    0 0 16px rgba(255, 0, 60, 0.6);
+}
+
+/* Timer text subtle neon */
+.info-awards .reset {
+  color: rgba(255, 120, 140, 0.9);
+  text-shadow: 0 0 6px rgba(255, 0, 60, 0.4);
+}
+
+/* Optional: chest images glow */
+.info-awards .award-img {
+  filter: drop-shadow(0 0 6px rgba(255, 0, 60, 0.5));
+}.clan-tag {
+  color: #ff2a2a !important;
+  text-shadow:
+    0 0 5px rgba(255, 0, 0, 0.9),
+    0 0 10px rgba(255, 0, 0, 0.7),
+    0 0 20px rgba(255, 0, 0, 0.5);
+  animation: clanGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes clanGlow {
+  0% {
+    text-shadow:
+      0 0 3px rgba(255, 0, 0, 0.6),
+      0 0 8px rgba(255, 0, 0, 0.4),
+      0 0 16px rgba(255, 0, 0, 0.2);
+  }
+  50% {
+    text-shadow:
+      0 0 8px rgba(255, 0, 0, 1),
+      0 0 18px rgba(255, 0, 0, 0.9),
+      0 0 32px rgba(255, 0, 0, 0.7);
+  }
+  100% {
+    text-shadow:
+      0 0 3px rgba(255, 0, 0, 0.6),
+      0 0 8px rgba(255, 0, 0, 0.4),
+      0 0 16px rgba(255, 0, 0, 0.2);
+  }
+}.tab.active {
+  color: #ff2a2a !important;
+  text-shadow:
+    0 0 6px rgba(255, 0, 0, 0.9),
+    0 0 14px rgba(255, 0, 0, 0.7),
+    0 0 28px rgba(255, 0, 0, 0.5);
+  position: relative;
+  animation: tabGlowPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tabGlowPulse {
+  0% {
+    text-shadow:
+      0 0 4px rgba(255, 0, 0, 0.6),
+      0 0 10px rgba(255, 0, 0, 0.4);
+  }
+  50% {
+    text-shadow:
+      0 0 10px rgba(255, 0, 0, 1),
+      0 0 22px rgba(255, 0, 0, 0.9),
+      0 0 40px rgba(255, 0, 0, 0.6);
+  }
+  100% {
+    text-shadow:
+      0 0 4px rgba(255, 0, 0, 0.6),
+      0 0 10px rgba(255, 0, 0, 0.4);
+  }
+}#view > div > div > div.content > div > div.clans > div.my-clan > button {
+  all: unset !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 12px 18px !important;
+  border-radius: 12px !important;
+
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+
+  cursor: pointer !important;
+  user-select: none !important;
+
+  color: #fff !important;
+
+  background: linear-gradient(135deg, #ff0033, #5a0000) !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 60, 0.6),
+    0 0 25px rgba(255, 0, 60, 0.35) !important;
+
+  border: 1px solid rgba(255, 0, 80, 0.6) !important;
+
+  outline: none !important;
+
+  -webkit-appearance: none !important;
+  appearance: none !important;
+
+  position: relative !important;
+  overflow: hidden !important;
+}div.item-content[data-v-45a6a849] {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 60, 0.18),
+    rgba(120, 0, 0, 0.35)
+  ) !important;
+
+  border: 1px solid rgba(255, 0, 80, 0.35) !important;
+
+  border-radius: 12px !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 60, 0.25),
+    inset 0 0 15px rgba(255, 0, 60, 0.08) !important;
+
+  backdrop-filter: blur(8px) !important;
+
+  padding: 10px 12px !important;
+
+  transition: all 0.25s ease !important;
+}div.label[data-v-e10c5a6a] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+
+  color: #fff !important;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 60, 0.9),
+    rgba(120, 0, 0, 0.9)
+  ) !important;
+
+  border: 1px solid rgba(255, 0, 90, 0.6) !important;
+
+  box-shadow:
+    0 0 8px rgba(255, 0, 60, 0.6),
+    0 0 20px rgba(255, 0, 60, 0.35) !important;
+
+  position: relative !important;
+  overflow: hidden !important;
+}span.nickname.profile[data-v-4f4783e0] {
+  border: none !important;
+  outline: none !important;
+
+  text-shadow: none !important;
+  box-shadow: none !important;
+
+  background: transparent !important;
+
+  -webkit-text-stroke: 0 !important;
+}span.name.profile[data-v-4f4783e0] {
+  border: none !important;
+  outline: none !important;
+
+  text-shadow: none !important;
+  box-shadow: none !important;
+
+  background: transparent !important;
+
+  -webkit-text-stroke: 0 !important;
+}div.tab.active[data-v-0c2b2d3b] {
+  border-bottom: 2px solid #ff0033 !important;
+}button.inspect-btn.rectangle[data-v-e32a4426] {
+  background: linear-gradient(135deg, #ff0033, #5a0000) !important;
+
+  --hover-color: rgba(255, 0, 60, 0.85) !important;
+  --top: #ff2a55 !important;
+  --bottom: #7a0000 !important;
+
+  color: #fff !important;
+
+  border: 1px solid rgba(255, 0, 80, 0.6) !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 60, 0.45),
+    inset 0 0 8px rgba(255, 0, 60, 0.15) !important;
+
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+
+  transition: all 0.2s ease !important;
+}button.sell-btn[data-v-e32a4426] {
+  background: linear-gradient(135deg, #ff0033, #5a0000) !important;
+
+  border: 1px solid rgba(255, 0, 80, 0.6) !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 60, 0.4),
+    inset 0 0 8px rgba(255, 0, 60, 0.1) !important;
+}
+
+button.sell-btn[data-v-e32a4426]:hover {
+  transform: translateY(-1px) scale(1.02) !important;
+
+  box-shadow:
+    0 0 18px rgba(255, 0, 60, 0.8),
+    0 0 40px rgba(255, 0, 60, 0.4) !important;
+}button.market-btn.rectangle[data-v-e32a4426] {
+  background: linear-gradient(135deg, #2a1a10 0%, #ff6a00 50%, #3a1f00 100%) !important;
+
+  border: 1px solid rgba(255, 120, 0, 0.35) !important;
+
+  --WwNnWwmM-1: transparent !important;
+  --WwNnWwmM-2: transparent !important;
+  --WwNnWwmM-3: transparent !important;
+
+  --hover-color: rgba(255, 120, 0, 0.6) !important;
+  --top: transparent !important;
+  --bottom: transparent !important;
+}div.gun[data-v-17a70c70] {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 60, 0.15),
+    rgba(20, 0, 0, 0.55)
+  ) !important;
+
+  border: 1px solid rgba(255, 0, 80, 0.25) !important;
+
+  border-radius: 10px !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 60, 0.15),
+    inset 0 0 10px rgba(255, 0, 60, 0.05) !important;
+
+  backdrop-filter: blur(6px) !important;
+
+  transition: all 0.2s ease !important;
+}div.tab-bar[data-v-0c2b2d3b][data-v-17a70c70] {
+  background: rgba(20, 0, 0, 0.65) !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 60, 0.12),
+    inset 0 0 8px rgba(255, 0, 60, 0.06) !important;
+
+  backdrop-filter: blur(8px) !important;
+}button.rectangle[data-v-e32a4426] {
+  background-image: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+
+  /* stop gradient system from breaking edges */
+  --top: transparent !important;
+  --bottom: transparent !important;
+  --hover-color: transparent !important;
+}button.rectangle[data-v-e32a4426] {
+  background: linear-gradient(135deg, #2a0000, #ff0033) !important;
+
+  border: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+  color: #fff !important;
+}#left-interface[data-v-0d228eb8] .card-cont,
+#left-interface[data-v-0d228eb8] .avatar-info,
+#left-interface[data-v-0d228eb8] .user-info,
+#left-interface[data-v-0d228eb8] .money {
+  border: none !important;
+  box-shadow: none !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+}div.owned[data-v-315a832c] {
+  background: rgba(0, 0, 0, 0.45) !important;
+
+  color: #ff2b55 !important;
+
+  border: 1px solid rgba(255, 0, 60, 0.45) !important;
+
+  box-shadow:
+    0 0 8px rgba(255, 0, 60, 0.25),
+    inset 0 0 6px rgba(255, 0, 60, 0.08) !important;
+
+  text-shadow: 0 0 6px rgba(255, 0, 60, 0.4) !important;
+}div.name.wmWWNw[data-v-315a832c] {
+  background: rgba(0, 0, 0, 0.85) !important;
+
+  border-bottom: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+  color: #ffffff !important;
+
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 0, 60, 0.15) !important;
+}div.name[data-v-315a832c],
+div.name[class*="wmWWNw"],
+div.name[class*="rar"],
+div.name[class*="Rarity"],
+div.name[class*="skin"] {
+  background: rgba(0, 0, 0, 0.85) !important;
+
+  color: #ffffff !important;
+
+  border-bottom: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 0, 60, 0.15) !important;
+}
+/* ICON default */
+.icon-btn.INVENTORY svg {
+  filter: brightness(0) invert(1);
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}.icon-btn.INVENTORY .text-icon {
+  position: relative;
+
+  color: rgba(255, 255, 255, 0.75);
+
+  font-weight: 700;
+  letter-spacing: 1.2px;
+
+  transition: all 0.2s ease;
+}
+
+/* hover glow (works immediately) */
+.icon-btn.INVENTORY:hover .text-icon {
+  color: #fff;
+
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.35),
+    0 0 14px rgba(255, 255, 255, 0.2);
+}
+
+/* underline ALWAYS visible on hover */
+.icon-btn.INVENTORY .text-icon::after {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+
+  width: 0%;
+  height: 2px;
+
+  background: rgba(255, 255, 255, 0.85);
+
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.5);
+
+  transform: translateX(-50%);
+  transition: width 0.25s ease;
+}
+
+/* underline appears on hover */
+.icon-btn.INVENTORY:hover .text-icon::after {
+  width: 85%;
+}
+
+/* icon effect */
+.icon-btn.INVENTORY svg {
+  opacity: 0.65;
+  filter: brightness(0) invert(1);
+  transition: 0.2s ease;
+}
+
+.icon-btn.INVENTORY:hover svg {
+  opacity: 1;
+  filter: brightness(0) invert(1);
+}.icon-btn .text-icon {
+  position: relative;
+
+  color: rgba(255, 255, 255, 0.7);
+
+  font-weight: 700;
+  letter-spacing: 1.2px;
+
+  transition: all 0.2s ease;
+}
+
+/* hover glow for ALL tabs */
+.icon-btn:hover .text-icon {
+  color: #fff;
+
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.35),
+    0 0 14px rgba(255, 255, 255, 0.2);
+}
+
+/* underline base (hidden) */
+.icon-btn .text-icon::after {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+
+  width: 0%;
+  height: 2px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.5);
+
+  transform: translateX(-50%);
+  transition: width 0.25s ease;
+}
+
+/* underline on hover */
+.icon-btn:hover .text-icon::after {
+  width: 80%;
+}
+
+/* icon styling for all top bar buttons */
+.icon-btn svg {
+  opacity: 0.6;
+  filter: brightness(0) invert(1);
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover svg {
+  opacity: 1;
+}button.daily-rewards-btn.rectangle[data-v-e32a4426] {
+  background: rgba(0, 0, 0, 0.55) !important;
+
+  background-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.75),
+    rgba(255, 0, 60, 0.25)
+  ) !important;
+
+  background-color: transparent !important;
+
+  --hover-color: rgba(255, 0, 60, 0.35) !important;
+  --top: rgba(255, 0, 60, 0.35) !important;
+  --bottom: rgba(0, 0, 0, 0.8) !important;
+
+  color: #ffffff !important;
+
+  border: 1px solid rgba(255, 0, 60, 0.45) !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 60, 0.25),
+    inset 0 0 10px rgba(0, 0, 0, 0.6) !important;
+}button.button.next[data-v-e32a4426] {
+  background: rgba(0, 0, 0, 0.55) !important;
+
+  background-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.75),
+    rgba(0, 255, 120, 0.18)
+  ) !important;
+
+  background-color: transparent !important;
+
+  --hover-color: rgba(0, 255, 120, 0.25) !important;
+  --top: rgba(0, 255, 120, 0.25) !important;
+  --bottom: rgba(0, 120, 60, 0.7) !important;
+
+  color: #ffffff !important;
+
+  border: 1px solid rgba(0, 255, 120, 0.45) !important;
+
+  box-shadow:
+    0 0 10px rgba(0, 255, 120, 0.25),
+    inset 0 0 10px rgba(0, 0, 0, 0.6) !important;
+}/* =========================
+   EVENT QUEST PROGRESS BAR
+   RED FUTURISTIC STYLE
+========================= */
+
+#wNWmwMn .progress-line {
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 0, 60, 0.25) !important;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    overflow: hidden !important;
+}/* =========================
+   USER LEVEL PROGRESS BAR
+   RED FUTURISTIC HUD STYLE
+========================= */
+
+.card-cont.user-info .progress-line {
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 0, 60, 0.25) !important;
+
+    box-shadow:
+        inset 0 0 10px rgba(0,0,0,0.8);
+
+    overflow: hidden !important;
+    border-radius: 999px !important;
+}
+
+/* actual fill */
+.card-cont.user-info .progress-line .progress {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 0, 60, 0.95),
+        rgba(255, 80, 120, 0.7),
+        rgba(255, 0, 60, 0.9)
+    ) !important;
+
+    height: 100% !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.35),
+        0 0 20px rgba(255, 0, 60, 0.2);
+
+    transition: width 0.3s ease !important;
+}
+
+/* optional: subtle glow pulse effect */
+@keyframes expPulse {
+    0% {
+        box-shadow: 0 0 6px rgba(255, 0, 60, 0.25);
+    }
+    50% {
+        box-shadow: 0 0 14px rgba(255, 0, 60, 0.45);
+    }
+    100% {
+        box-shadow: 0 0 6px rgba(255, 0, 60, 0.25);
+    }
+}
+
+.card-cont.user-info .progress-line .progress {
+    animation: expPulse 2.5s infinite ease-in-out;
+}/* =========================
+   PROFILE PROGRESS CARD ONLY
+   RED FUTURISTIC OVERLAY + BAR
+========================= */
+
+/* card container itself */
+.card.progress {
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+    box-shadow:
+        0 0 20px rgba(255, 0, 60, 0.12),
+        0 8px 32px rgba(0, 0, 0, 0.6) !important;
+
+    backdrop-filter: none !important;
+}
+
+/* progress bar track */
+.card.progress .progress-line {
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 0, 60, 0.25) !important;
+
+    overflow: hidden !important;
+    border-radius: 999px !important;
+
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+
+/* progress fill (your 63.7385% bar) */
+.card.progress .progress-line .progress {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 0, 60, 0.95),
+        rgba(255, 80, 120, 0.7),
+        rgba(255, 0, 60, 0.9)
+    ) !important;
+
+    height: 100% !important;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.35),
+        0 0 20px rgba(255, 0, 60, 0.2);
+
+    border-radius: 999px !important;
+
+    transition: width 0.3s ease !important;
+}
+
+/* optional glow pulse */
+@keyframes profileCardPulse {
+    0%   { box-shadow: 0 0 6px rgba(255,0,60,0.25); }
+    50%  { box-shadow: 0 0 14px rgba(255,0,60,0.45); }
+    100% { box-shadow: 0 0 6px rgba(255,0,60,0.25); }
+}
+
+.card.progress .progress-line .progress {
+    animation: profileCardPulse 2.5s infinite ease-in-out;
+}/* =========================
+   TAB HEADER (FUTURISTIC RED HUD)
+========================= */
+.tab-header {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.65) !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 0 15px rgba(255, 0, 60, 0.18),
+        inset 0 0 18px rgba(0, 0, 0, 0.7);
+
+    position: relative;
+    overflow: hidden;
+}
+
+/* glowing red frame overlay */
+.tab-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 0, 60, 0.35),
+        rgba(255, 0, 60, 0.05),
+        rgba(255, 0, 60, 0.25)
+    );
+
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* tabs text styling */
+.tab-header .tab {
+    color: rgba(255, 255, 255, 0.75) !important;
+    transition: 0.2s ease;
+}
+
+/* hover glow */
+.tab-header .tab:hover {
+    color: rgba(255, 0, 60, 0.9) !important;
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.5),
+        0 0 16px rgba(255, 0, 60, 0.3);
+}
+
+/* active tab */
+.tab-header .tab.active {
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    text-shadow:
+        0 0 10px rgba(255, 0, 60, 0.6),
+        0 0 20px rgba(255, 0, 60, 0.35);
+}/* =========================
+   FRIEND CARD – RED FUTURISTIC HUD
+========================= */
+.friend {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.55) !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 0 12px rgba(255, 0, 60, 0.18),
+        inset 0 0 18px rgba(0, 0, 0, 0.75);
+
+    position: relative;
+    overflow: hidden;
+
+    transition: 0.2s ease;
+}
+
+/* glowing red HUD frame */
+.friend::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 0, 60, 0.35),
+        rgba(255, 0, 60, 0.05),
+        rgba(255, 0, 60, 0.25)
+    );
+
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* hover effect */
+.friend:hover {
+    border: 1px solid rgba(255, 0, 60, 0.9) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.35),
+        inset 0 0 20px rgba(0, 0, 0, 0.85);
+
+    transform: translateY(-1px);
+}
+
+/* nickname glow */
+.friend .nickname {
+    color: rgba(255,255,255,0.9) !important;
+    text-shadow: 0 0 8px rgba(255, 0, 60, 0.25);
+}
+
+/* ONLINE dot = neon red */
+.friend .online-circle {
+    color: rgba(255, 0, 60, 0.95) !important;
+    text-shadow: 0 0 8px rgba(255, 0, 60, 0.6);
+}
+
+/* JOIN button futuristic red */
+.friend .add {
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 0, 60, 0.6) !important;
+    color: rgba(255,255,255,0.9) !important;
+
+    padding: 2px 10px;
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.15);
+}
+
+.friend .add:hover {
+    border: 1px solid rgba(255, 0, 60, 0.9) !important;
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.35);
+}/* =========================
+   FUTURISTIC RED CLOSE BUTTON (RED BACKGROUND)
+   NO SIZE CHANGES
+========================= */
+.friend .delete {
+    background: rgba(255, 0, 60, 0.18) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.75) !important;
+    border-radius: 6px !important;
+
+    box-shadow:
+        0 0 12px rgba(255, 0, 60, 0.25),
+        inset 0 0 10px rgba(255, 0, 60, 0.12);
+
+    position: relative;
+    overflow: hidden;
+
+    transition: 0.2s ease;
+}
+
+/* animated red HUD glow */
+.friend .delete::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: radial-gradient(
+        circle,
+        rgba(255, 0, 60, 0.45),
+        rgba(255, 0, 60, 0.15),
+        transparent
+    );
+
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* hover = stronger red glow */
+.friend .delete:hover {
+    background: rgba(255, 0, 60, 0.28) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.95) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.45),
+        0 0 30px rgba(255, 0, 60, 0.25),
+        inset 0 0 12px rgba(255, 0, 60, 0.15);
+
+    transform: translateY(-1px);
+}
+
+/* icon styling */
+.friend .delete svg {
+    fill: rgba(255, 255, 255, 0.9) !important;
+    filter: drop-shadow(0 0 6px rgba(255, 0, 60, 0.4));
+    transition: 0.2s ease;
+}
+
+/* hover icon turns stronger red */
+.friend .delete:hover svg {
+    fill: rgba(255, 0, 60, 1) !important;
+    filter: drop-shadow(0 0 10px rgba(255, 0, 60, 0.7));
+}/* =========================
+   FRIEND LEVEL ONLY (NO GLOBAL IMPACT)
+========================= */
+.friend .level-cont {
+    background: rgba(255, 0, 60, 0.12) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.55) !important;
+    border-radius: 6px;
+
+    box-shadow:
+        0 0 10px rgba(255, 0, 60, 0.18),
+        inset 0 0 8px rgba(255, 0, 60, 0.10);
+
+    padding: 2px 6px;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* number (96) */
+.friend .level-cont .level-amount {
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    text-shadow:
+        0 0 6px rgba(255, 0, 60, 0.35);
+}
+
+/* "lvl" text */
+.friend .level-cont .level-label {
+    color: rgba(255, 255, 255, 0.75) !important;
+}/* =========================
+   ACTIVE TAB - FUTURISTIC GREEN
+========================= */
+.tab.active-tab {
+    background: rgba(0, 255, 140, 0.18) !important;
+
+    border: 1px solid rgba(0, 255, 140, 0.65) !important;
+    border-radius: 6px;
+
+    color: rgba(255, 255, 255, 0.95) !important;
+
+    box-shadow:
+        0 0 12px rgba(0, 255, 140, 0.25),
+        0 0 24px rgba(0, 255, 140, 0.15),
+        inset 0 0 10px rgba(0, 0, 0, 0.4);
+
+    text-shadow:
+        0 0 8px rgba(0, 255, 140, 0.35);
+
+    position: relative;
+    overflow: hidden;
+
+    transition: 0.2s ease;
+}
+
+/* subtle HUD glow layer */
+.tab.active-tab::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: radial-gradient(
+        circle,
+        rgba(0, 255, 140, 0.25),
+        transparent
+    );
+
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* optional hover intensify */
+.tab.active-tab:hover {
+    background: rgba(0, 255, 140, 0.25) !important;
+
+    box-shadow:
+        0 0 18px rgba(0, 255, 140, 0.35),
+        0 0 30px rgba(0, 255, 140, 0.2);
+}/* =========================
+   MAIN MOD + MAP MENU BACKGROUND
+   BLACK TRANSPARENT HUD STYLE
+========================= */
+
+.select-mods-cont,
+.select-mods-mods,
+.select-mods-maps,
+#mode-filters,
+.wrapper {
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.25) !important;
+
+    box-shadow:
+        inset 0 0 20px rgba(0,0,0,0.7),
+        0 0 25px rgba(0,0,0,0.4) !important;
+}
+
+/* kill any leftover light/blue gradients */
+.select-mod,
+.filters,
+.mod-button,
+.map-button {
+    background-image: none !important;
+}/* =========================
+   ACTIVE MOD BUTTON (SELECTED)
+   RED FUTURISTIC STYLE
+========================= */
+
+.mod-button.active {
+    background: rgba(0, 0, 0, 0.55) !important;
+    border: 1px solid rgba(255, 0, 60, 0.85) !important;
+
+    box-shadow:
+        0 0 12px rgba(255, 0, 60, 0.25),
+        0 0 28px rgba(255, 0, 60, 0.15),
+        inset 0 0 18px rgba(0, 0, 0, 0.75) !important;
+
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+
+    position: relative;
+    overflow: hidden;
+}
+
+/* futuristic red glow layer */
+.mod-button.active::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 0, 60, 0.25),
+        transparent 70%
+    );
+
+    pointer-events: none;
+}
+
+/* text glow */
+.mod-button.active .mod-name {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.6),
+        0 0 16px rgba(255, 0, 60, 0.35);
+}
+
+/* keep icon readable */
+.mod-button.active .info-icon {
+    color: rgba(255, 80, 120, 0.9) !important;
+}/* =========================
+   ACTIVE MAP BUTTON
+   RED FUTURISTIC HUD STYLE
+========================= */
+
+.map-button.active {
+    border: 1px solid rgba(255, 0, 60, 0.85) !important;
+
+    box-shadow:
+        0 0 14px rgba(255, 0, 60, 0.25),
+        0 0 30px rgba(255, 0, 60, 0.15),
+        inset 0 0 20px rgba(0, 0, 0, 0.75) !important;
+
+    position: relative;
+    overflow: hidden;
+
+    background-color: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* red scan glow overlay */
+.map-button.active::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 0, 60, 0.28),
+        transparent 70%
+    );
+
+    pointer-events: none;
+}
+
+/* subtle red edge highlight */
+.map-button.active::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    border: 1px solid rgba(255, 0, 60, 0.35);
+
+    pointer-events: none;
+}
+
+/* text glow */
+.map-button.active .map-name {
+    color: rgba(255, 255, 255, 0.95) !important;
+
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.6),
+        0 0 18px rgba(255, 0, 60, 0.35);
+}/* =========================
+   TOP PLAYERS LABEL
+   GLOWING GREEN TEXT
+========================= */
+
+.label-primary {
+    color: #66ff99 !important;
+
+    text-shadow:
+        0 0 6px rgba(0, 255, 120, 0.6),
+        0 0 14px rgba(0, 255, 120, 0.4),
+        0 0 28px rgba(0, 255, 120, 0.25) !important;
+}/* ONLY nickname inside that specific container */
+div[data-v-00ce7b25] .nickname {
+    background: linear-gradient(
+        90deg,
+        #000000 0%,
+        #ff003c 55%,
+        #ff4d6d 100%
+    ) !important;
+
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+
+    text-shadow: 0 0 6px rgba(255, 0, 60, 0.25);
+}/* =========================
+   ADD FRIEND PANEL
+   BLACK GLASS + RED HUD
+========================= */
+
+.add-friends {
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.65) !important;
+
+    box-shadow:
+        0 0 18px rgba(255, 0, 60, 0.15),
+        inset 0 0 25px rgba(0, 0, 0, 0.8);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    color: rgba(255, 60, 90, 0.9) !important;
+}
+
+/* HEAD TEXT */
+.add-friends .head-text {
+    color: rgba(255, 0, 60, 0.9) !important;
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.5),
+        0 0 18px rgba(255, 0, 60, 0.25);
+}
+
+/* YOUR ID TEXT */
+.add-friends .short-id-clipboard {
+    color: rgba(255, 80, 120, 0.9) !important;
+    text-shadow: 0 0 6px rgba(255, 0, 60, 0.3);
+}
+
+/* INPUT FIELD */
+.add-friends input {
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+    color: rgba(255, 200, 210, 0.9) !important;
+
+    box-shadow:
+        inset 0 0 10px rgba(0,0,0,0.8);
+}
+
+.add-friends input::placeholder {
+    color: rgba(255, 80, 100, 0.35) !important;
+}
+
+/* =========================
+   GREEN FUTURISTIC ADD BUTTON
+========================= */
+
+.add-friends .button.btn {
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    border: 1px solid rgba(0, 255, 140, 0.75) !important;
+
+    color: rgba(0, 255, 140, 0.9) !important;
+
+    box-shadow:
+        0 0 14px rgba(0, 255, 140, 0.18),
+        inset 0 0 15px rgba(0, 0, 0, 0.7);
+
+    position: relative;
+    overflow: hidden;
+}
+
+/* green glow layer */
+.add-friends .button.btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: radial-gradient(
+        circle at center,
+        rgba(0, 255, 140, 0.25),
+        transparent 70%
+    );
+
+    pointer-events: none;
+}
+
+/* hover effect */
+.add-friends .button.btn:hover {
+    border: 1px solid rgba(0, 255, 140, 1) !important;
+
+    box-shadow:
+        0 0 18px rgba(0, 255, 140, 0.35),
+        inset 0 0 15px rgba(0, 0, 0, 0.8);
+
+    transform: translateY(-1px);
+}
+
+/* button text glow */
+.add-friends .button.btn .text {
+    color: rgba(0, 255, 140, 0.95) !important;
+    text-shadow:
+        0 0 8px rgba(0, 255, 140, 0.5);
+}
+
+/* =========================
+   SEARCH SECTION CLEAN HUD
+========================= */
+
+.search-friends {
+    background: rgba(0, 0, 0, 0.35) !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.25) !important;
+
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.7);
+}
+
+.search-text {
+    color: rgba(255, 0, 60, 0.85) !important;
+    text-shadow: 0 0 8px rgba(255, 0, 60, 0.25);
+}
+
+.search-input {
+    background: rgba(0, 0, 0, 0.55) !important;
+    border: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+    color: rgba(255,255,255,0.9) !important;
+}
+
+.lookup-toggle {
+    color: rgba(255, 0, 60, 0.6) !important;
+}
+.lookup-toggle:hover {
+    color: rgba(255, 0, 60, 0.95) !important;
+    text-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
+}/* =========================
+   HARD RESET ADD FRIEND BUTTON
+   REMOVE ALL BUILT-IN UI LAYERS
+========================= */
+
+.add-friends .button.btn {
+    position: relative !important;
+    overflow: hidden !important;
+
+    background: rgba(0, 0, 0, 0.55) !important;
+
+    border: 1px solid rgba(0, 255, 140, 0.75) !important;
+
+    box-shadow:
+        0 0 14px rgba(0, 255, 140, 0.18),
+        inset 0 0 18px rgba(0, 0, 0, 0.85) !important;
+
+    backdrop-filter: none !important;
+}
+
+/* REMOVE ALL DEFAULT DECORATIVE ELEMENTS */
+.add-friends .button.btn .triangle,
+.add-friends .button.btn .WwNwmM,
+.add-friends .button.btn .border-top,
+.add-friends .button.btn .border-bottom {
+    display: none !important;
+}
+
+/* KILL ANY INHERITED GRADIENT VARIABLES */
+.add-friends .button.btn {
+    --hover-color: transparent !important;
+    --top: transparent !important;
+    --bottom: transparent !important;
+}
+
+/* CLEAN TEXT */
+.add-friends .button.btn .text {
+    color: rgba(0, 255, 140, 0.95) !important;
+
+    text-shadow:
+        0 0 6px rgba(0, 255, 140, 0.45),
+        0 0 14px rgba(0, 255, 140, 0.25);
+}
+
+/* OPTIONAL INNER CLEAN GLOW LAYER */
+.add-friends .button.btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: radial-gradient(
+        circle at center,
+        rgba(0, 255, 140, 0.18),
+        transparent 70%
+    );
+
+    pointer-events: none;
+}
+
+/* HOVER IMPROVEMENT */
+.add-friends .button.btn:hover {
+    border: 1px solid rgba(0, 255, 140, 1) !important;
+
+    box-shadow:
+        0 0 22px rgba(0, 255, 140, 0.35),
+        inset 0 0 18px rgba(0, 0, 0, 0.9);
+}/* =========================
+   ADD FRIEND HEADER
+   BLACK BACKGROUND BAR
+========================= */
+
+.add-friends .head-text {
+    background: rgba(0, 0, 0, 0.65) !important;
+
+    padding: 6px 12px !important;
+
+    border: 1px solid rgba(255, 0, 60, 0.35) !important;
+
+    color: rgba(255, 0, 60, 0.9) !important;
+
+    display: inline-block;
+
+    box-shadow:
+        inset 0 0 12px rgba(0, 0, 0, 0.8),
+        0 0 10px rgba(255, 0, 60, 0.12);
+
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.35);
+}/* Active nav tab */
+.nav.active {
+    color: rgba(255, 0, 60, 0.95) !important;
+
+    text-shadow:
+        0 0 8px rgba(255, 0, 60, 0.5),
+        0 0 16px rgba(255, 0, 60, 0.25);
+
+    position: relative !important;
+}
+
+/* Red underline */
+.nav.active::after {
+    content: "";
+    position: absolute;
+
+    left: 12px;
+    right: 12px;
+    bottom: -2px;
+
+    height: 2px;
+    border-radius: 999px;
+
+    background: rgba(255, 0, 60, 0.95);
+
+    box-shadow:
+        0 0 8px rgba(255, 0, 60, 0.5),
+        0 0 16px rgba(255, 0, 60, 0.25);
+}/* Red glow behind top players */
+.background-leaders {
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 0, 0, 0.35) 0%,
+        rgba(255, 0, 0, 0.15) 40%,
+        transparent 80%
+    ) !important;
+    filter: blur(20px) !important;
+}
+
+/* Make the existing light effect red */
+.bg-light {
+    filter:
+        hue-rotate(-50deg)
+        saturate(4)
+        brightness(1.3)
+        drop-shadow(0 0 20px rgba(255, 0, 0, 0.8))
+        drop-shadow(0 0 40px rgba(255, 0, 0, 0.6))
+    !important;
+
+    opacity: 0.75 !important;
+}
+
+/* Extra glow on leaderboard section */
+.leaderboard-cont {
+    position: relative !important;
+}
+
+.leaderboard-cont::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(
+            circle at top center,
+            rgba(255, 0, 0, 0.15),
+            transparent 65%
+        );
+    pointer-events: none;
+    z-index: 1;
+}/* Futuristic blue HOME button */
+.home[data-v-da7c34da]{
+    position: relative !important;
+
+    background: linear-gradient(
+        135deg,
+        rgba(0,20,50,.95) 0%,
+        rgba(0,60,120,.85) 50%,
+        rgba(0,25,60,.95) 100%
+    ) !important;
+
+    border: 2px solid #00bfff !important;
+    border-radius: 0 !important;
+
+    box-shadow:
+        inset 0 0 15px rgba(0,191,255,.25),
+        0 0 12px rgba(0,191,255,.5);
+
+    backdrop-filter: blur(6px);
+    padding: 8px !important;
+
+    clip-path: polygon(
+        10% 0,
+        100% 0,
+        100% 75%,
+        90% 100%,
+        0 100%,
+        0 25%
+    );
+}
+
+/* Blue icon */
+.home[data-v-da7c34da] svg,
+.home[data-v-da7c34da] .icon-home{
+    fill: #7fdfff !important;
+    color: #7fdfff !important;
+
+    filter:
+        drop-shadow(0 0 4px #00bfff)
+        drop-shadow(0 0 12px #0099ff);
+}
+
+/* Futuristic corner accents */
+.home[data-v-da7c34da]::before{
+    content:"";
+    position:absolute;
+    inset:3px;
+    border-top:2px solid #00e5ff;
+    border-left:2px solid #00e5ff;
+    pointer-events:none;
+}
+
+.home[data-v-da7c34da]::after{
+    content:"";
+    position:absolute;
+    right:3px;
+    bottom:3px;
+    width:12px;
+    height:12px;
+    border-right:2px solid #00e5ff;
+    border-bottom:2px solid #00e5ff;
+    pointer-events:none;
+}
+
+/* Hover */
+.home[data-v-da7c34da]:hover{
+    background: linear-gradient(
+        135deg,
+        rgba(0,40,90,.95),
+        rgba(0,110,220,.85),
+        rgba(0,40,90,.95)
+    ) !important;
+
+    box-shadow:
+        0 0 20px rgba(0,191,255,.8),
+        inset 0 0 20px rgba(0,191,255,.35);
+}
+/* ==========================================================
+   CONFIRM BUTTON - FUTURISTIC GREEN TRANSPARENT STYLE
+   (NO LAYOUT CHANGES)
+   ========================================================== */
+
+button.btn-WwWnNmw-add.rectangle {
+    position: relative;
+    overflow: hidden;
+
+    /* transparent futuristic green base */
+    background: linear-gradient(
+        180deg,
+        rgba(0, 255, 140, 0.18),
+        rgba(0, 120, 70, 0.12)
+    ) !important;
+
+    border: 1px solid rgba(0, 255, 140, 0.35) !important;
+
+    color: #d8ffe9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    backdrop-filter: blur(8px);
+
+    box-shadow:
+        0 0 10px rgba(0, 255, 140, 0.15),
+        inset 0 0 10px rgba(0, 0, 0, 0.5);
+
+    transition: 0.25s ease;
+}
+
+/* GREEN ENERGY GLOW OVERLAY */
+button.btn-WwWnNmw-add.rectangle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 255, 140, 0.25),
+        rgba(0, 255, 200, 0.35),
+        rgba(0, 255, 140, 0.25),
+        transparent
+    );
+
+    opacity: 0.35;
+    transform: translateX(-70%);
+    transition: 0.45s ease;
+}
+
+/* HOVER STATE */
+button.btn-WwWnNmw-add.rectangle:hover {
+    border-color: rgba(0, 255, 140, 0.7) !important;
+
+    box-shadow:
+        0 0 18px rgba(0, 255, 140, 0.35),
+        0 0 40px rgba(0, 255, 140, 0.15),
+        inset 0 0 12px rgba(0, 0, 0, 0.6);
+
+    transform: translateY(-1px);
+}
+
+/* animated green sweep on hover */
+button.btn-WwWnNmw-add.rectangle:hover::before {
+    transform: translateX(70%);
+    opacity: 0.75;
+}
+
+/* TEXT GLOW */
+button.btn-WwWnNmw-add.rectangle .text {
+    color: #bfffe3;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(0, 255, 140, 0.25);
+}
+
+/* TRIANGLE ICON */
+button.btn-WwWnNmw-add.rectangle .triangle {
+    border-color: rgba(0, 255, 140, 0.6);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 140, 0.4));
+}
+
+/* INNER BORDER LINES */
+button.btn-WwWnNmw-add.rectangle .border-top,
+button.btn-WwWnNmw-add.rectangle .border-bottom {
+    background: rgba(0, 255, 140, 0.25) !important;
+}.levels {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 0, 0.28),
+    rgba(70, 0, 0, 0.45)
+  ) !important;
+
+  border: 1px solid rgba(255, 60, 60, 0.75);
+  border-radius: 6px;
+
+  box-shadow:
+    0 0 8px rgba(255, 0, 0, 0.55),
+    inset 0 0 8px rgba(255, 0, 0, 0.25);
+
+  color: #fff;
+
+  text-shadow:
+    0 0 5px rgba(255, 255, 255, 0.8),
+    0 0 10px rgba(255, 80, 80, 0.7);
+
+  /* IMPORTANT: prevents layout shift */
+  padding: 0;
+  margin: 0;
+
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ensure inner "lvl" doesn't break sizing */
+.levels .klo {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}.levels .klo {
+  padding: 2px 6px;
+  margin-left: 4px;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+
+  color: #ff2a2a;
+
+  background: rgba(255, 0, 0, 0.15);
+  border: 1px solid rgba(255, 40, 40, 0.8);
+  border-radius: 6px;
+
+  box-shadow:
+    0 0 6px rgba(255, 0, 0, 0.6),
+    inset 0 0 8px rgba(255, 0, 0, 0.3);
+
+  text-transform: uppercase;
+}
+/* addon label */
+#left-interface::after {
+  content: "rune 2026 v0.2 css";
+
+  position: absolute;
+  top: 14px;
+  right: 16px;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+
+  color: #ff2a2a;
+
+  text-shadow:
+    0 0 6px rgba(255, 0, 0, 0.8),
+    0 0 12px rgba(255, 0, 0, 0.4);
+
+  pointer-events: none;
+  z-index: 9999;
+}.button.join {
+  color: #ffffff;
+
+  background: linear-gradient(
+    180deg,
+    #00ff6a,
+    #00c853
+  ) !important;
+
+  border: 1px solid #00ff6a;
+
+  box-shadow:
+    0 0 10px #00ff6a,
+    0 0 20px rgba(0, 255, 106, 0.7);
+
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.9);
+
+  font-weight: 700;
+  letter-spacing: 1px;
+
+  transition: all 0.15s ease-in-out;
+}
+
+/* hover = stronger “energy surge” */
+.button.join:hover {
+  background: linear-gradient(
+    180deg,
+    #1aff80,
+    #00e676
+  ) !important;
+
+  box-shadow:
+    0 0 14px #00ff6a,
+    0 0 30px #00ff6a;
+
+  transform: translateY(-1px);
+}.button.join:hover {
+  background: #0f2a1c !important;
+
+  box-shadow:
+    0 0 10px rgba(0, 255, 106, 0.9),
+    0 0 25px rgba(0, 255, 106, 0.4),
+    inset 0 0 10px rgba(0, 255, 106, 0.25);
+}.button.join * {
+  background: transparent !important;
+  box-shadow: none !important;
+}.server {
+  position: relative;
+
+  border-radius: 10px;
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 40, 40, 0.8);
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 0, 0.35),
+    inset 0 0 12px rgba(255, 0, 0, 0.15);
+
+  transform: translateZ(0);
+}.server:hover {
+  box-shadow:
+    0 0 18px rgba(255, 0, 0, 0.7),
+    0 0 35px rgba(255, 0, 0, 0.25),
+    inset 0 0 14px rgba(255, 0, 0, 0.2);
+
+  transition: 0.2s ease-in-out;
+}.description.background {
+  background: linear-gradient(
+    135deg,
+    #2a0000,
+    #5a0000
+  ) !important;
+
+  border: 1px solid rgba(255, 40, 40, 0.8);
+
+  box-shadow:
+    0 0 10px rgba(255, 0, 0, 0.4),
+    inset 0 0 12px rgba(255, 0, 0, 0.2);
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 6px rgba(255, 0, 0, 0.7);
+}.champions-stat.background {
+  background: linear-gradient(
+    135deg,
+    #1a0000,
+    #3a0000
+  ) !important;
+
+  border: 1px solid rgba(255, 40, 40, 0.85);
+
+  box-shadow:
+    0 0 12px rgba(255, 0, 0, 0.45),
+    inset 0 0 14px rgba(255, 0, 0, 0.18);
+
+  color: #ffffff;
+
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.6);
+}.all-scores.background {
+  background: linear-gradient(
+    135deg,
+    #140000,
+    #2e0000
+  ) !important;
+
+  border: 1px solid rgba(255, 40, 40, 0.85);
+
+  box-shadow:
+    0 0 12px rgba(255, 0, 0, 0.45),
+    inset 0 0 14px rgba(255, 0, 0, 0.18);
+
+  color: #ffffff;
+
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.6);
+}.rank.wnWmwNM {
+  color: #ff2a2a !important;
+
+  font-weight: 800;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 6px rgba(255, 0, 0, 0.9),
+    0 0 14px rgba(255, 0, 0, 0.7),
+    0 0 24px rgba(255, 0, 0, 0.4);
+}.role-select.wnWmwNM {
+  color: #ff2a2a !important;
+
+  font-weight: 800;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 6px rgba(255, 0, 0, 0.9),
+    0 0 14px rgba(255, 0, 0, 0.6);
+}.rank.wMWWnNm {
+  color: #2aa8ff !important;
+
+  font-weight: 800;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 6px rgba(0, 150, 255, 0.9),
+    0 0 14px rgba(0, 150, 255, 0.7),
+    0 0 24px rgba(0, 150, 255, 0.4);
+}.role-select.wMWWnNm {
+  color: #2aa8ff !important;
+
+  font-weight: 800;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 6px rgba(0, 150, 255, 0.9),
+    0 0 14px rgba(0, 150, 255, 0.6);
+
+  cursor: pointer;
+}.rank.wnWNmwW {
+  color: #2dff7a !important;
+
+  font-weight: 800;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 6px rgba(0, 255, 120, 0.9),
+    0 0 14px rgba(0, 255, 120, 0.7),
+    0 0 24px rgba(0, 255, 120, 0.4);
+}.role-select.wnWNmwW {
+  color: #2dff7a !important;
+
+  font-weight: 800;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 6px rgba(0, 255, 120, 0.9),
+    0 0 14px rgba(0, 255, 120, 0.6);
+
+  cursor: pointer;
+}.discord-cont {
+  background: linear-gradient(
+    135deg,
+    #061426,
+    #0a2a4a
+  ) !important;
+
+  border: 1px solid rgba(0, 150, 255, 0.6);
+
+  box-shadow:
+    0 0 10px rgba(0, 150, 255, 0.35),
+    inset 0 0 10px rgba(0, 150, 255, 0.15);
+}/* TIMER */
+.timer.bg {
+  background: rgba(0, 0, 0, 0.72) !important;
+  border: 2px solid #ff2b2b !important; /* strong red */
+
+  box-shadow: 0 0 12px rgba(255, 43, 43, 0.35) !important;
+
+  color: #ff6b6b !important; /* lighter red for readability */
+}/* =========================
+   FUTURISTIC CONTINUE BUTTON (RED HUD)
+   ========================= */
+
+#continue.button.continue.rectangle {
+  background: rgba(0, 0, 0, 0.75) !important; /* black transparent inside */
+
+  border: 1px solid rgba(255, 43, 43, 0.75) !important;
+
+  color: #ff4b4b !important;
+
+  box-shadow:
+    0 0 12px rgba(255, 43, 43, 0.25),
+    inset 0 0 10px rgba(255, 43, 43, 0.08);
+
+  text-transform: uppercase;
+  letter-spacing: 2px;
+
+  transition: all 0.2s ease;
+}
+
+/* remove game’s blue styling layers */
+#continue.button.continue.rectangle {
+  --hover-color: transparent !important;
+  --top: transparent !important;
+  --bottom: transparent !important;
+}
+
+/* hover = activation glow */
+#continue.button.continue.rectangle:hover {
+  background: rgba(0, 0, 0, 0.9) !important;
+
+  border-color: rgba(255, 43, 43, 1) !important;
+
+  box-shadow:
+    0 0 18px rgba(255, 43, 43, 0.45),
+    inset 0 0 12px rgba(255, 43, 43, 0.15);
+
+  transform: translateY(-1px);
+}
+
+/* text glow */
+#continue.button.continue.rectangle .text {
+  color: #ff4b4b !important;
+  text-shadow: 0 0 6px rgba(255, 43, 43, 0.35);
+}
+
+/* optional: hide triangle if it clashes with futuristic style */
+#continue.button.continue.rectangle .triangle {
+  opacity: 0.2;
+}/* =========================
+   FUTURISTIC HEADER CONTROLS (RED HUD)
+   ========================= */
+
+.head .head-right .button {
+  background: rgba(0, 0, 0, 0.75) !important;
+
+  border: 1px solid rgba(255, 43, 43, 0.45) !important;
+
+  color: #ff4b4b !important;
+
+  box-shadow:
+    0 0 10px rgba(255, 43, 43, 0.15),
+    inset 0 0 8px rgba(255, 43, 43, 0.05);
+
+  border-radius: 6px;
+
+  transition: all 0.2s ease;
+}
+
+/* hover activation */
+.head .head-right .button:hover {
+  background: rgba(0, 0, 0, 0.9) !important;
+
+  border-color: rgba(255, 43, 43, 0.9) !important;
+
+  box-shadow:
+    0 0 14px rgba(255, 43, 43, 0.35),
+    inset 0 0 10px rgba(255, 43, 43, 0.1);
+
+  transform: translateY(-1px);
+}
+
+/* TEXT + ICON COLOR */
+.head .head-right .button .text,
+.head .head-right .button svg {
+  color: #ff4b4b !important;
+  fill: #ff4b4b !important;
+  filter: drop-shadow(0 0 4px rgba(255, 43, 43, 0.35));
+}
+
+/* REMOVE OLD COLOR SYSTEM (blue/red vars) */
+.head .head-right .button {
+  --hover-color: transparent !important;
+  --top: transparent !important;
+  --bottom: transparent !important;
+}
+
+/* SPECIAL: EXIT BUTTON stays dangerous red but unified style */
+.head .head-right .exit-btn {
+  background: rgba(20, 0, 0, 0.85) !important;
+  border: 1px solid rgba(255, 0, 0, 0.6) !important;
+}
+
+.head .head-right .exit-btn:hover {
+  border-color: rgba(255, 0, 0, 1) !important;
+  box-shadow: 0 0 18px rgba(255, 0, 0, 0.4);
+}/* =========================
+   FUTURISTIC GUN CARD (RED HUD)
+   ========================= */
+
+.gun {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 12px;
+
+  background: rgba(5, 5, 5, 0.95) !important;
+
+  border: 1px solid rgba(255, 43, 43, 0.45) !important;
+  border-radius: 8px;
+
+  box-shadow:
+    0 0 10px rgba(255, 43, 43, 0.12),
+    inset 0 0 8px rgba(255, 43, 43, 0.05);
+
+  transition: all 0.2s ease;
+}
+
+/* hover activation */
+.gun:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(255, 43, 43, 0.9) !important;
+
+  box-shadow:
+    0 0 16px rgba(255, 43, 43, 0.35),
+    inset 0 0 10px rgba(255, 43, 43, 0.08);
+}
+
+/* weapon name */
+.gun .gun-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+
+  color: #ff4b4b !important;
+
+  text-transform: uppercase;
+
+  margin-bottom: 6px;
+
+  text-shadow: 0 0 6px rgba(255, 43, 43, 0.35);
+}
+
+/* weapon image */
+.gun .gun-img {
+  width: 90px;
+  height: auto;
+
+  filter: drop-shadow(0 0 6px rgba(255, 43, 43, 0.25));
+
+  transition: all 0.2s ease;
+}
+
+/* image hover micro-lift */
+.gun:hover .gun-img {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 10px rgba(255, 43, 43, 0.4));
+}/* =========================
+   PLAYER CARD (ESCAPE MENU ONLY)
+   ========================= */
+
+#app .game-interface .player-cont {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 10px 12px;
+  margin: 6px 0;
+
+  background: rgba(10, 10, 10, 0.95) !important;
+
+  border: 1px solid rgba(255, 43, 43, 0.4) !important;
+  border-radius: 6px;
+
+  box-shadow: 0 0 10px rgba(255, 43, 43, 0.12);
+
+  transition: 0.2s ease;
+}
+
+/* hover */
+#app .game-interface .player-cont:hover {
+  border-color: rgba(255, 43, 43, 0.8) !important;
+  box-shadow: 0 0 14px rgba(255, 43, 43, 0.25);
+}
+
+/* name */
+#app .game-interface .player-cont .label {
+  color: #ff4b4b !important;
+  font-weight: 600;
+}
+
+/* nickname */
+#app .game-interface .player-cont .nickname {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* buttons */
+#app .game-interface .player-cont .btn-invite,
+#app .game-interface .player-cont .btn-report {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 43, 43, 0.4);
+  color: #ff5c5c;
+
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+/* button hover */
+#app .game-interface .player-cont .btn-invite:hover,
+#app .game-interface .player-cont .btn-report:hover {
+  background: rgba(255, 43, 43, 0.12);
+  border-color: rgba(255, 43, 43, 0.9);
+}/* TIMER */
+.timer.bg {
+  background: rgba(0, 0, 0, 0.72) !important;
+  border: 2px solid #ff3b3b !important;
+
+  box-shadow: 0 0 12px rgba(255, 59, 59, 0.35) !important;
+
+  color: #ff9a9a !important;
+}
+
+/* KILL / DEATH */
+.kill-death .bg {
+  background: rgba(0, 0, 0, 0.72) !important;
+  border: 1px solid #ff3b3b !important;
+
+  box-shadow: 0 0 10px rgba(255, 59, 59, 0.25) !important;
+
+  color: #ffffff !important;
+}
+
+/* KD MAIN VALUE */
+.kill-death .kd.bg {
+  background: rgba(0, 0, 0, 0.78) !important;
+  border: 2px solid #ff3b3b !important;
+
+  box-shadow: 0 0 14px rgba(255, 59, 59, 0.35) !important;
+
+  color: #ffb3b3 !important;
+}
+
+/* container stays clean (no big box look) */
+.kill-bar-cont {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* EACH kill feed entry */
+.kill-bar-cont > div {
+  background: rgba(0, 0, 0, 0.65) !important;
+
+  border: 1px solid #ff3b3b !important;
+
+  box-shadow:
+    0 0 8px rgba(255, 59, 59, 0.25),
+    inset 0 0 6px rgba(0, 0, 0, 0.8) !important;
+
+  margin-bottom: 6px !important;
+
+  padding: 6px 10px !important;
+
+  color: #ffb3b3 !important;
+}
+
+/* text inside each kill card */
+.kill-bar-cont > div * {
+  color: #ffb3b3 !important;
+  text-shadow: 0 0 5px rgba(255, 59, 59, 0.3) !important;
+}/* KILL ICON CONTAINER */
+.animate-cont {
+    width: 120px;
+    height: 175px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+
+    position: fixed;
+    top: 125px;          /* moves icon to top of screen */
+    left: 50%;
+    transform: translateX(-50%);
+
+    z-index: 9999;
+}
+
+/* ICON IMAGE */
+.animate-cont {
+    background-image: url("https://i.postimg.cc/KzkF17Gn/cooltext509719519471838.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* REMOVE ALL TEXT UNDER ICON */
+.animate-cont .text,
+.animate-cont .info,
+.animate-cont .details,
+.animate-cont .subtext,
+.animate-cont span,
+.animate-cont div {
+    display: none !important;
+}.animate-cont {
+    filter:
+        hue-rotate(145deg)
+        saturate(3)
+        brightness(1.1) !important;
+}/* Remove info/text under kill icon */
+.animate-cont .text,
+.animate-cont .info,
+.animate-cont .details,
+.animate-cont .subtext {
+    display: none !important;
+}.animate-cont {
+    position: fixed !important;
+    top: 120px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+
+    bottom: auto !important;
+    z-index: 9999 !important; 
+}
+/* === HEALTH MODULE (clean strip layout) === */
+.cont-hp {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+
+    background: rgba(0, 0, 0, 0.20) !important;
+    border-radius: 6px !important;
+
+    padding: 4px 8px !important;
+
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+/* remove spacing noise */
+.hp {
+    margin: 0 !important;
+}
+
+/* === HEALTH BAR (clean single line look) === */
+.hp-progress {
+    height: 6px !important;
+    border-radius: 4px !important;
+
+    background: linear-gradient(90deg, #ff3b3b, #ff0000) !important;
+
+    box-shadow: none !important;
+}
+
+/* === STAMINA (aligned cleanly, no clutter) === */
+.cont-endurance {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.endurance-progress {
+    height: 6px !important;
+    border-radius: 4px !important;
+
+    background: linear-gradient(90deg, #84a1ff, #39ffd4) !important;
+
+    box-shadow: none !important;
+}/* === CLEAN DASH / ENDURANCE BAR === */
+
+.cont-endurance {
+    background: rgba(0, 0, 0, 0.45) !important; /* black transparent background */
+    border-radius: 6px !important;
+    padding: 6px !important;
+    height: 18px !important; /* bigger bar container */
+    width: 220px !important; /* wider bar */
+}
+
+/* the actual fill */
+.endurance-progress {
+    background: #ffffff !important; /* white bar */
+    height: 100% !important;
+    border-radius: 4px !important;
+}
+
+/* optional: remove weird layering */
+.cont-endurance * {
+    box-shadow: none !important;
+}/* === HP TITLE BACKGROUND ONLY === */
+.hp-title {
+    background: rgba(0, 0, 0, 0.45) !important;  /* black transparent box */
+    padding: -4px 8px !important;
+    border-radius: 6px !important;
+}/* === HP BOX BACKGROUND (BLACK TRANSPARENT) === */
+
+.cont-hp {
+    display: flex !important;
+    align-items: center !important;
+    flex-direction: row-reverse !important;
+    gap: 10px !important;
+
+    margin-top: 8px !important;
+
+    background: rgba(0, 0, 0, 0.45) !important; /* black transparent box */
+    padding: 6px 10px !important;
+    border-radius: 6px !important;
+}
+
+/* HP number + icon */
+.hp-title {
+    position: static !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    color: white !important;
+}
+
+/* custom icon */
+.hp-title::before {
+    content: "";
+    width: 22px;
+    height: 50px;
+    display: inline-block;
+
+    margin-right: 6px;
+
+    background: url("https://i.postimg.cc/440hvj9w/cfe9cfaaf59f26bc6c13faa83283f7ab(1).webp") no-repeat center;
+    background-size: contain;
+}.cont-endurance {
+    margin-left: 175px !important; /* move right */
+}.cont-endurance {
+    position: relative !important;
+    transform: translate(0px, 4px) !important; /* down a bit */
+}/* === REMOVE RIGHT BOTTOM WEAPONS/AMMO BACKGROUND === */
+
+.weapons-cont,
+.weapons-cont * {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+}
+
+/* extra safety in case wrapper uses different class */
+.weapon-cont,
+.weapon-cont * {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* keep text visible */
+.ammunition {
+    color: white !important;
+}/* === RED WEAPONS HUD THEME === */
+
+/* overall text color */
+.weapons-cont,
+.weapons-cont * {
+    color: #ff3b3b !important;
+}
+
+/* ammo / numbers */
+.ammunition {
+    color: #ff3b3b !important;
+    text-shadow: 0 0 6px rgba(255, 0, 0, 0.7) !important;
+}
+
+/* selected / active weapon (most games use .active or .selected) */
+.weapons-cont .active,
+.weapons-cont .selected,
+.weapons-cont .weapon.active,
+.weapons-cont .weapon.selected {
+    color: #ff1a1a !important;
+
+    background: rgba(255, 0, 0, 0.08) !important;
+
+    text-shadow:
+        0 0 5px rgba(255, 0, 0, 0.8),
+        0 0 12px rgba(255, 0, 0, 0.9),
+        0 0 20px rgba(255, 0, 0, 0.6) !important;
+
+    transform: scale(1.05) !important;
+}
+
+/* subtle hover glow for weapons */
+.weapons-cont .weapon:hover {
+    color: #ff4d4d !important;
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.7) !important;
+} 

@@ -24,6 +24,7 @@ async function boot(): Promise<void> {
   const i18n = new I18n(resolveLocale(save.data.locale, navigator.languages))
   const input = new Input(canvas)
   const audio = new Audio()
+  void audio.loadKchSamples()
   let game: import('./game/game').Game | undefined
   const kchMaps: GameModels['kchMaps'] = {}
   let loadKchMap: (id: MapId) => Promise<boolean> = async () => false
@@ -43,7 +44,7 @@ async function boot(): Promise<void> {
   let loaded = 0
   const modelKeys = Object.keys(KCH_GAME_MODELS) as Array<keyof typeof KCH_GAME_MODELS>
   const defaultMapId: MapId = 'pool'
-  const bootTaskCount = 5 + modelKeys.length + KCH_TEXTURE_PACKS.length
+  const bootTaskCount = 6 + modelKeys.length + KCH_TEXTURE_PACKS.length
   const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(Math.min(0.9, 0.08 + loaded / bootTaskCount * 0.82)); return value })
   const optionalModel = (key: keyof typeof KCH_GAME_MODELS) => {
     const model = KCH_GAME_MODELS[key]
@@ -61,6 +62,19 @@ async function boot(): Promise<void> {
     texture.needsUpdate = true
     return texture
   }).catch(error => { console.warn('Optional KCH map atlas unavailable', error); return null }))
+  const optionalKchSkybox = () => track(new Promise<THREE.CubeTexture | null>(resolve => {
+    const folder = 'assets/kch-library/skyboxs/paintedblue/'
+    const faces = ['right-min.png', 'left-min.png', 'up-min.png', 'down-min.png', 'front-min.png', 'back-min.png']
+      .map(face => new URL(`${folder}${face}`, document.baseURI).href)
+    new THREE.CubeTextureLoader().load(faces, texture => {
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.generateMipmaps = true
+      texture.minFilter = THREE.LinearMipmapLinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.needsUpdate = true
+      resolve(texture)
+    }, undefined, error => { console.warn('Optional KCH skybox unavailable', error); resolve(null) })
+  }))
   const optionalTexturePack = (pack: typeof KCH_TEXTURE_PACKS[number]) => track(assets.textureVerified(pack.url, pack.sha256, { color: true, flipY: false }).then(texture => {
     texture.magFilter = THREE.NearestFilter
     texture.minFilter = THREE.NearestMipmapNearestFilter
@@ -69,9 +83,9 @@ async function boot(): Promise<void> {
     return texture
   }).catch(error => { console.warn(`Optional KCH texture pack unavailable: ${pack.url}`, error); return null }))
   ui.setBootProgress(0.08)
-  const [{ Game }, { Renderer }, , loadedModels, defaultMap, mapAtlas, loadedTexturePacks] = await Promise.all([
+  const [{ Game }, { Renderer }, , loadedModels, defaultMap, mapAtlas, loadedTexturePacks, kchSkybox] = await Promise.all([
     track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready),
-    Promise.all(modelKeys.map(optionalModel)), optionalMap(defaultMapId), optionalKchTexture(), Promise.all(KCH_TEXTURE_PACKS.map(optionalTexturePack)),
+    Promise.all(modelKeys.map(optionalModel)), optionalMap(defaultMapId), optionalKchTexture(), Promise.all(KCH_TEXTURE_PACKS.map(optionalTexturePack)), optionalKchSkybox(),
   ])
   const models = Object.fromEntries(modelKeys.map((key, index) => [key, loadedModels[index] ?? null])) as unknown as Omit<GameModels, 'kchMaps' | 'modelTexture' | 'kchTexturePacks'>
   const kchTexturePacks = loadedTexturePacks.filter((texture): texture is THREE.Texture => texture !== null)
@@ -91,7 +105,7 @@ async function boot(): Promise<void> {
     }
   }
   const renderer = new Renderer(canvas, save.data.quality)
-  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps, modelTexture: null, kchMapTexture: mapAtlas, kchTexturePacks })
+  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps, modelTexture: null, kchMapTexture: mapAtlas, kchTexturePacks, kchSkybox })
   game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
     step: dt => { game?.step(dt) },

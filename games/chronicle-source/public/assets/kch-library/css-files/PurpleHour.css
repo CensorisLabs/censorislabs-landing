@@ -1,0 +1,350 @@
+/* made by mohak/snipercat #ZOYXMS - improved version */
+:root {
+    --asscentColor: #a855f7;
+    --background-clr-seconwry-4: rgba(168, 85, 247, 0.15);
+    --glow: 0 0 10px rgba(168, 85, 247, 0.75), 0 0 20px rgba(147, 51, 234, 0.5);
+    --primary-bg: #0f0f0f;
+    --secondary-bg: #1a1a1a;
+    --text-color: #d8b4fe;
+    --card-bg: rgba(168, 85, 247, 0.08);
+    --border-color: #a855f7;
+    --glow-light: 0 0 10px rgba(168, 85, 247, 0.5), 0 0 30px rgba(168, 85, 247, 0.3);
+    --dark-purple: #3b0a58;
+    --deep-purple-glow: 0 0 12px rgba(91, 33, 182, 0.6), 0 0 30px rgba(59, 10, 88, 0.5);
+}
+
+@keyframes shine {
+    0% {
+        background-position: -100px;
+    }
+    100% {
+        background-position: 300px;
+    }
+}
+
+#app > div.interface.text-2 > div.background {
+    background-image: url("https://i.ibb.co/tpXH3pXK/IMG-5584.jpg") !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+#app > div.interface.text-2 > div.background > div.pattern-bg,
+#app > div.interface.text-2 > div.background > div.bg-radial {
+    display: none !important;
+}
+
+.left-icons .icon-btn,
+#home-btn,
+#inventory-btn,
+#settings-btn,
+#play-btn,
+.menu-button,
+.header-button,
+.interface .left .icon-btn,
+.interface .left .button {
+    background: linear-gradient(120deg, #9333ea, #a855f7);
+    background-size: 200% 100%;
+    background-position: left center;
+    color: white !important;
+    border: 2px solid #a855f7;
+    box-shadow: var(--glow);
+    animation: shine 3s infinite linear;
+    transition: all 0.3s ease-in-out;
+    font-weight: bold;
+    border-radius: 0.5rem;
+}
+
+.left-icons .icon-btn:hover,
+#home-btn:hover,
+#inventory-btn:hover,
+#settings-btn:hover,
+#play-btn:hover,
+.menu-button:hover,
+.header-button:hover,
+.interface .left .icon-btn:hover,
+.interface .left .button:hover {
+    background-position: right center;
+    box-shadow: 0 0 25px #c084fc, 0 0 45px #a855f7;
+    transform: scale(1.05);
+}
+
+#play-btn,
+#play-btn:hover {
+    background: linear-gradient(120deg, #3b0a58, #6b21a8) !important;
+    background-size: 200% 100% !important;
+    background-position: left center !important;
+    border: 2px solid #6b21a8 !important;
+    color: white !important;
+    box-shadow: var(--deep-purple-glow);
+    transition: all 0.3s ease-in-out;
+    border-radius: 0.5rem;
+}
+
+#play-btn:hover {
+    background-position: right center !important;
+    transform: scale(1.05);
+    box-shadow: 0 0 25px #7c3aed, 0 0 45px #6b21a8;
+}
+
+.text-icon,
+.left-icons .icon-btn .border,
+.button .border,
+.btn .border,
+.interface .logo,
+.expire,
+.card-cont.soc-group,
+#invite-btn.button.invite-btn.rectangle,
+.animate-cont > svg {
+    display: none !important;
+}
+
+.box,
+.input,
+.settings,
+.quests,
+.quest,
+.tip,
+.amount,
+.reward,
+.progress-line,
+.card-cont,
+.container-card,
+.progress[data-v-49c6809c],
+.background,
+.container button .border-top,
+.container button .border-bottom,
+.messages.messages-cont.small,
+.title,
+.card-list,
+.head,
+.changelog-item,
+.card,
+.live-streams,
+.left,
+.cont {
+    background: transparent !important;
+    border: none !important;
+}
+
+.progress[data-v-0f7a25c2] {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-bottom: none !important;
+}
+
+.active {
+    border-bottom: var(--asscentColor) solid 0.125rem !important;
+}
+
+.endurance-progress {
+    background: #fff !important;
+}
+.hp-progress {
+    background: #0fffff !important;
+}
+
+.end-modal {
+    background: url("https://www.shutterstock.com/shutterstock/videos/1085816414/thumb/1.jpg?ip=x480") repeat !important;
+    z-index: -1;
+    background-size: cover !important;
+}
+.end-modal .team-list-players .list .player {
+    background: rgba(168, 85, 247, .52) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.end-modal .team-list-players .card-cont:nth-child(1),
+.end-modal .team-list-players .card-cont:nth-child(2),
+.end-modal .items {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.end-modal .team-list-players .label {
+    background: transparent;
+    color: var(--asscentColor);
+}
+
+.container,
+.page,
+.tab-content,
+.card-cont,
+.list,
+.scroll-container,
+.menu-content,
+.interface-panel,
+.section,
+.content,
+#hub,
+.hub-inner,
+.hub-section,
+.hub-header,
+.settings,
+.sub-page,
+.background-panel,
+.clan-panel,
+.clan-card,
+.clan-info,
+.clan-leaderboard,
+.clan-members,
+.clan-rankings,
+.clan-tab,
+.inventory-panel,
+.inventory-card,
+.inventory-slot,
+.item-box,
+.item-details,
+.inventory-grid,
+.store-panel,
+.store-item,
+.store-header,
+.store-card,
+.store-category,
+.purchase-btn,
+.price-tag {
+    background: var(--primary-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--deep-purple-glow);
+    border-radius: 0.5rem;
+}
+
+.tab,
+.tab.active,
+.tab:hover,
+.nav-tab,
+.nav-tab:hover,
+.nav-tab.active {
+    background: linear-gradient(120deg, #9333ea, #a855f7);
+    background-size: 200% 100%;
+    color: white !important;
+    font-weight: bold;
+    border: 2px solid #a855f7;
+    border-radius: 0.5rem;
+    box-shadow: var(--glow-light);
+    transition: all 0.3s ease;
+}
+.tab:hover,
+.nav-tab:hover {
+    background-position: right center;
+    box-shadow: 0 0 25px #c084fc, 0 0 45px #a855f7;
+    transform: scale(1.05);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+label,
+.text,
+.label,
+.description {
+    color: var(--text-color) !important;
+}
+
+.page-btn,
+.card-btn,
+.action-btn,
+.confirm-btn,
+.cancel-btn {
+    background: linear-gradient(120deg, #9333ea, #a855f7);
+    background-size: 200% 100%;
+    border: 2px solid #a855f7;
+    color: white !important;
+    box-shadow: var(--glow-light);
+    border-radius: 0.5rem;
+    transition: all 0.3s ease-in-out;
+}
+.page-btn:hover,
+.card-btn:hover,
+.action-btn:hover,
+.confirm-btn:hover,
+.cancel-btn:hover {
+    background-position: right center;
+    box-shadow: 0 0 20px #c084fc, 0 0 40px #a855f7;
+    transform: scale(1.05);
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #a855f7;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+#play-btn:hover {
+    box-shadow: 0 0 25px #a855f7, 0 0 45px #9333ea !important;
+    background-position: right center;
+    transform: scale(1.05);
+}
+
+.changelog-item,
+.changelog,
+.patch-notes,
+.changelog-container {
+    display: none !important;
+}
+
+#server-select-btn,
+#create-server-btn,
+#join-server-btn {
+    background: linear-gradient(120deg, #9333ea, #a855f7);
+    background-size: 200% 100%;
+    background-position: left center;
+    color: white !important;
+    border: 2px solid #a855f7;
+    box-shadow: var(--glow);
+    animation: shine 3s infinite linear;
+    transition: all 0.3s ease-in-out;
+    font-weight: bold;
+    border-radius: 0.5rem;
+}
+
+#server-select-btn:hover,
+#create-server-btn:hover,
+#join-server-btn:hover {
+    background-position: right center;
+    box-shadow: 0 0 25px #c084fc, 0 0 45px #a855f7;
+    transform: scale(1.05);
+}
+
+button,
+.button,
+.btn,
+.create-btn,
+.join-btn,  
+.server-select,
+.server-btn {
+    background: linear-gradient(120deg, #9333ea, #a855f7) !important;
+    background-size: 200% 100% !important;
+    background-position: left center !important;
+    color: white !important;
+    border: 2px solid #a855f7 !important;
+    box-shadow: 0 0 15px #a855f7 !important;
+    animation: shine 3s infinite linear;
+    transition: all 0.3s ease-in-out !important;
+    font-weight: bold !important;
+    border-radius: 0.5rem !important;
+}
+
+#invite-btn:hover {
+    background: linear-gradient(120deg, #9333ea, #a855f7)
+}
+
+button:hover,
+.button:hover,
+.btn:hover,
+.create-btn:hover,
+.join-btn:hover,
+.server-select:hover,
+.server-btn:hover {
+    background-position: right center !important;
+    box-shadow: 0 0 25px #c084fc, 0 0 45px #a855f7 !important;
+    transform: scale(1.05) !important;
+}

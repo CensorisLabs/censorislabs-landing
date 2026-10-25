@@ -1,0 +1,285 @@
+/* made by mohak/snipercat #ZOYXMS */
+
+:root {
+    --asscentColor: #ff6a00;
+    --background-clr-secondary-4: rgba(255, 106, 0, 0.15);
+    --glow: 0 0 10px rgba(255, 106, 0, 0.75), 0 0 20px rgba(255, 140, 0, 0.5);
+    --primary-bg: #0f0f0f;
+    --secondary-bg: #1a1a1a;
+    --text-color: #ffae42;
+    --card-bg: rgba(255, 106, 0, 0.08);
+    --border-color: #ff6a00;
+    --glow-light: 0 0 10px rgba(255, 106, 0, 0.5), 0 0 30px rgba(255, 106, 0, 0.3);
+}
+
+@keyframes shine {
+    0% { background-position: -100px; }
+    100% { background-position: 300px; }
+}
+
+#app > div.interface.text-2 > div.background {
+    background-image: url("https://i.ibb.co/84PcBbqQ/20250517-1614-Futuristic-Orange-Vibes-simple-compose-01jvexg2x0e0rspem61me84ed5.png") !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+#app > div.interface.text-2 > div.background > div.pattern-bg,
+#app > div.interface.text-2 > div.background > div.bg-radial {
+    display: none !important;
+}
+
+.left-icons .icon-btn,
+#home-btn,
+#inventory-btn,
+#settings-btn,
+#play-btn,
+.menu-button,
+.header-button,
+.interface .left .icon-btn,
+.interface .left .button {
+    background: linear-gradient(120deg, #ff6a00, #ff3c00);
+    background-size: 200% 100%;
+    background-position: left center;
+    color: white !important;
+    border: 2px solid #ff8800;
+    box-shadow: var(--glow);
+    animation: shine 3s infinite linear;
+    transition: all 0.3s ease-in-out;
+    font-weight: bold;
+    border-radius: 0.5rem;
+}
+
+.left-icons .icon-btn:hover,
+#home-btn:hover,
+#inventory-btn:hover,
+#settings-btn:hover,
+#play-btn:hover,
+.menu-button:hover,
+.header-button:hover,
+.interface .left .icon-btn:hover,
+.interface .left .button:hover {
+    background-position: right center;
+    box-shadow: 0 0 25px #ff8800, 0 0 45px #ff5500;
+    transform: scale(1.05);
+}
+
+#play-btn .border {
+    display: none;
+}
+.text-icon,
+.left-icons .icon-btn .border,
+.button .border,
+.btn .border {
+    display: none !important;
+    border: none !important;
+    background: none !important;
+}
+
+.box,
+.input,
+.settings,
+.quests,
+.quest,
+.tip,
+.amount,
+.reward,
+.progress-line,
+.card-cont,
+.container-card,
+.progress[data-v-49c6809c],
+.background,
+.container button .border-top,
+.container button .border-bottom,
+.messages.messages-cont.small,
+.title,
+.card-list,
+.head,
+.changelog-item,
+.card,
+.live-streams,
+.left,
+.cont {
+    background: transparent !important;
+    border: none !important;
+}
+
+.progress[data-v-0f7a25c2] {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-bottom: none !important;
+}
+.active {
+    border-bottom: var(--asscentColor) solid 0.125rem !important;
+}
+
+.interface .logo {
+    display: none;
+}
+
+.endurance-progress {
+    background: #fff !important;
+}
+.hp-progress {
+    background: #0fffff !important;
+}
+
+.end-modal {
+    background: url("https://www.shutterstock.com/shutterstock/videos/1085816414/thumb/1.jpg?ip=x480") repeat !important;
+    z-index: -1; 
+    background-size: cover !important;
+}
+.end-modal .team-list-players .list .player {
+    background: rgba(255, 0, 0, .52) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.end-modal .team-list-players .card-cont:nth-child(1),
+.end-modal .team-list-players .card-cont:nth-child(2),
+.end-modal .items {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.end-modal .team-list-players .label {
+    background: transparent;
+    color: var(--asscentColor);
+}
+.expire,
+.card-cont.soc-group,
+#invite-btn.button.invite-btn.rectangle,
+.animate-cont > svg,
+.interface .logo {
+    display: none !important;
+}
+
+.container,
+.page,
+.tab-content,
+.card-cont,
+.list,
+.scroll-container,
+.menu-content,
+.interface-panel,
+.section,
+.content,
+#hub,
+.hub-inner,
+.hub-section,
+.hub-header,
+.settings,
+.sub-page,
+.background-panel {
+    background: var(--primary-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--glow-light);
+    border-radius: 0.5rem;
+}
+
+.clan-panel,
+.clan-card,
+.clan-info,
+.clan-leaderboard,
+.clan-members,
+.clan-rankings,
+.clan-tab {
+    background: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--glow-light);
+}
+
+.inventory-panel,
+.inventory-card,
+.inventory-slot,
+.item-box,
+.item-details,
+.inventory-grid {
+    background: var(--secondary-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+    box-shadow: var(--glow-light);
+}
+
+.store-panel,
+.store-item,
+.store-header,
+.store-card,
+.store-category,
+.purchase-btn,
+.price-tag {
+    background: var(--secondary-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--glow-light);
+}
+
+.tab,
+.tab.active,
+.tab:hover,
+.nav-tab,
+.nav-tab:hover,
+.nav-tab.active {
+    background: linear-gradient(120deg, #ff6a00, #ff3c00);
+    background-size: 200% 100%;
+    color: white !important;
+    font-weight: bold;
+    border: 2px solid #ff8800;
+    border-radius: 0.5rem;
+    box-shadow: var(--glow-light);
+    transition: all 0.3s ease;
+}
+.tab:hover,
+.nav-tab:hover {
+    background-position: right center;
+    box-shadow: 0 0 25px #ff8800, 0 0 45px #ff5500;
+    transform: scale(1.05);
+}
+
+h1, h2, h3, h4, h5, h6,
+p, span, label, .text, .label, .description {
+    color: var(--text-color) !important;
+}
+
+.page-btn,
+.card-btn,
+.action-btn,
+.confirm-btn,
+.cancel-btn {
+    background: linear-gradient(120deg, #ff6a00, #ff3c00);
+    background-size: 200% 100%;
+    border: 2px solid #ff8800;
+    color: white !important;
+    box-shadow: var(--glow-light);
+    border-radius: 0.5rem;
+    transition: all 0.3s ease-in-out;
+}
+.page-btn:hover,
+.card-btn:hover,
+.action-btn:hover,
+.confirm-btn:hover,
+.cancel-btn:hover {
+    background-position: right center;
+    box-shadow: 0 0 20px #ff8800, 0 0 40px #ff5500;
+    transform: scale(1.05);
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #ff6a00;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+    .left-interface .button.daily-rewards-btn {
+        background-color: var(--asscentColor) !important;
+        animation:none
+    }
+.select-mod,
+.select-region,
+.play-content-up .button {
+        background-color: var(--asscentColor) !important;
+    border:none !important;
+
+}

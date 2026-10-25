@@ -1,0 +1,1118 @@
+:root {
+    --main: hsl(0, 0%, 4%);
+    --sec: hsl(0, 0%, 8%);
+    --accent: hsl(263, 100%, 65%);
+    --sub: var(--trans);
+    --trans: transparent;
+    --white: #fff;
+    --br: 10px;
+    --opacity: .7;
+    --glow: 0 0 5px var(--white),
+    0 0 10px var(--white),
+    0 0 20px var(--accent),
+    0 0 40px var(--accent);
+    --progressGlow: 0 0 10px var(--accent),
+    0 0 15px var(--accent),
+    0 0 25px var(--accent),
+    0 0 45px var(--accent);
+
+    --plus-icon: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='black' fill='none' stroke-width='2'><path d='M5 12h14'/><path d='M12 5v14'/></svg>");
+}
+/* scroll bar */
+::-webkit-scrollbar {
+    width: 4px !important;
+    border-radius: var(--br) !important;
+    background-color: var(--accnet) !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--accent) !important;
+}
+
+/* display none */
+#cmpPersistentLink,
+.exp-values,
+.level-text,
+.username,
+.progress-label,
+.text-icon,
+.soc-group,
+.soc-group.orange,
+.logo,
+.soc-icon,
+.card-cont .soc-group,
+.arrow-bottom,
+.select-mods-cont hr,
+.progress-level-label,
+.player .levels,
+.profile .levels,
+.level-card .bg,
+.level-head,
+.progress .buy-btn,
+.background-leaders,
+.bg-light,
+.lvl-leader,
+.awards-imgs,
+.label-top,
+.top-names,
+.list-champions .svg-icon use,
+.clans .bg-gradient,
+.clans .cup,
+.clans .award-img,
+.clans .gun-img,
+.clans .label,
+.reset-time .time {
+    display: none !important;
+}
+
+/* Opacity hover */
+.avatar-info:hover,
+.level-value:hover,
+.profile .progress-line:hover,
+.left-icons:hover,
+.quests:hover,
+.select-mod:hover,
+.select-region:hover,
+.custom-checkbox > input:not(:disabled):not(:checked) + span:hover:before,
+#select-regions-cont:hover,
+#playerholderelement:hover,
+.container:hover {
+    opacity: 1 !important;
+    transition-duration: 1s !important;
+}
+
+/* UserInfo */
+.avatar-info:hover,
+.user-info:hover {
+    background-color: var(--trans);
+}
+
+#left-interface .card-cont {
+    background-color: var(--trans);
+}
+
+.avatar-info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: var(--main) !important;
+    border: none !important;
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: var(--br);
+    opacity: var(--opacity);
+}
+
+
+.left-interface .progress-line {
+    position: absolute;
+    width: 51%;
+    bottom: 13px;
+    right: 10px;
+    background-color: var(--main);
+    border-radius: 5px;
+    opacity: var(--opacity);
+}
+
+.left-interface .progress {
+    background-color: var(--white);
+    border-radius: 3px;
+    height: .8rem;
+    transition: width 1s linear;
+    box-shadow: var(--progressGlow);
+}
+
+.level-value {
+    background: var(--main) !important;
+    opacity: var(--opacity);
+    min-width: 126px !important;
+    min-height: 60px !important;
+    position: absolute;
+    top: 15px;
+    right: 10px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: var(--white);
+    text-shadow: var(--glow);
+}
+
+/* Card Container */
+.card-cont {
+    border: none !important;
+    background-color: var(--sub);
+}
+
+/* Moneys Thanks To Word <3 */
+.left-interface > .moneys {
+    align-items: flex-start;
+    background: var(--main);
+    border-radius: 0.25rem;
+    flex-direction: column;
+    height: 90px;
+    margin: unset;
+    padding: 0.25rem 1rem;
+    position: absolute;
+    top: 14px;
+    left: 103%;
+    z-index: 10;
+    opacity: var(--opacity);
+}
+
+.left-interface > .moneys > div {
+    background: unset;
+    border: 0;
+    font-size: 1rem;
+    height: 50px;
+    margin: 0;
+    min-width: auto;
+    padding: 0;
+}
+
+.left-interface > .moneys > div:nth-child(1):before {
+    background: var(--accent);
+    border-radius: 0.1rem;
+    content: "";
+    height: 12px;
+    margin-right: 0.8rem;
+    transform: rotate(45deg);
+    width: 12px;
+}
+
+.left-interface > .moneys > div:nth-child(2):before {
+    background: var(--accent);
+    border-radius: 0.1rem;
+    content: "";
+    filter: brightness(1.6);
+    height: 12px;
+    margin-right: 0.8rem;
+    transform: rotate(45deg);
+    width: 12px;
+}
+
+.left-interface > .moneys > div > svg,
+.quests > .expire > svg,
+.quests > .tip-wrapper,
+.reward > .diamonds > img,
+.reward > .coins > img {
+    display: none;
+}
+
+/* Left Interface */
+.left-icons {
+    background: var(--main) !important;
+    border: solid 10px var(--accent);
+    display: block !important;
+    right: unset;
+    left: -28% !important;
+    position: fixed !important;
+    top: unset !important;
+    bottom: -30% !important;
+    width: 600px !important;
+    height: 600px !important;
+    transform: translateY(30%)translateX(+30%)rotateZ(-35deg) !important;
+    scale: .9;
+    border-radius: 50% !important;
+    opacity: var(--opacity);
+}
+
+.icon-btn:nth-child(1) {
+    left: 380px;
+    position: absolute;
+    bottom: 500px;
+}
+
+.icon-btn:nth-child(2) {
+    left: 450px;
+    position: absolute;
+    bottom: 443px;
+}
+
+.icon-btn:nth-child(3) {
+    left: 510px;
+    position: absolute;
+    bottom: 370px;
+}
+
+.icon-btn:nth-child(4) {
+    position: absolute;
+    bottom: 280px;
+    left: 530px;
+}
+
+.icon-btn:nth-child(5) {
+    left: 520px;
+    position: absolute;
+    bottom: 190px;
+    padding: 0 !important;
+}
+
+.icon-btn:nth-child(6) {
+    left: 490px;
+    position: absolute;
+    bottom: 95px;
+    padding: 0 !important;
+}
+
+.icon-btn:nth-child(7) {
+    left: 420px;
+    position: absolute;
+    bottom: 20px;
+}
+
+.icon-btn:nth-child(8) {
+    left: 280px;
+    position: absolute;
+    bottom: 130px;
+    background: transparent;
+    border: none !important;
+}
+
+.icon-btn {
+    border: var(--main) 10px solid !important;
+    height: 80px;
+    width: 80px !important;
+    background: var(--accent) !important;
+    border-radius: 50%;
+    display: flex !important;
+    justify-content: center !important;
+    align-content: center;
+    align-items: center !important;
+    flex-wrap: nowrap;
+    flex-direction: column !important;
+}
+
+/* Background */
+.bg-radial {
+    background-color: var(--accent) !important;
+    opacity: .5;
+}
+
+/* Quests Thanks word <3 */
+.quests {
+    border-color: var(--trans) !important;
+    background-color: var(--main) !important;
+    border-radius: 5px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: var(--opacity);
+}
+
+.progress-line {
+    box-shadow: none !important;
+    background-color: var(--main) !important;
+    border-radius: 5px !important;
+    opacity: var(--opacity);
+}
+
+.progress-line .progress {
+    background-color: var(--white);
+    border-radius: 3px !important;
+    transition: width 1s linear;
+    box-shadow: var(--progressGlow);
+}
+
+.reward {
+    color: var(--white) !important;
+    background-color: var(--trans) !important;
+}
+
+.reward .coins:before {
+    background: var(--accent);
+    border-radius: 0.1rem;
+    content: "";
+    height: 10px;
+    margin-right: 0.1rem;
+    transform: rotate(45deg);
+    width: 10px;
+}
+
+.reward .diamonds:before {
+    background: var(--accent);
+    border-radius: 0.1rem;
+    content: "";
+    filter: brightness(1.6);
+    height: 10px;
+    margin-right: 0.1rem;
+    transform: rotate(45deg);
+    width: 10px;
+}
+
+.quests .right {
+    background-color: var(--sec) !important;
+}
+
+.quests > .expire {
+    margin-top: 0.5rem;
+}
+
+.quests > .tabs-wrapper {
+    padding: 0.5rem;
+}
+
+.tabs-wrapper > .tabs {
+    background: var(--sec);
+}
+
+.tabs-wrapper > .tabs > .tab {
+    border: unset;
+    font-size: 1rem;
+}
+
+.tabs-wrapper > .tabs .event {
+    background: var(--trans);
+}
+
+.content > .quests-container {
+    height: min-content !important;
+    padding: 0.5rem;
+}
+
+.quests-container > .quests {
+    padding: 0 !important;
+}
+
+.quests-container > .tabs {
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.tabs-wrapper > .tabs > .tab {
+    border: unset;
+    font-size: 1rem;
+    background: var(--trans);
+}
+
+.quests-container > .tabs > .tab:nth-child(1) {
+    margin-right: 0.5rem;
+}
+
+.quests-container > .tabs > .tab:hover {
+    background: var(--accent);
+    border: 0;
+}
+
+.quests-container > .tabs > .active {
+    background: var(--accent);
+}
+
+.quests-container > .quests > .subjects > .subject {
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
+    padding: 0.5rem;
+    width: calc(50% - 0.5rem);
+}
+
+.quests-container > .quests > .subjects > .subject > div {
+    background: unset;
+}
+
+.quests-container > .quests > .subjects > .subject > .time-left {
+    height: 0;
+    padding: 0;
+    transform: translatey(-50px);
+}
+
+.quests-container > .quests > .subjects > .subject > .quest > .right {
+    padding: 0;
+}
+
+.quests-container > .quests > .subjects > .subject > .quest > .right > .rewards {
+    background: unset;
+    height: fit-content;
+    justify-content: flex-start;
+    padding: 0;
+}
+
+.quests-container > .quests > .subjects > .subject > .quest > .right > .rewards > .list > div {
+    padding: 0.25rem;
+}
+
+.quests-container > .quests > .subjects > .subject > .quest > .left {
+    border-radius: 0.1rem;
+    margin-right: 0.5rem;
+    width: 0.5rem;
+}
+
+#dailyQuestscounter {
+    text-shadow: var(--glow);
+}
+
+/* Settings */
+.settings-and-socicons {
+    position: absolute;
+    top: 10px;
+    right: 110px;
+}
+
+.settings-and-socicons .settings {
+    padding: 10px 15px !important;
+    border-radius: 5px !important;
+    position: fixed;
+    background-color: var(--main) !important;
+    opacity: var(--opacity);
+    transition: 1s ease !important;
+}
+
+.settings-and-socicons .settings:hover {
+    background: var(--main) !important;
+    opacity: 1 !important;
+    transition: 1s ease !important;
+}
+
+/* Play btn And Region */
+.select-mod:hover,
+.select-region:hover {
+    background-color: var(--main) !important;
+}
+
+.select-mod,
+.select-region {
+    background-color: var(--main) !important;
+    padding: 8px !important;
+    border-radius: 5px !important;
+    border-color: transparent !important;
+    opacity: var(--opacity);
+    text-shadow: var(--glow);
+}
+
+.select-mod {
+    padding-left: 8px !important;
+}
+
+.private-btn span {
+    visibility: hidden;
+}
+
+.private-btn span:before {
+    visibility: visible !important;
+    content: "Create Match" !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 9.3em !important;
+    height: 45px !important;
+    margin-top: 1.1px !important;
+    border-radius: 5px !important;
+    margin-right: -4rem !important;
+    border-color: transparent !important;
+    background-color: var(--main) !important;
+    text-shadow: var(--glow) !important;
+    opacity: var(--opacity) !important;
+}
+
+.custom-checkbox > input:checked + span:before {
+    background-image: none !important;
+}
+
+/* Play Button */
+.play-btn {
+    margin-right: 0 !important;
+    margin-bottom: -8px !important;
+    width: 410px !important;
+    height: 200px !important;
+    box-shadow: none !important;
+    text-shadow: var(--glow) !important;
+    box-shadow: none !important;
+    opacity: var(--opacity) !important;
+    background-color: var(--main) !important;
+    --hover-color: var(--main) !important;
+    --top: var(--trans) !important;
+    --bottom: var(--trans) !important;
+}
+
+#play .button {
+    padding: 0.4em 0.5em !important;
+    transform: none !important;
+    opacity: var(--opacity);
+    box-shadow: none !important;
+    -webkit-text-stroke-color: var(--trans) !important;
+}
+
+.button:after {
+    border-radius: var(--br) !important;
+    border: none !important;
+}
+
+.triangle-bottom,
+.triangle {
+    border: none !important;
+}
+
+.play-btn .text {
+    font-size: 0;
+}
+
+.play-btn .text::before {
+    content: "我爱无尽" !important;
+    font-size: 72px !important;
+    text-shadow: var(--glow) !important;
+}
+
+/* Gamemodes */
+.select-mods-cont {
+    right: 97% !important;
+    bottom: 10px !important;
+    background-color: var(--main) !important;
+    border-color: var(--trans) !important;
+}
+
+.map-title,
+.mode-title {
+    padding: 20px 15px 10px 10px !important;
+}
+
+.map-title,
+.mode-title {
+    padding-top: 20px !important;
+}
+
+.select-mods-mods {
+    padding: 5px 10px 5px 0;
+}
+
+.custom-checkbox > input:checked + span:before {
+    background-color: var(--accent) !important;
+    border-color: var(--trans) !important;
+}
+
+.custom-checkbox > span:before {
+    background-color: var(--sec) !important;
+    border-color: var(--trans) !important;
+}
+
+.select-regions-cont {
+    bottom: 140% !important;
+    right: 97% !important;
+    background-color: var(--main) !important;
+    box-shadow: none !important;
+    border-radius: 5px !important;
+    border-color: var(--trans) !important;
+    opacity: var(--opacity);
+}
+
+.custom-checkbox > span[data-v-47e1b746] {
+    text-shadow: var(--glow);
+}
+
+/* Currently playing */
+#playerholderelement {
+    bottom: unset !important;
+    background-color: var(--main) !important;
+    padding: 10px;
+    border-radius: 5px;
+    top: 140px;
+    left: 10px;
+    opacity: var(--opacity);
+    text-shadow: var(--glow);
+    text-align: left;
+}
+
+/* Profile */
+.background {
+    background-color: var(--trans) !important;
+}
+
+.home {
+    background-color: var(--sec) !important;
+    border-color: var(--accent) !important;
+    transition-duration: 1s !important;
+}
+
+.name-page {
+    box-shadow: none !important;
+    background-color: var(--sec) !important;
+    border-right: 1px solid var(--accent) !important;
+}
+
+.top-bar {
+    background-color: var(--main) !important;
+    box-shadow: none !important;
+}
+
+.close {
+    background-color: var(--trans) !important;
+}
+
+.container {
+    background: var(--main) !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+    opacity: var(--opacity);
+}
+
+.card {
+    border-radius: var(--br) !important;
+    background-color: var(--sec) !important;
+    box-shadow: none !important;
+}
+
+.profile .value {
+    font-size: 0;
+    background-color: var(--trans);
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    top: 20px;
+    left: 345px;
+}
+
+.card-profile > .avatar {
+    border-color: var(--sec) !important;
+    margin-top: 10px !important;
+}
+
+.stat-name {
+    color: var(--accent) !important;
+    font-weight: 700 !important;
+}
+
+.stat-value {
+    text-shadow: var(--glow);
+    font-weight: 700 !important;
+}
+
+.progress-level-value {
+    color: var(--white) !important;
+    text-shadow: var(--glow) !important;
+    font-weight: 700 !important;
+    padding-bottom: 5px !important;
+}
+
+.progress-exp {
+    color: var(--white) !important;
+    text-shadow: var(--glow) !important;
+    font-weight: 700 !important;
+    padding-bottom: 3px;
+}
+
+.secondary {
+    transform: scaleY(1.6);
+}
+
+.secondary .progress {
+    height: 15px !important;
+}
+
+.profile .head-right {
+    flex-direction: row !important;
+}
+
+.profile .clan-tag {
+    font-size: 1.7rem !important;
+}
+
+.profile .nickname {
+    font-size: 1.95rem !important;
+}
+
+.button {
+    background-color: var(--main) !important;
+    --hover-color: var(--trans) !important;
+    --top: var(--trans) !important;
+    --bottom: var(--trans) !important;
+    box-shadow: none !important;
+}
+
+/* Clan tag And nickname Thanks word <3 */
+.head > .cont-name,
+.heads > .head-right {
+    align-items: center;
+    border-radius: 0.25rem;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    justify-content: center;
+    margin-bottom: -100px;
+}
+
+.heads > .head-right > .nickname {
+    margin-bottom: -0.75rem;
+    margin-top: unset;
+    text-shadow: var(--progressGlow);
+}
+
+.user-card .name {
+    flex-direction: row !important;
+    align-items: center;
+}
+
+.clan-tag {
+    color: var(--white) !important;
+    font-size: 2rem !important;
+    margin-right: 0.25rem;
+    --clanGlow: 0 0 5px var(--white),
+    0 0 10px var(--accent),
+    0 0 20px var(--accent);
+    text-shadow: var(--clanGlow);
+}
+
+.user-card .clan {
+    color: var(--text-clr-secondary-3) !important;
+    font-size: 1.5rem !important;
+    margin-right: 0.25rem;
+}
+
+.user-card .clan:after,
+.clan-tag:after {
+    content: "•";
+    margin: 0 5px;
+}
+
+.heads > .levels {
+    align-items: center;
+    background: var(--background-clr-primary);
+    display: none;
+    height: 100%;
+}
+
+.player > .heads {
+    height: 60px;
+}
+
+.players-lobby {
+    margin-top: 100px !important;
+}
+
+/* levels */
+.level-card {
+    transform: none !important;
+    align-items: center;
+    background-image: none !important;
+    box-shadow: none !important;
+    background-color: var(--sec) !important;
+}
+
+.box-border {
+    border: none !important;
+}
+
+.label {
+    font-weight: 800 !important;
+}
+
+.box-shadow {
+    box-shadow: none !important;
+}
+
+.level-card.text-1.disable-shadow {
+    box-shadow: none !important;
+}
+
+.disable {
+    border: none !important;
+    font-weight: 800 !important;
+    background-color: var(--sec) !important;
+    color: var(--white) !important;
+    text-shadow: var(--glow) !important;
+}
+
+.level > .progress {
+    background: var(--white);
+    box-shadow: var(--progressGlow);
+}
+
+.progress-helper {
+    background: var(--white) !important;
+    box-shadow: var(--progressGlow) !important;
+}
+
+.levels {
+    background-color: var(--main) !important;
+}
+
+.level {
+    background-color: var(--sec) !important;
+}
+
+.lvl {
+    background: var(--white) !important;
+    box-shadow: var(--glow);
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+.no-active {
+    background: var(--sec) !important;
+    text-shadow: var(--progressGlow) !important;
+    box-shadow: none !important;
+}
+
+/* Settings tab */
+.header {
+    color: var(--accent) !important;
+    font-weight: 800 !important;
+}
+
+.element {
+    margin: 8px 0 !important;
+    background-color: var(--sec) !important;
+    border-radius: 5px !important;
+    padding: 10px !important;
+}
+
+.element .label {
+    padding-left: 5px;
+}
+
+.element .value {
+    color: var(--white);
+    text-shadow: var(--glow);
+}
+
+.input {
+    border-color: var(--trans) !important;
+    background: var(--trans) !important;
+    color: var(--white);
+    box-shadow: none !important;
+    font-weight: 800 !important;
+    border-radius: 5px !important;
+}
+
+.settings .input {
+    text-shadow: var(--glow);
+}
+
+.keybindings-wrap .input,
+.wWmMn > .input {
+    text-shadow: none !important;
+    font-weight: 900 !important;
+}
+
+.range {
+    filter: hue-rotate(45deg);
+}
+
+.active,
+.tab:hover {
+    color: var(--white) !important;
+    background-color: var(--sec) !important;
+    border-color: var(--accent) !important;
+}
+
+.tabs {
+    background-color: var(--main) !important;
+}
+
+.box {
+    background: var(--trans) !important;
+    border: none !important;
+}
+
+/* Create match */
+.container-card {
+    background: var(--main) !important;
+    box-shadow: none !important;
+    padding: 2rem !important;
+    border-color: var(--main);
+}
+
+.general-content {
+    background-color: var(--main) !important;
+    border-radius: var(--br) !important;
+}
+
+.create-btn {
+    width: 100% !important;
+    height: 200px;
+    background-color: var(--sec) !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+.create-btn:after {
+    content: "作成" !important;
+    font-size: 7.5rem !important;
+    -webkit-text-stroke-color: var(--white);
+    text-shadow: var(--glow) !important;
+    top: unset !important;
+    bottom: unset !important;
+}
+
+button.button.create-btn.rectangle {
+    font-size: 0 !important;
+}
+
+/* Hub */
+.info-awards {
+    background: var(--sec) !important;
+    box-shadow: none !important;
+    border-radius: 0 var(--br) 0 0 !important;
+    padding: 0.7rem 2rem 0.7rem 1rem !important;
+}
+
+.awards-span {
+    font-weight: 800 !important;
+    color: var(--accent) !important;
+}
+
+.info-awards .reset {
+    font-weight: 700 !important;
+    text-shadow: var(--glow);
+}
+
+.leaders > .head-leaders > .head > .cont-name {
+    margin-bottom: 10px !important;
+}
+
+.list-cont {
+    background: var(--trans) !important;
+    box-shadow: none !important;
+    border-radius: 5px !important;
+}
+
+.top-items {
+    background: var(--trans) !important;
+    box-shadow: none !important;
+    padding-bottom: 0 !important;
+    height: 11.5rem !important;
+}
+
+.top-label {
+    text-shadow: var(--glow);
+}
+
+.list-champions {
+    bottom: 80px !important;
+}
+
+.item {
+    background-color: var(--sec) !important;
+    border-radius: 5px !important;
+}
+
+.number-player {
+    color: var(--accent) !important;
+}
+
+.top-items > .items > .item > .left > .number-player {
+    color: var(--white) !important;
+    text-shadow: var(--glow);
+}
+
+.bottom-items::-webkit-scrollbar {
+    background-color: var(--trans) !important;
+}
+
+.bottom-items::-webkit-scrollbar-thumb {
+    background-color: var(--trans) !important;
+}
+
+.bottom-items {
+    width: calc(100% + 1%) !important;
+    height: calc(100% - 9.5rem) !important;
+}
+
+.list-champions .value {
+    font-weight: 800 !important;
+}
+
+.list-champions .svg-icon {
+    margin-left: 10px;
+}
+
+.svg-icon--star {
+    content: "";
+    background: var(--accent) !important;
+    height: 11px !important;
+    width: 11px !important;
+    transform: rotate(45deg);
+    border-radius: 0.025rem;
+    filter: brightness(1.3);
+    visibility: visible !important;
+}
+
+/* clans */
+.clans .nav {
+    padding: 10px;
+    background-color: var(--sec) !important;
+    margin-bottom: -15px;
+    border-radius: 5px;
+    font-weight: 900;
+}
+
+.active,
+.nav:hover {
+    color: currentColor !important;
+}
+
+.reset-time {
+    background: var(--sec) !important;
+    top: unset !important;
+    bottom: 45px !important;
+    width: 20rem !important;
+    height: 5rem !important;
+    background: var(--sec) !important;
+    box-shadow: none !important;
+    border-radius: var(--br) 0 0 0 !important;
+    padding: 0.7rem 2rem 0.7rem 1rem !important;
+    align-items: flex-end !important;
+    font-weight: 700 !important;
+    text-shadow: var(--glow);
+    font-size: 20px;
+}
+
+.reset-time::after {
+    content: "Awards";
+    position: absolute;
+    top: 10px;
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 1.5rem !important;
+    text-shadow: none !important;
+    text-transform: uppercase;
+}
+
+.reset-time::before {
+    content: "Of The Month";
+    position: absolute;
+    top: 10px;
+    left: 114px;
+    font-size: 1.5rem;
+    text-shadow: none !important;
+    font-weight: 800;
+}
+
+.clans {
+    background: var(--main) !important;
+}
+
+.left-interface .button.daily-rewards-btn {
+    position: absolute;
+    top: 100%;
+    left: -55%
+}
+#invite-btn {
+    background-color: #000!important;
+    border-radius: 5px!important;
+    font-size: 1.9em!important;
+    height: 39px;
+    width: 39px;
+    overflow: hidden;
+}
+#invite-btn:hover {
+    transform: scale(116%)
+}
+#invite-btn span {
+    display: none;
+    box-shadow: none !important;
+}
+
+#invite-btn::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 80%;
+    width: 80%;
+    background-image: var(--plus-icon);
+    filter: invert(1);
+    opacity: 0.5;
+    background-size: 100%;
+    background-repeat: no-repeat;
+    transition: transform 0.4s ease;
+}

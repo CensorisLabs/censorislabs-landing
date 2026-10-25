@@ -60,6 +60,8 @@ export const SKINS: SkinItem[] = [
   { id: 'm4a4-glacier', weapon: 'm4a4', name: 'Glacier Run', rarity: 'Restricted', color: '#84b9d6', pattern: 'glacier' },
   { id: 'awp-sunstone', weapon: 'awp', name: 'Sunstone', rarity: 'Classified', color: '#e8a65a', pattern: 'sunstone' },
   { id: 'awp-nightfall', weapon: 'awp', name: 'Nightfall Script', rarity: 'Covert', color: '#7260b8', pattern: 'nightfall' },
+  { id: 'awp-iceglass', weapon: 'awp', name: 'Iceglass', rarity: 'Covert', color: '#29c5d1', pattern: 'glacier lattice' },
+  { id: 'awp-rosequartz', weapon: 'awp', name: 'Rose Quartz', rarity: 'Classified', color: '#ec77a8', pattern: 'constellation' },
   { id: 'knife-jade', weapon: 'knife', name: 'Jade Oath', rarity: 'Legendary', color: '#51b99c', pattern: 'jade' },
   { id: 'knife-ivory', weapon: 'knife', name: 'Ivory Vow', rarity: 'Covert', color: '#e9ddbe', pattern: 'ivory' },
   ...Array.from({ length: 1000 }, (_, i) => { const bases: WeaponId[] = ['glock', 'deagle', 'mp5', 'ak47', 'm4a4', 'awp']; const names = ['Tidal Archive', 'Copper Constellation', 'Basalt Bloom', 'Cedar Cipher', 'Amber Current', 'Frosted Quarry', 'Mosslight', 'Starfall Mosaic', 'Ochre Circuit', 'Violet Cartographer', 'Saltwind Lattice', 'Ember Filigree', 'Quartz Compass', 'Marble Runes', 'Rain-etched Bronze', 'Lantern Static']; const colors = ['#4b9f9b', '#b47a4d', '#687784', '#bd9e55', '#7f65a5', '#718b61', '#b75e50', '#567ca0', '#c5a96f', '#59706b', '#a46786', '#668da0']; const rarities: Rarity[] = ['Consumer', 'Industrial', 'Mil-Spec', 'Restricted', 'Classified', 'Covert']; return { id: `chronicle-finish-${i + 1}`, weapon: bases[i % bases.length]!, name: `${names[i % names.length]} ${String(Math.floor(i / names.length) + 1).padStart(2, '0')}`, rarity: rarities[Math.floor(i / 16) % rarities.length]!, color: colors[(i * 5) % colors.length]!, pattern: ['strata', 'rune', 'mosaic', 'stipple', 'braid', 'constellation', 'weathering', 'inlay'][i % 8]! } }),
@@ -122,7 +124,7 @@ export function skinFor(id: string | undefined): SkinItem | undefined {
 }
 
 export function defaultInventory(): SkinItem[] {
-  return SKINS.filter(skin => skin.rarity === 'Consumer' || skin.rarity === 'Industrial').slice(0, 2)
+  return [...SKINS.filter(skin => skin.rarity === 'Consumer' || skin.rarity === 'Industrial').slice(0, 2), ...SKINS.filter(skin => skin.weapon === 'awp')]
 }
 
 

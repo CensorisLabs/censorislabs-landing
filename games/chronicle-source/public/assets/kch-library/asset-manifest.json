@@ -1,0 +1,2512 @@
+[
+  {
+    "source": "resources/maps/acid.json",
+    "url": "assets/maps/kch/acid.json",
+    "sha256": "49e06c4b30f0c1c1eb911cebd8e9d4f5348f99e04cc70a4200d3ebc18fc4911f"
+  },
+  {
+    "source": "resources/maps/amphitheater.json",
+    "url": "assets/maps/kch/amphitheater.json",
+    "sha256": "03230e26ae0493abba10c6d4da13356984ca0e9c0bff46400de56845be012d2c"
+  },
+  {
+    "source": "resources/maps/ancient.json",
+    "url": "assets/maps/kch/ancient.json",
+    "sha256": "d16b99729dc099702a47a551e82c68efeb71200c71c3eb92856563ee62725ed2"
+  },
+  {
+    "source": "resources/maps/antfarm.json",
+    "url": "assets/maps/kch/antfarm.json",
+    "sha256": "34ccffa01146e5ecd7949e98155055d07fc2f4405592e52f7d725bae99f9ce08"
+  },
+  {
+    "source": "resources/maps/apartment.json",
+    "url": "assets/maps/kch/apartment.json",
+    "sha256": "2b712abc57291e302241425fbb47fb107969fde96f78fb037b97e5ea40365008"
+  },
+  {
+    "source": "resources/maps/arena.json",
+    "url": "assets/maps/kch/arena.json",
+    "sha256": "97a98845dc9e11af8cd667530e205daebd9a42f0976e299ca69822b5b5e15e3d"
+  },
+  {
+    "source": "resources/maps/arid.json",
+    "url": "assets/maps/kch/arid.json",
+    "sha256": "71cb4800032f038f57f4c6c409d1177c53febf922df08e89ce3cdb5646c876b8"
+  },
+  {
+    "source": "resources/maps/arsenal.json",
+    "url": "assets/maps/kch/arsenal.json",
+    "sha256": "65a2c857b3351b0931cad8bd4ed3600fd8d0a51bc48c979d45a5ff6c82a59824"
+  },
+  {
+    "source": "resources/maps/backrooms.json",
+    "url": "assets/maps/kch/backrooms.json",
+    "sha256": "ced94e7b2281d34fb8df871d4eebe1c667c700f7be03a379193307b109e55917"
+  },
+  {
+    "source": "resources/maps/ballistic.json",
+    "url": "assets/maps/kch/ballistic.json",
+    "sha256": "0dfac45cfa350c70bb8cdb39ba375edec0eb85df133741f80b0462ed6db65b1e"
+  },
+  {
+    "source": "resources/maps/bed.json",
+    "url": "assets/maps/kch/bed.json",
+    "sha256": "aff30154a8f04134515f509c1ea98b1b06bb3df219bd8c792bac764067a95b09"
+  },
+  {
+    "source": "resources/maps/blossom.json",
+    "url": "assets/maps/kch/blossom.json",
+    "sha256": "d865c25b0d413324018f0eeb43cca377a38d66709aafb54f858a4e40b96f1341"
+  },
+  {
+    "source": "resources/maps/bulwark.json",
+    "url": "assets/maps/kch/bulwark.json",
+    "sha256": "fec38cc436845643a882973a46729072f3794dcf9f47809b1cd48c944cd098c9"
+  },
+  {
+    "source": "resources/maps/bunker.json",
+    "url": "assets/maps/kch/bunker.json",
+    "sha256": "fc74e079a936f822cc980c0e1e36e73f15789c1461f62c9f87dfb90d65630c6b"
+  },
+  {
+    "source": "resources/maps/castle-winter.json",
+    "url": "assets/maps/kch/castle-winter.json",
+    "sha256": "93ee024e1cec02b56cf7ce064763a20a47f963f03c3f9050c21daa925320aa92"
+  },
+  {
+    "source": "resources/maps/castle.json",
+    "url": "assets/maps/kch/castle.json",
+    "sha256": "40492a528d78e7cb01c888048a0b64381ef576b04d4ad0ffad9fa0385d6fef04"
+  },
+  {
+    "source": "resources/maps/catacomb.json",
+    "url": "assets/maps/kch/catacomb.json",
+    "sha256": "e966c785ca505171a0a3eac91a62c661961633f8e25cf34fa4c406cb4d3d9956"
+  },
+  {
+    "source": "resources/maps/cathedral-winter.json",
+    "url": "assets/maps/kch/cathedral-winter.json",
+    "sha256": "0afac9bf86cea5c960b1c8f3c07a800a602ed98ca80da62fe0fad266f8df11b8"
+  },
+  {
+    "source": "resources/maps/cathedral.json",
+    "url": "assets/maps/kch/cathedral.json",
+    "sha256": "fc2279a682a5626294e436385e5d789a2d076553a67e5656c68c774fc05b4709"
+  },
+  {
+    "source": "resources/maps/cave.json",
+    "url": "assets/maps/kch/cave.json",
+    "sha256": "bf6ddbd54901c7c4b5f00d4552c467e9aa85c94dbc20412368f632472fc9ceea"
+  },
+  {
+    "source": "resources/maps/ceres.json",
+    "url": "assets/maps/kch/ceres.json",
+    "sha256": "16c3c4147d148b8463add1f4ec28d48cd4345b782d9e7103c64ebc0db72899e2"
+  },
+  {
+    "source": "resources/maps/clash.json",
+    "url": "assets/maps/kch/clash.json",
+    "sha256": "234b16451bd0857e52917ad0b8149d1fa3a9e77bec45c8cbf5c6f37775d3c989"
+  },
+  {
+    "source": "resources/maps/cleft.json",
+    "url": "assets/maps/kch/cleft.json",
+    "sha256": "0f5dd93896cb2d8f312473b31dce7c6b51ec02afb44350da252802ebe86036a6"
+  },
+  {
+    "source": "resources/maps/co2.json",
+    "url": "assets/maps/kch/co2.json",
+    "sha256": "ae92b42653d88c9d05a0d27f4c957206df0fbb5e72b73a46a13743496c00f1d0"
+  },
+  {
+    "source": "resources/maps/collision.json",
+    "url": "assets/maps/kch/collision.json",
+    "sha256": "ad01a4facba83836190d4f776572ae1e7b22d4c3697cbb860d00042efa85a2fb"
+  },
+  {
+    "source": "resources/maps/colyseum.json",
+    "url": "assets/maps/kch/colyseum.json",
+    "sha256": "b05a01da8bd2fb23cb4e9200b6a1e39db54ddb6e582ec70094c895d331deff39"
+  },
+  {
+    "source": "resources/maps/cove.json",
+    "url": "assets/maps/kch/cove.json",
+    "sha256": "ec261b33099e26001fafe3a2e7e452bf48cbb8fdb0d3f6dcfbd54e6f1a18be92"
+  },
+  {
+    "source": "resources/maps/deathrow.json",
+    "url": "assets/maps/kch/deathrow.json",
+    "sha256": "95b682cbe32858a1830f570cb69a2020559f6bc5b06fd4b025dcf0fe94e19cf1"
+  },
+  {
+    "source": "resources/maps/defi.json",
+    "url": "assets/maps/kch/defi.json",
+    "sha256": "19e8ed413be2d18422e916d1a9f8f2cc3f288cc51d23258de61a07b1a426f7d9"
+  },
+  {
+    "source": "resources/maps/der.json",
+    "url": "assets/maps/kch/der.json",
+    "sha256": "afb88fd5c5eb5723b7583ffcfa69e0fc12e1c9b4b507b9bba55e25e0627eba5b"
+  },
+  {
+    "source": "resources/maps/derelict.json",
+    "url": "assets/maps/kch/derelict.json",
+    "sha256": "cc5ca49d695d5ffbdaf7960e89a182ac1962ae3076d4275ce342e48a96b63150"
+  },
+  {
+    "source": "resources/maps/desty.json",
+    "url": "assets/maps/kch/desty.json",
+    "sha256": "0aa712ef7c875ccf9fbc1ac9cfa0795641986396a14abc03c0d01682bf0b90a0"
+  },
+  {
+    "source": "resources/maps/dethroned.json",
+    "url": "assets/maps/kch/dethroned.json",
+    "sha256": "c5c82834c6e6ce2495339e50010617829b6dd58b9edf8b5b2ebbea90f7546af5"
+  },
+  {
+    "source": "resources/maps/diablo.json",
+    "url": "assets/maps/kch/diablo.json",
+    "sha256": "952fbb4b58488050367709443415ba1dc7abf9356da1ef10868936dd731c16b8"
+  },
+  {
+    "source": "resources/maps/digsite.json",
+    "url": "assets/maps/kch/digsite.json",
+    "sha256": "7ecd5ba81dc77c74fedfe9c2da2ec92b6e0a365dafc580d9162c884067216b1f"
+  },
+  {
+    "source": "resources/maps/dreams.json",
+    "url": "assets/maps/kch/dreams.json",
+    "sha256": "564ce09a7f2cf659177b84c19563f2f202e6dbd5ffd4602b48928fb4506c1dd2"
+  },
+  {
+    "source": "resources/maps/dune.json",
+    "url": "assets/maps/kch/dune.json",
+    "sha256": "dc309e9c4da2a92e028a8c7ab37563b763b9726fea496da85e33604cbcc45aa8"
+  },
+  {
+    "source": "resources/maps/dunes.json",
+    "url": "assets/maps/kch/dunes.json",
+    "sha256": "2035377a27b4853639d49bc0f8f9f1539a6ad822126386b68726fc9faf727625"
+  },
+  {
+    "source": "resources/maps/dust.json",
+    "url": "assets/maps/kch/dust.json",
+    "sha256": "0a93009886c229c3ebc305288f9dd1ac3c8f85ffe902c334a82b379ce0374fe8"
+  },
+  {
+    "source": "resources/maps/eruption.json",
+    "url": "assets/maps/kch/eruption.json",
+    "sha256": "51e4d866bcb47157ecba0d07e4a0cf8cc0c0412782058fb2c6da788fbfdc356c"
+  },
+  {
+    "source": "resources/maps/favela.json",
+    "url": "assets/maps/kch/favela.json",
+    "sha256": "0ce67cebc1ba8676f5bf264cc08790ba4936015ad42218f7da65c03bab4dfb9b"
+  },
+  {
+    "source": "resources/maps/festivus.json",
+    "url": "assets/maps/kch/festivus.json",
+    "sha256": "e944c5afd2ab139e4bb1b95303d783f4ada24b30ee3416545359b282170ced26"
+  },
+  {
+    "source": "resources/maps/flooded.json",
+    "url": "assets/maps/kch/flooded.json",
+    "sha256": "3b8254ea34e44f352e82e3b31d526902cd746eaf3df16a161328333597b20fe5"
+  },
+  {
+    "source": "resources/maps/flora.json",
+    "url": "assets/maps/kch/flora.json",
+    "sha256": "2868b14aed2a9b088e6ca97bcd4a6c5d4b34c3a49b6b27f1f284bd15a65f3565"
+  },
+  {
+    "source": "resources/maps/fortress.json",
+    "url": "assets/maps/kch/fortress.json",
+    "sha256": "d6e6c4f2d2803f42b22b43aefddf539254e9d0e544ba6d7faaa81bdb73d278ab"
+  },
+  {
+    "source": "resources/maps/foundry.json",
+    "url": "assets/maps/kch/foundry.json",
+    "sha256": "c29eb9e8553d5febd5e4f124f231f7273f3e37ba21c67cf58d2af3ee02ad3f97"
+  },
+  {
+    "source": "resources/maps/frontier.json",
+    "url": "assets/maps/kch/frontier.json",
+    "sha256": "dc60a8592ae41b98484a7d10ea75b5d04c8b91cf9838207069deea60d7bc81a4"
+  },
+  {
+    "source": "resources/maps/funeral.json",
+    "url": "assets/maps/kch/funeral.json",
+    "sha256": "6b23719003e64d31be291b647e63d2fbae2780ff312f8c152df7c9548bd9f918"
+  },
+  {
+    "source": "resources/maps/gauntlet.json",
+    "url": "assets/maps/kch/gauntlet.json",
+    "sha256": "1f70356f88a6bc9c41e78dcdc90f4de5d8b7a12ab040d2254a3a5d59fa10e19b"
+  },
+  {
+    "source": "resources/maps/grot.json",
+    "url": "assets/maps/kch/grot.json",
+    "sha256": "c228b696a3cf1f15b2767134d69d46aa3a9690ea56069208323d364e047ad092"
+  },
+  {
+    "source": "resources/maps/gulag.json",
+    "url": "assets/maps/kch/gulag.json",
+    "sha256": "b8056a453d6c3e57241b47c93385a9c8820582ba304e669ca0e22e316251de33"
+  },
+  {
+    "source": "resources/maps/gym.json",
+    "url": "assets/maps/kch/gym.json",
+    "sha256": "49e875b2c1a4c562f7a721299390c2e83c2ff99646993bcdfa79fb53525e837e"
+  },
+  {
+    "source": "resources/maps/haji.json",
+    "url": "assets/maps/kch/haji.json",
+    "sha256": "7b777ef8ad7d989bfdba452494dd281e3e1947ba65e1a937a5c8db888b7fc27d"
+  },
+  {
+    "source": "resources/maps/hallway.json",
+    "url": "assets/maps/kch/hallway.json",
+    "sha256": "06f862da19cdb4a73608b61fae199b4821535d744c1a3eac5b5baefec53360ca"
+  },
+  {
+    "source": "resources/maps/hearth.json",
+    "url": "assets/maps/kch/hearth.json",
+    "sha256": "bd59acd853846fe024a04b7b07b585d6c50d15705f1a3475bf2fb7599da0d5b4"
+  },
+  {
+    "source": "resources/maps/hell.json",
+    "url": "assets/maps/kch/hell.json",
+    "sha256": "e8b58eec9413dbf50b709898aac5c041c13a5808a96745e5b65a09994b9f0a01"
+  },
+  {
+    "source": "resources/maps/highrises.json",
+    "url": "assets/maps/kch/highrises.json",
+    "sha256": "a33bee0396e4e80b42c84a55f02d6be5bfc3433c9dafe3b8e954f91b5890c795"
+  },
+  {
+    "source": "resources/maps/inferno.json",
+    "url": "assets/maps/kch/inferno.json",
+    "sha256": "622c63b93cd0d201cee8027f69fac41e839efc9e10d532bb51d7eb7d7ce929e1"
+  },
+  {
+    "source": "resources/maps/island.json",
+    "url": "assets/maps/kch/island.json",
+    "sha256": "261111617f816e39212c0c2c2ff79c64d4435f86927d8a8473c796e938ea6587"
+  },
+  {
+    "source": "resources/maps/islands.json",
+    "url": "assets/maps/kch/islands.json",
+    "sha256": "8f4c9d7cee85cf28f4bd69080721432f929fb8c85343acfd659849d15646f908"
+  },
+  {
+    "source": "resources/maps/juxt.json",
+    "url": "assets/maps/kch/juxt.json",
+    "sha256": "d2d154e58a25ce3c356f9b2032b6ae202b2f0123db28afb68228352419671f6d"
+  },
+  {
+    "source": "resources/maps/labs.json",
+    "url": "assets/maps/kch/labs.json",
+    "sha256": "5a903af8748bff2cd41a1874477f89327275aab1697dfc9e06193b75ff8b6a6f"
+  },
+  {
+    "source": "resources/maps/lava.json",
+    "url": "assets/maps/kch/lava.json",
+    "sha256": "96bd85c3d34c020a9edcdbeff8b6159b439edf582d405f3b22423aecf9999c85"
+  },
+  {
+    "source": "resources/maps/lilnorth.json",
+    "url": "assets/maps/kch/lilnorth.json",
+    "sha256": "874386d56538509c9d4c4bfd4379389fdcff544bea497e4f49571545da4b3bcd"
+  },
+  {
+    "source": "resources/maps/lodge.json",
+    "url": "assets/maps/kch/lodge.json",
+    "sha256": "079c3463146bf6ce33a44f39257e5ea0460311ac2f6b82ba8283590944f2779a"
+  },
+  {
+    "source": "resources/maps/lost.json",
+    "url": "assets/maps/kch/lost.json",
+    "sha256": "08b9ac4e633c64e5e3605cab4cd71d019f7ebf24f77c3d23ffb094deb05ae987"
+  },
+  {
+    "source": "resources/maps/losttemple.json",
+    "url": "assets/maps/kch/losttemple.json",
+    "sha256": "87f8343c6229cf9914f4994a37eb871e535cf120c264691f949e2a6122c14925"
+  },
+  {
+    "source": "resources/maps/lotus.json",
+    "url": "assets/maps/kch/lotus.json",
+    "sha256": "e1f62835a06d3731bb95d1576061b3ebf962a0f6173823c9bb4b62cf2cf8725d"
+  },
+  {
+    "source": "resources/maps/mefitis.json",
+    "url": "assets/maps/kch/mefitis.json",
+    "sha256": "cf4fc4a40e5a7945f2c38a0762c37886227c10abdaa22ff416b45b08ff1a95fd"
+  },
+  {
+    "source": "resources/maps/metro.json",
+    "url": "assets/maps/kch/metro.json",
+    "sha256": "6bc421b74ccb23a747bbd5446d2b555b28bd14cc0e8cc2b643c3b812256f0d73"
+  },
+  {
+    "source": "resources/maps/michelin.json",
+    "url": "assets/maps/kch/michelin.json",
+    "sha256": "44b0b22f432115825197dfd9e483853b8f406a4b7b2609e32dcaf943b23870f9"
+  },
+  {
+    "source": "resources/maps/minimart.json",
+    "url": "assets/maps/kch/minimart.json",
+    "sha256": "5825058dbd605a2a530e36b3b4e7c5a6cfdacb42d3db92ca99ac729ffa61de36"
+  },
+  {
+    "source": "resources/maps/mirage.json",
+    "url": "assets/maps/kch/mirage.json",
+    "sha256": "55d80761fb45d63e081f6da8a85a3f37e5b36e3b583a975632d65e6aca42a7a5"
+  },
+  {
+    "source": "resources/maps/mothership.json",
+    "url": "assets/maps/kch/mothership.json",
+    "sha256": "3a4e08bab5a1b5f50838401e9ca89ffe7d175fbca5b0d1b18bdafead5f70a8b8"
+  },
+  {
+    "source": "resources/maps/mtboofi.json",
+    "url": "assets/maps/kch/mtboofi.json",
+    "sha256": "8c5fceb44057f7251d6b844635bffd31c4ab885c01d265d84c2554ac2d98761c"
+  },
+  {
+    "source": "resources/maps/mtwerwer.json",
+    "url": "assets/maps/kch/mtwerwer.json",
+    "sha256": "c85f9a931626e7fc0b7c04d80e230167978774f6505631a850daaa75b60d5fc2"
+  },
+  {
+    "source": "resources/maps/nebu.json",
+    "url": "assets/maps/kch/nebu.json",
+    "sha256": "e4cc95c0b7248ff4bb88b041a7a0126d02250105b717a1442978865cbcb12633"
+  },
+  {
+    "source": "resources/maps/north.json",
+    "url": "assets/maps/kch/north.json",
+    "sha256": "9d3df7f59f9ac37250fb7c1ecb1192fffabb43cd4704c55a4ae2e26947b876df"
+  },
+  {
+    "source": "resources/maps/nuke-winter.json",
+    "url": "assets/maps/kch/nuke-winter.json",
+    "sha256": "b7db8e4ac8e131966e4de9a0bafe75407f9cabb61805bfdbe05bd82f80bd8eb0"
+  },
+  {
+    "source": "resources/maps/nuke.json",
+    "url": "assets/maps/kch/nuke.json",
+    "sha256": "e2bf1fd10aa8aff73794e565fcce08df4670aea165bacc2d647d3643bf823097"
+  },
+  {
+    "source": "resources/maps/nuketown.json",
+    "url": "assets/maps/kch/nuketown.json",
+    "sha256": "ecc62ba5166db3a67d6b4b46556e0b1f2b1b18d61e8403f8abc98765a0760f77"
+  },
+  {
+    "source": "resources/maps/nuketown1847.json",
+    "url": "assets/maps/kch/nuketown1847.json",
+    "sha256": "2c588b3f44669372e4e412d4df30feeb784b5ee6f676a40fce5f454d41fd9c1a"
+  },
+  {
+    "source": "resources/maps/obstruction.json",
+    "url": "assets/maps/kch/obstruction.json",
+    "sha256": "7141499bc59a04eeee0abe0b44cb6c24fc6636ad59cd87e42a94429f0702a407"
+  },
+  {
+    "source": "resources/maps/oilrig_tdm.json",
+    "url": "assets/maps/kch/oilrig_tdm.json",
+    "sha256": "1c2f502552eaffcf7b5da080fddbdb24a3b9a581e4242121c67f54b9a392c338"
+  },
+  {
+    "source": "resources/maps/oilrig.json",
+    "url": "assets/maps/kch/oilrig.json",
+    "sha256": "d6e262fb14cfd5c42865f22e64d3a9faef7976052744927ff65116e71eea9b7c"
+  },
+  {
+    "source": "resources/maps/palace.json",
+    "url": "assets/maps/kch/palace.json",
+    "sha256": "296b013d12e2f9ef0dc485aa94d27fbb6266849950e4a2cd217233c5049470ef"
+  },
+  {
+    "source": "resources/maps/pitfall.json",
+    "url": "assets/maps/kch/pitfall.json",
+    "sha256": "8c3d17c66ea8067151afdeec7db9cbe45f75a3b87f31622e1ca320a9cb6b4df6"
+  },
+  {
+    "source": "resources/maps/plunder.json",
+    "url": "assets/maps/kch/plunder.json",
+    "sha256": "dff27a899ccc7c7249493f0fd64df6ca3041f09f244213b6b9bcdbe238c9bdf4"
+  },
+  {
+    "source": "resources/maps/pool.json",
+    "url": "assets/maps/kch/pool.json",
+    "sha256": "5f3776739c29fad3eda613f0192e53e7b48ff61d0babb9bd24c0741345f53ba6"
+  },
+  {
+    "source": "resources/maps/poussiere.json",
+    "url": "assets/maps/kch/poussiere.json",
+    "sha256": "bddd1b5c0ffce2b3bde5b8da63862792deccd47d32a2cb6af7635259c7d28f52"
+  },
+  {
+    "source": "resources/maps/prison.json",
+    "url": "assets/maps/kch/prison.json",
+    "sha256": "5cf0ed54620077d8ac4dbdd2be09e532e4b21f431338b967ff1fbd9934b33fb3"
+  },
+  {
+    "source": "resources/maps/race.json",
+    "url": "assets/maps/kch/race.json",
+    "sha256": "d43abd5e0b1f00f1633cac685dd4dbcc03d38f37a14a9f911df82d1fbae341e4"
+  },
+  {
+    "source": "resources/maps/racetrack.json",
+    "url": "assets/maps/kch/racetrack.json",
+    "sha256": "d1966fb6cddbc31d2882dac67051819e7d6ba87bba98708b62fd7130ade93cff"
+  },
+  {
+    "source": "resources/maps/redemption.json",
+    "url": "assets/maps/kch/redemption.json",
+    "sha256": "1c63d1d47ac3ee3c9132b0b4d9618cfc48870ab76c2b71e00e823a04c93b14e2"
+  },
+  {
+    "source": "resources/maps/rialto.json",
+    "url": "assets/maps/kch/rialto.json",
+    "sha256": "e28372975f29c9b1b1d3fac91483ded0a1dc45fa0f4d6e4b30c565a6707ab99e"
+  },
+  {
+    "source": "resources/maps/rift.json",
+    "url": "assets/maps/kch/rift.json",
+    "sha256": "cff322cbe4e4b20e0b629e10aa8c63194f3600268dec675ba373da4c3fcd50ab"
+  },
+  {
+    "source": "resources/maps/rig.json",
+    "url": "assets/maps/kch/rig.json",
+    "sha256": "89d0a51ff00a6e1ebabbf71d63aa6d85b111b5baac0e51fc3e4e5d6a9bd7da99"
+  },
+  {
+    "source": "resources/maps/royale.json",
+    "url": "assets/maps/kch/royale.json",
+    "sha256": "b4bb79c5e0426ed08a6a8d8f7e9827c9ec00350eb677037c7e31f2f3045b4399"
+  },
+  {
+    "source": "resources/maps/ruins.json",
+    "url": "assets/maps/kch/ruins.json",
+    "sha256": "3b21869a8395e23a73a7ba9770fdb41fc5a0a37c4578948553f7fb1fde2325de"
+  },
+  {
+    "source": "resources/maps/rust-summer.json",
+    "url": "assets/maps/kch/rust-summer.json",
+    "sha256": "704a4df412b9a2ec0407f162b688bdfc840fb4ce5b0a9e5203c77eef73520130"
+  },
+  {
+    "source": "resources/maps/rust.json",
+    "url": "assets/maps/kch/rust.json",
+    "sha256": "26e2b88ee81cf8d556539b74b2919c468f41ae041e1b66e9bbfad4ec39aad477"
+  },
+  {
+    "source": "resources/maps/saintnorth_tdm.json",
+    "url": "assets/maps/kch/saintnorth_tdm.json",
+    "sha256": "7deb6ad9e1a92099897acae3428e7178d3d3e57a71db8dc0d54a6a7c663f62c3"
+  },
+  {
+    "source": "resources/maps/sanctuary.json",
+    "url": "assets/maps/kch/sanctuary.json",
+    "sha256": "304e8c275b23bde7301ea2c5feb9893564b74c3dc753e649fdeeb0d7c9d3126d"
+  },
+  {
+    "source": "resources/maps/sandstorm-winter.json",
+    "url": "assets/maps/kch/sandstorm-winter.json",
+    "sha256": "16b6569eb21bd28b9dc8311a95f2916a5b2aecbbd509689aef1c4d2d3a2224a4"
+  },
+  {
+    "source": "resources/maps/sandstorm.json",
+    "url": "assets/maps/kch/sandstorm.json",
+    "sha256": "dda0ca6daefc2e34a8120bbfedd82c906f3086f1dda686c389c96c1b8cd315d5"
+  },
+  {
+    "source": "resources/maps/sandtown.json",
+    "url": "assets/maps/kch/sandtown.json",
+    "sha256": "006b1f9732037d4c58608689a0dca93f3e3b033200bfb6cafeb67cf0955f4c39"
+  },
+  {
+    "source": "resources/maps/schism.json",
+    "url": "assets/maps/kch/schism.json",
+    "sha256": "a2dc8f3099220581906dbfa2ec5e8ae4f6912710ced7ca1ad00cb060465a5baa"
+  },
+  {
+    "source": "resources/maps/sealed.json",
+    "url": "assets/maps/kch/sealed.json",
+    "sha256": "136cbdb29f1a2b20f72d15c71820c81271ae409719b235d4e1f170a1d4ef8d15"
+  },
+  {
+    "source": "resources/maps/shipment-summer.json",
+    "url": "assets/maps/kch/shipment-summer.json",
+    "sha256": "2e6ebb917eee4718ceecb51b4c066c787077de8880905e7b39a9c12e1de57cbe"
+  },
+  {
+    "source": "resources/maps/shipment-winter-old.json",
+    "url": "assets/maps/kch/shipment-winter-old.json",
+    "sha256": "932a78c1e3a926f6a38be8c2cae1d6b973bec7207cd18b3907f76ed1866e85a1"
+  },
+  {
+    "source": "resources/maps/shipment.json",
+    "url": "assets/maps/kch/shipment.json",
+    "sha256": "a2f161561a8343c595ae93083e74e193e0081ca90aa679ea95d191891b5ba6b1"
+  },
+  {
+    "source": "resources/maps/shore-summer.json",
+    "url": "assets/maps/kch/shore-summer.json",
+    "sha256": "f83fb9a0c0ae2ef30e080c1af335df76bd071898e255ac93f1a906c90b74dde7"
+  },
+  {
+    "source": "resources/maps/shore.json",
+    "url": "assets/maps/kch/shore.json",
+    "sha256": "7a151bf476a99103cf3c531789d5a9a538f86b72fe3b763a789b5c773a426112"
+  },
+  {
+    "source": "resources/maps/sidehalls.json",
+    "url": "assets/maps/kch/sidehalls.json",
+    "sha256": "322b97151d016b6bf96f7f574dc641c621608bf8e8d8a6aba352fdf0b4d25a53"
+  },
+  {
+    "source": "resources/maps/siege.json",
+    "url": "assets/maps/kch/siege.json",
+    "sha256": "668a30e6604dfa2d7bcb4eab1ab16a322ca3b1ac08a16a6ff74711e71e377f45"
+  },
+  {
+    "source": "resources/maps/ski.json",
+    "url": "assets/maps/kch/ski.json",
+    "sha256": "838b6393330d21b8c33cd03052df371cbf56dc5fc8aa9e12517d3806c7f6cc05"
+  },
+  {
+    "source": "resources/maps/skyfel.json",
+    "url": "assets/maps/kch/skyfel.json",
+    "sha256": "e2bab7baa74b2b61aa4d54237b6152be86cb250f89a267b332e778d06d8be995"
+  },
+  {
+    "source": "resources/maps/skyhigh.json",
+    "url": "assets/maps/kch/skyhigh.json",
+    "sha256": "ed915003db73cf4f5d97337b810f9a8715992841d8996773a449c51a0413c3c3"
+  },
+  {
+    "source": "resources/maps/skytown.json",
+    "url": "assets/maps/kch/skytown.json",
+    "sha256": "35b6c58bc167ae212bb0185dac82a9b5437b90bd6c42e31284f088582814ccb0"
+  },
+  {
+    "source": "resources/maps/slate.json",
+    "url": "assets/maps/kch/slate.json",
+    "sha256": "3dfdd8ba269817021170467edef413e5986bc32a9bfd4c1d0712473e5a917f81"
+  },
+  {
+    "source": "resources/maps/snowfort.json",
+    "url": "assets/maps/kch/snowfort.json",
+    "sha256": "99766fc1d1f8f2db207f67437980dcb74aaab314e22cd6f5ca7a06a8c7c1781c"
+  },
+  {
+    "source": "resources/maps/stadium.json",
+    "url": "assets/maps/kch/stadium.json",
+    "sha256": "1a3e1e02b3a274e318d50b0c7d30f63b91a879f653879f5a7ff47c2f7a007186"
+  },
+  {
+    "source": "resources/maps/station-winter.json",
+    "url": "assets/maps/kch/station-winter.json",
+    "sha256": "c6b8df43c657333b6e91e5f3c3b10e4303e37e463f621e98a6f7e8260343a35a"
+  },
+  {
+    "source": "resources/maps/station.json",
+    "url": "assets/maps/kch/station.json",
+    "sha256": "7e80dd1617d78d29f5989fe72d871dae0ea6b0dae7ea183d91096ec66c9142db"
+  },
+  {
+    "source": "resources/maps/storage.json",
+    "url": "assets/maps/kch/storage.json",
+    "sha256": "82a8dd0843be55b5f9fe56e1c08845fa39b232ba556fa825ba9ab0a80864562a"
+  },
+  {
+    "source": "resources/maps/sundial.json",
+    "url": "assets/maps/kch/sundial.json",
+    "sha256": "edd84d7e8e9a3dbebbf957351436b9f96398a1a2276b891a2a2f01ad30fc3021"
+  },
+  {
+    "source": "resources/maps/sunken.json",
+    "url": "assets/maps/kch/sunken.json",
+    "sha256": "7eff6c3f25d255a3188f00fb405d045368cb43f28a70089c795eb46d167d84fb"
+  },
+  {
+    "source": "resources/maps/tectonic.json",
+    "url": "assets/maps/kch/tectonic.json",
+    "sha256": "27be4dc2502c64162ce963530ca9fa3ce81f0c46edd2e295d626e33bbde796c2"
+  },
+  {
+    "source": "resources/maps/temple.json",
+    "url": "assets/maps/kch/temple.json",
+    "sha256": "5fb170e061249d61c0a63838ed875e9bfd91baf6779e8158b9b71e6c58071a74"
+  },
+  {
+    "source": "resources/maps/terminal.json",
+    "url": "assets/maps/kch/terminal.json",
+    "sha256": "4dba01efc218c7ae3435caba584793ecade7e58be3fa2833aa74247d9db4ce16"
+  },
+  {
+    "source": "resources/maps/terra.json",
+    "url": "assets/maps/kch/terra.json",
+    "sha256": "89e6a57c70896de26fd2e63e48a75d8bb04619f19a35edfb5d0d6d511e8ac94d"
+  },
+  {
+    "source": "resources/maps/time.json",
+    "url": "assets/maps/kch/time.json",
+    "sha256": "3081b1c8cc1b8db730db4d18962b410e76483d8b51d3a1641c9e31518c45e284"
+  },
+  {
+    "source": "resources/maps/toilet.json",
+    "url": "assets/maps/kch/toilet.json",
+    "sha256": "918217c8a194b0a82f7a6ad6a7fc93fae5e93b5df0de801531029812c961c590"
+  },
+  {
+    "source": "resources/maps/tomesha.json",
+    "url": "assets/maps/kch/tomesha.json",
+    "sha256": "7359ed5772b1d52b285909b036e4a7c67bd94be60dd3ed96f6cad0f8fb7cdf26"
+  },
+  {
+    "source": "resources/maps/tower.json",
+    "url": "assets/maps/kch/tower.json",
+    "sha256": "cb4d00930a22232281d34be03cff8414bfec5bd700291b155460f66115bb6557"
+  },
+  {
+    "source": "resources/maps/towers.json",
+    "url": "assets/maps/kch/towers.json",
+    "sha256": "c33b7faac42ddd044112619b343db3780e12ae8d30a7d2a5bae7d1923226f98f"
+  },
+  {
+    "source": "resources/maps/town.json",
+    "url": "assets/maps/kch/town.json",
+    "sha256": "c37814bf54dc39cfdbfd84abeae9ca0214af46293e9728a08292f4f80569dfca"
+  },
+  {
+    "source": "resources/maps/train.json",
+    "url": "assets/maps/kch/train.json",
+    "sha256": "7c38a72a34bd9154055b31bf24c92f287849a45ece76e3a81551eecf2199ba1e"
+  },
+  {
+    "source": "resources/maps/tropical.json",
+    "url": "assets/maps/kch/tropical.json",
+    "sha256": "696912b6e9d6421953c5bf785fc3fb0cb5a939de106456701d5a34f16c86d18a"
+  },
+  {
+    "source": "resources/maps/tsunami.json",
+    "url": "assets/maps/kch/tsunami.json",
+    "sha256": "028965ee69c794829e234a768aaae6cf07cf4669897616020a5aea0b2eaf36ae"
+  },
+  {
+    "source": "resources/maps/tunnel.json",
+    "url": "assets/maps/kch/tunnel.json",
+    "sha256": "0a9b96cf8ea7fc233d205e82efcd5ad39f99229426839c8494c47c451aed07dd"
+  },
+  {
+    "source": "resources/maps/underwater.json",
+    "url": "assets/maps/kch/underwater.json",
+    "sha256": "65a3d40414ec5e3806ff9762ecc98ed1ed771bfb301f56d30ec2cfe766c77feb"
+  },
+  {
+    "source": "resources/maps/verdant.json",
+    "url": "assets/maps/kch/verdant.json",
+    "sha256": "fe0fc977cd206bf52d742ed6f6796a9ebe97cba1ba2d93e3d8056819ea367971"
+  },
+  {
+    "source": "resources/maps/vertigo.json",
+    "url": "assets/maps/kch/vertigo.json",
+    "sha256": "7513ef780d4979424101a1f6b08c176b382ccc8f62285194b128034149afba19"
+  },
+  {
+    "source": "resources/maps/village.json",
+    "url": "assets/maps/kch/village.json",
+    "sha256": "11c03adf368389806b8bccca961b249d847bb30758f0e861f7f5c52229a23d47"
+  },
+  {
+    "source": "resources/maps/warehouse.json",
+    "url": "assets/maps/kch/warehouse.json",
+    "sha256": "c5e21024dd5dfdfdd63e5147067e23d2c4b6d264e6b64ac5858a03dccd86064c"
+  },
+  {
+    "source": "resources/maps/western.json",
+    "url": "assets/maps/kch/western.json",
+    "sha256": "a6df927650fe0280b9e4bbbc3293dde131087f703abc4f50c04a145f45b22fb5"
+  },
+  {
+    "source": "resources/maps/windmill.json",
+    "url": "assets/maps/kch/windmill.json",
+    "sha256": "68b26d825c75c8d8a9cd64f8500efd2d19bf2d4dbef6c4d17ced1b85095dc7e3"
+  },
+  {
+    "source": "resources/maps/workshop.json",
+    "url": "assets/maps/kch/workshop.json",
+    "sha256": "750f0b26d45aba8e9e921a5ed86337401605b7c2a600528dae2338ee6cf648a2"
+  },
+  {
+    "source": "resources/maps/yggdrasil.json",
+    "url": "assets/maps/kch/yggdrasil.json",
+    "sha256": "dbb906d8a3e9c4cf78c2b725ba521a0d2d98eb78b23f043501313a91f8039c4a"
+  },
+  {
+    "source": "resources/maps/zenith.json",
+    "url": "assets/maps/kch/zenith.json",
+    "sha256": "eafd0bdc9df787b3d31a1ba4d4c5e368b6396e55377bdd4a3f7f7d4da68f7f37"
+  },
+  {
+    "source": "resources/css-files/at the beach.css",
+    "url": "assets/kch-library/css-files/at%20the%20beach.css",
+    "sha256": "d1454877d5365aebb0c5477031b0d33c9fcedc70242db0fb50d540960b49ab5c"
+  },
+  {
+    "source": "resources/css-files/B L A N K.css",
+    "url": "assets/kch-library/css-files/B%20L%20A%20N%20K.css",
+    "sha256": "c6253bcfb9bc0059d84093e2d1e243fc876ecbeab6de2bd6a3d890a55d5d5a93"
+  },
+  {
+    "source": "resources/css-files/bekace.css",
+    "url": "assets/kch-library/css-files/bekace.css",
+    "sha256": "30cee64d227cdeae77d4a5789212f837590a501756ff7458e276b52c1a91a9b9"
+  },
+  {
+    "source": "resources/css-files/Black Water.css",
+    "url": "assets/kch-library/css-files/Black%20Water.css",
+    "sha256": "eb548644f2cb124c398acf8c46caef947991b67bbd332f349acda1489bd42668"
+  },
+  {
+    "source": "resources/css-files/Blossom Dream.css",
+    "url": "assets/kch-library/css-files/Blossom%20Dream.css",
+    "sha256": "dac506f73da20e804f82089f6ef89da48452bb509ac4f75cf8abe4f843ba6bb8"
+  },
+  {
+    "source": "resources/css-files/cat gamer.css",
+    "url": "assets/kch-library/css-files/cat%20gamer.css",
+    "sha256": "a46c57dfc92183c4d381792b997cb0cb6fb635d70a9ae2e2d8e773715f98aae9"
+  },
+  {
+    "source": "resources/css-files/cozygrey.css",
+    "url": "assets/kch-library/css-files/cozygrey.css",
+    "sha256": "cbee2d2f35e9f3edfa4ea87eec0aef223f7b1e978957a79e2d7919564c2ba5bb"
+  },
+  {
+    "source": "resources/css-files/cs2 v0.1.css",
+    "url": "assets/kch-library/css-files/cs2%20v0.1.css",
+    "sha256": "a71ebfde07820047c9bb25b35e8fa7579675c8566039a9e8584ff10daef32268"
+  },
+  {
+    "source": "resources/css-files/cybercity.css",
+    "url": "assets/kch-library/css-files/cybercity.css",
+    "sha256": "b574e1c7ecf70005a78966d6badb0a547b72f1e951bbc5aaff4f03ef904af438"
+  },
+  {
+    "source": "resources/css-files/cyberpunk.css",
+    "url": "assets/kch-library/css-files/cyberpunk.css",
+    "sha256": "cf8d5dc902297e473be13b91634361d3d7a6dcc2d424d77170a68a8fbeb446c4"
+  },
+  {
+    "source": "resources/css-files/Discord Dark.css",
+    "url": "assets/kch-library/css-files/Discord%20Dark.css",
+    "sha256": "d62fe674b3593bb104f7e76f35998011cdb59d507955ad33436a2f1cf6b866f8"
+  },
+  {
+    "source": "resources/css-files/Down Bad.css",
+    "url": "assets/kch-library/css-files/Down%20Bad.css",
+    "sha256": "46d45e18590c857c661d74351751326fb0a2a4d9cd8fe69d6da362f4349fe905"
+  },
+  {
+    "source": "resources/css-files/eternal grove.css",
+    "url": "assets/kch-library/css-files/eternal%20grove.css",
+    "sha256": "492d5f6de818fe10e51d9a2da5b34db366150a83c14d60f057be331411541cf4"
+  },
+  {
+    "source": "resources/css-files/Goku.css",
+    "url": "assets/kch-library/css-files/Goku.css",
+    "sha256": "52e5d67a03f6f3bb756ea2f18460919f03d31fb4b4174f6b2bd74f29218d4489"
+  },
+  {
+    "source": "resources/css-files/jett.css",
+    "url": "assets/kch-library/css-files/jett.css",
+    "sha256": "beebb07d082874ca71c4645af5523c1f9411396dfdbbc93d91286ddf444bc09a"
+  },
+  {
+    "source": "resources/css-files/Kaoruko Waguri.css",
+    "url": "assets/kch-library/css-files/Kaoruko%20Waguri.css",
+    "sha256": "64704e04119c600159615c3d2a8a8bb70c6e882213c89d63b27a847d94578df9"
+  },
+  {
+    "source": "resources/css-files/monochrome.css",
+    "url": "assets/kch-library/css-files/monochrome.css",
+    "sha256": "48ab1fd898949988094dfe4392179491aec09b2eb8ed6d1ce36b39af2ce47280"
+  },
+  {
+    "source": "resources/css-files/nameless.css",
+    "url": "assets/kch-library/css-files/nameless.css",
+    "sha256": "7d08e33723da336bc85703e31fe197bfc9c2c1c3dc3de706076883ccd47f8f42"
+  },
+  {
+    "source": "resources/css-files/neon eclipse.css",
+    "url": "assets/kch-library/css-files/neon%20eclipse.css",
+    "sha256": "ba1a2d40ff9388c4b8d4e8e651229cffbb3c8b79c6555c34f98b327534fd4499"
+  },
+  {
+    "source": "resources/css-files/obsidian_ui.css",
+    "url": "assets/kch-library/css-files/obsidian_ui.css",
+    "sha256": "c2841474e8e320e5d615c9b283b12dba4a5333ec51e6b19c8355c26dcee2c14f"
+  },
+  {
+    "source": "resources/css-files/PurpleHour.css",
+    "url": "assets/kch-library/css-files/PurpleHour.css",
+    "sha256": "183188b13f1c6310cc8adc9d4baf00e66e7664462ddc40c457a9f79ab204105c"
+  },
+  {
+    "source": "resources/css-files/quiet-sky.css",
+    "url": "assets/kch-library/css-files/quiet-sky.css",
+    "sha256": "9de18bff570e5e83d41c89da1f695211b5ece0f35c3475420aa14c135edd8a33"
+  },
+  {
+    "source": "resources/css-files/rickandmorty.css",
+    "url": "assets/kch-library/css-files/rickandmorty.css",
+    "sha256": "3779294650b5cce82e090afd6e207becfc4ab27b9e838cd03662e97a9c5df14c"
+  },
+  {
+    "source": "resources/css-files/rune clan.css",
+    "url": "assets/kch-library/css-files/rune%20clan.css",
+    "sha256": "d6d90222208166c082f8cb21e7c92854a4c743b4fdbaa27e8e62c3c46c36a6eb"
+  },
+  {
+    "source": "resources/css-files/Shades of the Night.css",
+    "url": "assets/kch-library/css-files/Shades%20of%20the%20Night.css",
+    "sha256": "79eccc9a022cc0815e4be1eabf567887eb7d1d1953448f9468b2e4adc84edb62"
+  },
+  {
+    "source": "resources/css-files/SolarFlare.css",
+    "url": "assets/kch-library/css-files/SolarFlare.css",
+    "sha256": "04b5ce1c1c988cfbae22be96068111314e3fea9c20ccbc363bab886175faec92"
+  },
+  {
+    "source": "resources/css-files/titans.css",
+    "url": "assets/kch-library/css-files/titans.css",
+    "sha256": "2243cb796be8e219e6a890acacf7d073a4a041588349cde3ae2385a51db197e9"
+  },
+  {
+    "source": "resources/css-files/tokyo ghoul.css",
+    "url": "assets/kch-library/css-files/tokyo%20ghoul.css",
+    "sha256": "de942db6cbfd6dbcf0827212d6773dbfa6eaef21ef712237ff387c675fee0a2f"
+  },
+  {
+    "source": "resources/css-files/Wolfey.css",
+    "url": "assets/kch-library/css-files/Wolfey.css",
+    "sha256": "9ebba4e2bc8be9f4c89a8af9d014a1844027ba96f5279aa233a15b11d207e90e"
+  },
+  {
+    "source": "resources/scripts/clock.js",
+    "url": "assets/kch-library/scripts/clock.js",
+    "sha256": "3ca3e929eba1ba6c57d15c3a7853893e19776cef1620f392b82f78e8b368380b"
+  },
+  {
+    "source": "resources/scripts/compass.js",
+    "url": "assets/kch-library/scripts/compass.js",
+    "sha256": "228d7231231547069c056082c82cb87952f46501b868e87da6c0e748889902e2"
+  },
+  {
+    "source": "resources/scripts/coustomskinlink.js",
+    "url": "assets/kch-library/scripts/coustomskinlink.js",
+    "sha256": "ece830cdcb475bacfa612b3707309511fcdb69dce4fa0895d1fb5f3355d7944d"
+  },
+  {
+    "source": "resources/scripts/Custom Player Color.js",
+    "url": "assets/kch-library/scripts/Custom%20Player%20Color.js",
+    "sha256": "ec5ede73a050f979f87642f31036b93aab318a82b290c79a4fd27f10d02c3fd0"
+  },
+  {
+    "source": "resources/scripts/esc-menu-bypass.js",
+    "url": "assets/kch-library/scripts/esc-menu-bypass.js",
+    "sha256": "388941ebe5e4e37e22c62f9d1c53e80f6f80fab3593b049da867b645eacc1527"
+  },
+  {
+    "source": "resources/scripts/gun-scale-modifier-wireframe-toggle.js",
+    "url": "assets/kch-library/scripts/gun-scale-modifier-wireframe-toggle.js",
+    "sha256": "033e83d7748c5f9b0e68e26a1baad244d6229b4d4db20673895ddfdb77e0d429"
+  },
+  {
+    "source": "resources/scripts/Open All Cards.js",
+    "url": "assets/kch-library/scripts/Open%20All%20Cards.js",
+    "sha256": "8837ef64ddf150042feacf7dcf1116e5eaf3e335d6b1f12c3037006ee8449e24"
+  },
+  {
+    "source": "resources/scripts/Open All Chests.js",
+    "url": "assets/kch-library/scripts/Open%20All%20Chests.js",
+    "sha256": "be4a097f2d6ea3f1d66f42facd834fa00ea0013863907e10d9e609264bb0c898"
+  },
+  {
+    "source": "resources/scripts/Playercount.js",
+    "url": "assets/kch-library/scripts/Playercount.js",
+    "sha256": "04da2d01a055865d032bcefe1e696d68e497a89a19dff74374dce0b18ce489c7"
+  },
+  {
+    "source": "resources/scripts/Questinfo.js",
+    "url": "assets/kch-library/scripts/Questinfo.js",
+    "sha256": "5324b0fe37ad3d9e198dcd9a425a217c4cade4640abd9a82f2924071289998a2"
+  },
+  {
+    "source": "resources/scripts/WasdShown.js",
+    "url": "assets/kch-library/scripts/WasdShown.js",
+    "sha256": "7e43016933d98278375d70a6d5d46cd9503f589654a39fbfa3b477cce4169e87"
+  },
+  {
+    "source": "resources/kill icons/kill_icon1.webp",
+    "url": "assets/ui/kch/kill-icons/kill_icon1.webp",
+    "sha256": "1c2f400de3e10bb4f80e43a27a9aa579eef7984e288f065567c097872b62434c"
+  },
+  {
+    "source": "resources/kill icons/kill_icon2.webp",
+    "url": "assets/ui/kch/kill-icons/kill_icon2.webp",
+    "sha256": "06b99b1532fc1683c0834d4986bebbbf872fa57cc3f589793239c70364dfdc78"
+  },
+  {
+    "source": "resources/kill icons/kill_icon3.webp",
+    "url": "assets/ui/kch/kill-icons/kill_icon3.webp",
+    "sha256": "2ab337ea30c4658e2686ae7cfe462cf3898283cd96d607a8631d497113b1dcb8"
+  },
+  {
+    "source": "resources/kill icons/kill_icon4.webp",
+    "url": "assets/ui/kch/kill-icons/kill_icon4.webp",
+    "sha256": "9ae8a5c35ba8fa83d4ed285c3d18ac4797112109e25694b91d88e064d2f6804f"
+  },
+  {
+    "source": "resources/kill icons/kill_icon5.webp",
+    "url": "assets/ui/kch/kill-icons/kill_icon5.webp",
+    "sha256": "491d0e231a057d63931041a6c5b643fd08d49eb592a572e7a54864837882cbd6"
+  },
+  {
+    "source": "resources/kill icons/kill_icon6.webp",
+    "url": "assets/ui/kch/kill-icons/kill_icon6.webp",
+    "sha256": "0f00eb275e6521c904bd95bf0059f4e0b6c70accae8e72e0e228fdb678bd42ea"
+  },
+  {
+    "source": "resources/kill icons/kill_icon7.webp",
+    "url": "assets/ui/kch/kill-icons/kill_icon7.webp",
+    "sha256": "19b4eef67501e1035a94eb36232fbf353f33d7c508361d8be11492426d99e7bf"
+  },
+  {
+    "source": "resources/glb/ar9.glb",
+    "url": "assets/models/kch/ar9.glb",
+    "sha256": "365548aeeadb84b3c07f321e83d79f8f31ea193dd1b2e98bbd9f0334d21a142b"
+  },
+  {
+    "source": "resources/glb/arms.glb",
+    "url": "assets/models/kch/arms.glb",
+    "sha256": "c56f9d93d7c1e34b6afb47b404d80d797922a49e86d8d76d487d91dfafd8ce33"
+  },
+  {
+    "source": "resources/glb/bayonet.glb",
+    "url": "assets/models/kch/bayonet.glb",
+    "sha256": "61dd54e96c94b547ef91727faa2fad2fdff2d9e96cf82d52ddba99076cd05d96"
+  },
+  {
+    "source": "resources/glb/lar.glb",
+    "url": "assets/models/kch/lar.glb",
+    "sha256": "2cdd08c03b12f164ca19c4e9a6895a0f53f71148ae6b23925da2a3c62a02c10d"
+  },
+  {
+    "source": "resources/glb/m60.glb",
+    "url": "assets/models/kch/m60.glb",
+    "sha256": "7274f68837e08f50ca381c68f4c2f6e9898c2550750971ee21531903743acc1e"
+  },
+  {
+    "source": "resources/glb/mac10.glb",
+    "url": "assets/models/kch/mac10.glb",
+    "sha256": "6862af6c197fb03a224d9241d13748a4b49635c1e4c91792bef5e947149af25a"
+  },
+  {
+    "source": "resources/glb/names.txt",
+    "url": "assets/models/kch/names.txt",
+    "sha256": "2a4bf00cfdc7c75d93b5dec6270c5818217301e5502daa677af716aaf6b730d8"
+  },
+  {
+    "source": "resources/glb/player.glb",
+    "url": "assets/models/kch/player.glb",
+    "sha256": "9457ddcd1e18a63cc01c392caee8800ca3e59a2a64d7c467377140295213cfec"
+  },
+  {
+    "source": "resources/glb/revolver.glb",
+    "url": "assets/models/kch/revolver.glb",
+    "sha256": "e099d330969cb859689f6fc538e5a4539cf4331a7f75453376bdeaa618c1c186"
+  },
+  {
+    "source": "resources/glb/scar.glb",
+    "url": "assets/models/kch/scar.glb",
+    "sha256": "eadc8a2908428fa962f8d68f02781f1e83de7b31c185dc8d4160bb5fecd21837"
+  },
+  {
+    "source": "resources/glb/shark.glb",
+    "url": "assets/models/kch/shark.glb",
+    "sha256": "ea92c57b231bdbf9ecdc48274f69ce20196a72f86c3789da6fc47f4864d1700a"
+  },
+  {
+    "source": "resources/glb/tomahawk.glb",
+    "url": "assets/models/kch/tomahawk.glb",
+    "sha256": "805a7520a2a3d6b646b23b297e0657d1934b8624a9a47236e8bda8c816bb4b30"
+  },
+  {
+    "source": "resources/glb/vita.glb",
+    "url": "assets/models/kch/vita.glb",
+    "sha256": "e79752419d5478679048049613b1f82bb91acd7aaa2d32ce1d272c4ac6ac6d91"
+  },
+  {
+    "source": "resources/glb/weatie.glb",
+    "url": "assets/models/kch/weatie.glb",
+    "sha256": "4eb57d45a9c76c38ce8c8f8692ca137476342428dfa9149e85265799634b46e5"
+  },
+  {
+    "source": "resources/skyboxs/sky1.png",
+    "url": "assets/kch-library/skyboxs/sky1.png",
+    "sha256": "d0adec56006e6003ac69f24862dbf36d1e3e8a6d169962eb41a011d6abac4103"
+  },
+  {
+    "source": "resources/skyboxs/sky2.png",
+    "url": "assets/kch-library/skyboxs/sky2.png",
+    "sha256": "fed88e977fb4e841395dd257f752ed02cfea3a7f95a38b4c0110d8a5208f82ed"
+  },
+  {
+    "source": "resources/skyboxs/brightpurple/Back.png",
+    "url": "assets/kch-library/skyboxs/brightpurple/Back.png",
+    "sha256": "a346a9026380909cc4800f12e0d06f6da14d67393398be94d256f130000a202c"
+  },
+  {
+    "source": "resources/skyboxs/brightpurple/Down.png",
+    "url": "assets/kch-library/skyboxs/brightpurple/Down.png",
+    "sha256": "d8c77001cd8ce7ff44c3d8bf6969cceaffc4920ee0718639cf080b1cd1655f08"
+  },
+  {
+    "source": "resources/skyboxs/brightpurple/front.png",
+    "url": "assets/kch-library/skyboxs/brightpurple/front.png",
+    "sha256": "8bd83b2bcf108497b55c93b1f55331cb2b56e3e439770a3ef517b3e8d8aaa1a8"
+  },
+  {
+    "source": "resources/skyboxs/brightpurple/left.png",
+    "url": "assets/kch-library/skyboxs/brightpurple/left.png",
+    "sha256": "82c1bb01bfd4f0f9164eed26f71e552ca1b9f2dbf84e9287aa7908afd6a96535"
+  },
+  {
+    "source": "resources/skyboxs/brightpurple/right.png",
+    "url": "assets/kch-library/skyboxs/brightpurple/right.png",
+    "sha256": "b05e4044343fc2e13f571b3a0f7102e56b5b6be8ac70bc1684faacd3d42df6ef"
+  },
+  {
+    "source": "resources/skyboxs/brightpurple/up.png",
+    "url": "assets/kch-library/skyboxs/brightpurple/up.png",
+    "sha256": "dbdc8e765bf291cd540c13aea65b28c3e45d31ed2c4a926211301fd023f2364d"
+  },
+  {
+    "source": "resources/skyboxs/paintedblue/back-min.png",
+    "url": "assets/kch-library/skyboxs/paintedblue/back-min.png",
+    "sha256": "f93be923c038e7f1c580076fa763e0c323a0ba268f398bec48c9405b061c3adb"
+  },
+  {
+    "source": "resources/skyboxs/paintedblue/down-min.png",
+    "url": "assets/kch-library/skyboxs/paintedblue/down-min.png",
+    "sha256": "5c8f6c2562fe28718d1467b0f67c68b761cb69ca2cd809d52e9e1fca41a472e2"
+  },
+  {
+    "source": "resources/skyboxs/paintedblue/front-min.png",
+    "url": "assets/kch-library/skyboxs/paintedblue/front-min.png",
+    "sha256": "cfce671ab1d7d7c75f53cc899627877ec1b838867bf9433c0b2e466b139d4701"
+  },
+  {
+    "source": "resources/skyboxs/paintedblue/left-min.png",
+    "url": "assets/kch-library/skyboxs/paintedblue/left-min.png",
+    "sha256": "8dd89a43e3ddfbca1fa7caab02d1f86f3004ac0384ac1a1b11c04ce9e1c197e9"
+  },
+  {
+    "source": "resources/skyboxs/paintedblue/right-min.png",
+    "url": "assets/kch-library/skyboxs/paintedblue/right-min.png",
+    "sha256": "ee554daabccc3db77bfbdea6069ab308133ae24ecdd9b10fed07b89a61cde2d6"
+  },
+  {
+    "source": "resources/skyboxs/paintedblue/up-min.png",
+    "url": "assets/kch-library/skyboxs/paintedblue/up-min.png",
+    "sha256": "235890b6470b125716e29c43d83278649fa3844cf1b7ed7973f400c4576e95c7"
+  },
+  {
+    "source": "resources/skyboxs/purpleblack/back.jpg",
+    "url": "assets/kch-library/skyboxs/purpleblack/back.jpg",
+    "sha256": "bfc8819876424134ebc452e5af2d4766f40caf38033bb91a4ba67cce95d3bc29"
+  },
+  {
+    "source": "resources/skyboxs/purpleblack/down.jpg",
+    "url": "assets/kch-library/skyboxs/purpleblack/down.jpg",
+    "sha256": "fc61da4595df3f60da9bcec2e48eeeddf10e9f74f84b5792c68b63835b0e76aa"
+  },
+  {
+    "source": "resources/skyboxs/purpleblack/front.jpg",
+    "url": "assets/kch-library/skyboxs/purpleblack/front.jpg",
+    "sha256": "30916b1174c7f5be07d52d1f5be6729eafbe4fcf60467f0ae91a69eb546145eb"
+  },
+  {
+    "source": "resources/skyboxs/purpleblack/left.jpg",
+    "url": "assets/kch-library/skyboxs/purpleblack/left.jpg",
+    "sha256": "762bc031070892d2e70dd9c1c2446ce829e4ce51548caeaed3ac971d6adb2ce5"
+  },
+  {
+    "source": "resources/skyboxs/purpleblack/right.jpg",
+    "url": "assets/kch-library/skyboxs/purpleblack/right.jpg",
+    "sha256": "a287516abfa91b256d7305fb34810c35b4be8a3200cb9774afa23ee8a648405c"
+  },
+  {
+    "source": "resources/skyboxs/purpleblack/up.jpg",
+    "url": "assets/kch-library/skyboxs/purpleblack/up.jpg",
+    "sha256": "f88981b84c19594ba9e66a2b072fc695fa5d416989ebfb903807c32dc884222e"
+  },
+  {
+    "source": "resources/skyboxs/redblack/back.jpg",
+    "url": "assets/kch-library/skyboxs/redblack/back.jpg",
+    "sha256": "9b6c44c6760672ec59ce88de3116eaebb96cc2f38acb8daca922180e6043cb9f"
+  },
+  {
+    "source": "resources/skyboxs/redblack/down.jpg",
+    "url": "assets/kch-library/skyboxs/redblack/down.jpg",
+    "sha256": "b8042e469046392a9bb461b2dd472897757e27e1227e8de91ed31e5b900c90af"
+  },
+  {
+    "source": "resources/skyboxs/redblack/front.jpg",
+    "url": "assets/kch-library/skyboxs/redblack/front.jpg",
+    "sha256": "e0052a397bbefdeb69e431ef82392935eb5bb2cdd0eaf1af50146a8f288404c4"
+  },
+  {
+    "source": "resources/skyboxs/redblack/left.jpg",
+    "url": "assets/kch-library/skyboxs/redblack/left.jpg",
+    "sha256": "f21059630cb65221a0923d53a1a2a0062197eed78f7323fecd44be01b66b2c64"
+  },
+  {
+    "source": "resources/skyboxs/redblack/right.jpg",
+    "url": "assets/kch-library/skyboxs/redblack/right.jpg",
+    "sha256": "1009e1fc1cae7841a1d90a91627b9bed1b8c8d4ac213e734d13f21b304d128ba"
+  },
+  {
+    "source": "resources/skyboxs/redblack/up.jpg",
+    "url": "assets/kch-library/skyboxs/redblack/up.jpg",
+    "sha256": "07dd6c4ed3e6e54a1b7f8ea00385ddc9a5fb2a69e922a66347d5bb26967308ce"
+  },
+  {
+    "source": "resources/crosshairs/1000038836.png",
+    "url": "assets/kch-library/crosshairs/1000038836.png",
+    "sha256": "0ceafcabefcc2d0a4a3669500ee4507e901acc5df31315edeb30f120720d7e7b"
+  },
+  {
+    "source": "resources/crosshairs/3dgifmaker67263.gif",
+    "url": "assets/kch-library/crosshairs/3dgifmaker67263.gif",
+    "sha256": "dc59ceb641be9e46995e974708c6626242961b9dacbd030bed064eb14a32d254"
+  },
+  {
+    "source": "resources/crosshairs/Crosshair_White.png",
+    "url": "assets/kch-library/crosshairs/Crosshair_White.png",
+    "sha256": "7f5ab82bad27c64819fa2c955b6cc986393232a394fed2060a23805dd3039410"
+  },
+  {
+    "source": "resources/crosshairs/Crosshair.png",
+    "url": "assets/kch-library/crosshairs/Crosshair.png",
+    "sha256": "a5a3af2e4894175d19afcfdc61ea1b22bda059b00d8c5c2de3a16dc44bb7c6da"
+  },
+  {
+    "source": "resources/crosshairs/green.png",
+    "url": "assets/kch-library/crosshairs/green.png",
+    "sha256": "5b0aea88d3b5d15c25c43fa284eeb74827e3a900eaea0e0b3ebad510c809eb9a"
+  },
+  {
+    "source": "resources/crosshairs/HALO.png",
+    "url": "assets/kch-library/crosshairs/HALO.png",
+    "sha256": "c1468928b325eb1c0d138c3cc4467f0263204dc28b5716357e4ffdf5d67c7e3d"
+  },
+  {
+    "source": "resources/crosshairs/Hitmarker.png",
+    "url": "assets/kch-library/crosshairs/Hitmarker.png",
+    "sha256": "cbfecef6ef32d8d36494c5246f9e949b86f9386344e64745a91a600dcf0bf251"
+  },
+  {
+    "source": "resources/crosshairs/i6ev43wv4r681.gif",
+    "url": "assets/kch-library/crosshairs/i6ev43wv4r681.gif",
+    "sha256": "03de75e12a834713c565f4ed5e87f7a630e4f7649960f2f7fc3fc11c11faee4c"
+  },
+  {
+    "source": "resources/crosshairs/image (1).png",
+    "url": "assets/kch-library/crosshairs/image%20%281%29.png",
+    "sha256": "e5f9e6520820eb08283499f21a9c5c3bc945ff4408c344149955c42b2e0f12f9"
+  },
+  {
+    "source": "resources/crosshairs/image (10).png",
+    "url": "assets/kch-library/crosshairs/image%20%2810%29.png",
+    "sha256": "d439f11fd798caf4b39e912a26397fec7f20a6282bfc7142aee8f4eaaff5dcbf"
+  },
+  {
+    "source": "resources/crosshairs/image (11).png",
+    "url": "assets/kch-library/crosshairs/image%20%2811%29.png",
+    "sha256": "c4880eb0ef19cf438f1d51b4dd85240ec5f93d2793c7ce0e3f6bf1efedcad38a"
+  },
+  {
+    "source": "resources/crosshairs/image (12).png",
+    "url": "assets/kch-library/crosshairs/image%20%2812%29.png",
+    "sha256": "958422f5e7ae1a448df0e4a88e47f1df884711f392b2e7641ea6d91be4cb48f5"
+  },
+  {
+    "source": "resources/crosshairs/image (14).png",
+    "url": "assets/kch-library/crosshairs/image%20%2814%29.png",
+    "sha256": "faf64339e271d2fe4cfd785dd9943c841b5e2a89215f147c0484b47812ce9c85"
+  },
+  {
+    "source": "resources/crosshairs/image (2).png",
+    "url": "assets/kch-library/crosshairs/image%20%282%29.png",
+    "sha256": "5f8a4bce2d0c9f1d73394651f9e6f6a30385f06bfc4fbeda8c29aa3af752c6d1"
+  },
+  {
+    "source": "resources/crosshairs/image (3).png",
+    "url": "assets/kch-library/crosshairs/image%20%283%29.png",
+    "sha256": "fd62800b2c70cbfedaaf4d4862d8a3cedb2f4483ee7543011391513793c91b20"
+  },
+  {
+    "source": "resources/crosshairs/image (4).png",
+    "url": "assets/kch-library/crosshairs/image%20%284%29.png",
+    "sha256": "41719607ffeada4ba40394ff4d1dc8b04036caf7407db87df772c7288f567f78"
+  },
+  {
+    "source": "resources/crosshairs/image (5).png",
+    "url": "assets/kch-library/crosshairs/image%20%285%29.png",
+    "sha256": "36ae816ce211651ca2465ad350dd1a4d3a9761fe1d200db95a5f4d24d2804c9e"
+  },
+  {
+    "source": "resources/crosshairs/image (6).png",
+    "url": "assets/kch-library/crosshairs/image%20%286%29.png",
+    "sha256": "3596f91c605d3e300ccea445b1ead9a8f16c7464890b962495b0c47913b948d5"
+  },
+  {
+    "source": "resources/crosshairs/image (7).png",
+    "url": "assets/kch-library/crosshairs/image%20%287%29.png",
+    "sha256": "7b139233e37b74863764f254737ddebcfadf65ea2a1114549dd79dd6f5e28bba"
+  },
+  {
+    "source": "resources/crosshairs/image (8).png",
+    "url": "assets/kch-library/crosshairs/image%20%288%29.png",
+    "sha256": "614d5996451ccbcf3cb0fabbdc4ae1db776e8ab2be75ada034d352e052307dd1"
+  },
+  {
+    "source": "resources/crosshairs/image (9).png",
+    "url": "assets/kch-library/crosshairs/image%20%289%29.png",
+    "sha256": "1bc8112a3ff42b7bdf273c113fb336bdd7f93a372ed5937bc9191f2f527fd086"
+  },
+  {
+    "source": "resources/crosshairs/image-2.png",
+    "url": "assets/kch-library/crosshairs/image-2.png",
+    "sha256": "f8e30a625730e476571a920581569b3e0c378231638b1dabf536bd0b6dda03df"
+  },
+  {
+    "source": "resources/crosshairs/image.png",
+    "url": "assets/kch-library/crosshairs/image.png",
+    "sha256": "845e782f2da370e5e9408a0b5c561aadb823e5986fd9409df1abbe76ed853d9c"
+  },
+  {
+    "source": "resources/crosshairs/image(13).png",
+    "url": "assets/kch-library/crosshairs/image%2813%29.png",
+    "sha256": "056e324a9fe5e37a84aa16d3d80b701803c11341ab7a5b10de3d446b4f8ccfce"
+  },
+  {
+    "source": "resources/crosshairs/image0.png",
+    "url": "assets/kch-library/crosshairs/image0.png",
+    "sha256": "f80b2937022b90d47910b03eaf10e9578adb6666dd963b6e3a875cfa4fe06121"
+  },
+  {
+    "source": "resources/crosshairs/KovaaK-Crosshair_10.png",
+    "url": "assets/kch-library/crosshairs/KovaaK-Crosshair_10.png",
+    "sha256": "485aefee09ea9d14e2c46c19c4f5859fc2d9ecbb8302f1ecccf73302a3fdfadd"
+  },
+  {
+    "source": "resources/crosshairs/KovaaK-Crosshair_5.png",
+    "url": "assets/kch-library/crosshairs/KovaaK-Crosshair_5.png",
+    "sha256": "148c53677c4e6efe15c56782c5a5f4cf95f255e7db81c4021d5f4cfde073e68a"
+  },
+  {
+    "source": "resources/crosshairs/pixil-frame-0.png",
+    "url": "assets/kch-library/crosshairs/pixil-frame-0.png",
+    "sha256": "4ce925c1d66f32b2425889f52bc52773ecbf15c5ecd4c342ee1145b67b3d8e73"
+  },
+  {
+    "source": "resources/crosshairs/plusbig.png",
+    "url": "assets/kch-library/crosshairs/plusbig.png",
+    "sha256": "4769399bb6ed1730c3785b67c4fc2d6792ea0f611767c9f4095c816a7e53cf08"
+  },
+  {
+    "source": "resources/crosshairs/purple-dot.png",
+    "url": "assets/kch-library/crosshairs/purple-dot.png",
+    "sha256": "01a893c08e4d123420c7c1bccad27823d8781f59bee93e63681110ece27aa42c"
+  },
+  {
+    "source": "resources/crosshairs/Red_Cross_Hollow.png",
+    "url": "assets/kch-library/crosshairs/Red_Cross_Hollow.png",
+    "sha256": "6f2ab5a9fb49dc250b27bf78eb9eef16bbe440972aeef95541a6d5bdf987f6a1"
+  },
+  {
+    "source": "resources/crosshairs/rgbcrosshair.gif",
+    "url": "assets/kch-library/crosshairs/rgbcrosshair.gif",
+    "sha256": "fd8aad966c7292881d202c09d335f5e5f2800f4356b2f65bc566a9ca17944a51"
+  },
+  {
+    "source": "resources/crosshairs/sayaplayerUpdated2.png",
+    "url": "assets/kch-library/crosshairs/sayaplayerUpdated2.png",
+    "sha256": "a1f88db65fd86a3896e734a21b09b3fe19fa960c7b629524f3642e74ad463c27"
+  },
+  {
+    "source": "resources/crosshairs/scope.png",
+    "url": "assets/kch-library/crosshairs/scope.png",
+    "sha256": "d2e9aff1401fbaa8b1ec0fea9e92dea4f49b67bbf748b78f611beb73cfa614a7"
+  },
+  {
+    "source": "resources/crosshairs/sukaks2.png",
+    "url": "assets/kch-library/crosshairs/sukaks2.png",
+    "sha256": "c57a1f33d13c2979bff8bce4b1728156c8d593204b78d01e38e9beb4cf72314d"
+  },
+  {
+    "source": "resources/crosshairs/Untitled_drawing_3.png",
+    "url": "assets/kch-library/crosshairs/Untitled_drawing_3.png",
+    "sha256": "418ec60a7e93928c9956b29d62fe8bcb4c86051e14972e62040d95d3cb344b8e"
+  },
+  {
+    "source": "resources/crosshairs/white-dot.png",
+    "url": "assets/kch-library/crosshairs/white-dot.png",
+    "sha256": "895526ca2e0b32deb04513d550853db10f32d3ec4ecd9b4cb51bdfa6b48f44ca"
+  },
+  {
+    "source": "resources/crosshairs/xh-42a6a-0.gif",
+    "url": "assets/kch-library/crosshairs/xh-42a6a-0.gif",
+    "sha256": "532bc35149939673c32301886d67665951ffcfcbee2237cce973c348acd35f54"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__Earth__.37abd171.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__Earth__.37abd171.mp3",
+    "sha256": "38955386dbe15c996b110dff097bba47bb43c114aaad55985122040569b07577"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__Grass__.9d721edd.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__Grass__.9d721edd.mp3",
+    "sha256": "38955386dbe15c996b110dff097bba47bb43c114aaad55985122040569b07577"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__hit__.200043fa.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__hit__.200043fa.mp3",
+    "sha256": "d1dc9980a670ff824f6cfc739cf06c1436ace081a89f69bb12ddfc88035d1490"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill__1.623ec38b.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill__1.623ec38b.mp3",
+    "sha256": "29ce82faece3aa36f4d2226a95b45c87d0b81aa4d94a186bcc7f20463032c052"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill__2.8ffe9342.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill__2.8ffe9342.mp3",
+    "sha256": "d87dbd75e71becb64681b6048f5798f32f8e0a496b2517190ac4584776d1cc31"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill__3.ba83d756.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill__3.ba83d756.mp3",
+    "sha256": "b7db1354c7f8895346a4389c5bcf5e5d29b8703c46eb300cd4507fa702ca4195"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill__4.08568f50.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill__4.08568f50.mp3",
+    "sha256": "9843e0e784a4e766ef1fd4bf25a2343b25d344182139570ac0c558f103626648"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill__5.cf529154.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill__5.cf529154.mp3",
+    "sha256": "36db851e930bfdabc842d4ceff3a4a44d786aad798e6b23b3ec64c7007ec06d0"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill1__.623ec38b.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill1__.623ec38b.mp3",
+    "sha256": "e6b68c16463bf838605db36fdedde2a0a4956f32310cee38d46b8b93866f7204"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill2__.8ffe9342.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill2__.8ffe9342.mp3",
+    "sha256": "44970a94a049d9d3fdd2b86bcae23350693db7aa274dd79fcd089130d75814db"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill3__.ba83d756.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill3__.ba83d756.mp3",
+    "sha256": "a148edeac10feb02aaa203cadda242ca869437eafa3bc1350d406e9a9bb955ba"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill4__.08568f50.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill4__.08568f50.mp3",
+    "sha256": "08ce3d82b1a0f6502d9d9bea10969ca39783a030157f9ebc69a2145eb9ad18d6"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__kill5__.cf529154.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__kill5__.cf529154.mp3",
+    "sha256": "93cfe5fe7519423f12b96bd43351ab9c9c4b60e8f73fc49d5e96f858919730f2"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__Mud__.44d00950.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__Mud__.44d00950.mp3",
+    "sha256": "8dd9fdd6ade2de5c68ad2bb2f2819a30b65ce983ee1f7302576753f4ed2da532"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__Sand__.10a59d13.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__Sand__.10a59d13.mp3",
+    "sha256": "4597179060a26ab059a8d35a0a1846a7ba2e1b7f0f00c189a6f4b7864a4c336c"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__Stone__.a9cedce8.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__Stone__.a9cedce8.mp3",
+    "sha256": "386700f3688abf8cef02eb8e0b005e57c8e67e70e776f8c0c84866a44575e936"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__use__.5421e46b.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__use__.5421e46b.mp3",
+    "sha256": "11a5c17404266f536ff19f4c05d4a1bb4463f216e37783df872d76283e1b9add"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__use__.5ab6f364.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__use__.5ab6f364.mp3",
+    "sha256": "6b5a18f852720006a38471e25773d588c065e806bd96bd1864b04e03cc1bbe12"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__use__.6f884eb5.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__use__.6f884eb5.mp3",
+    "sha256": "6b5a18f852720006a38471e25773d588c065e806bd96bd1864b04e03cc1bbe12"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__use__.8dd49954.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__use__.8dd49954.mp3",
+    "sha256": "6b5a18f852720006a38471e25773d588c065e806bd96bd1864b04e03cc1bbe12"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__use__.a6197a4d.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__use__.a6197a4d.mp3",
+    "sha256": "6b5a18f852720006a38471e25773d588c065e806bd96bd1864b04e03cc1bbe12"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__use__.cbf719c0.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__use__.cbf719c0.mp3",
+    "sha256": "00a06818ebfd5d5a0594166deb3bd7700f989582f6407faffd2068b4518e772f"
+  },
+  {
+    "source": "resources/sounds/media pack-1/__use__.fd944232.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-1/__use__.fd944232.mp3",
+    "sha256": "9000cbe17f373a70d0ecb2ad5bda7b020c965515b831c94870261442b375ceb1"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__hit__.200043fa.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__hit__.200043fa.mp3",
+    "sha256": "9c55a0d91b2d9ab8968e7f6fa20b2d46ebe2504ee91b1ad467e40d1897853ee0"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__kill1__.623ec38b.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__kill1__.623ec38b.mp3",
+    "sha256": "c04072e72ba2fc934c2c12f20b076c56fdef29125fc6f3f6eebacb5be00b1432"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__kill2__.8ffe9342.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__kill2__.8ffe9342.mp3",
+    "sha256": "c04072e72ba2fc934c2c12f20b076c56fdef29125fc6f3f6eebacb5be00b1432"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__kill3__.ba83d756.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__kill3__.ba83d756.mp3",
+    "sha256": "c04072e72ba2fc934c2c12f20b076c56fdef29125fc6f3f6eebacb5be00b1432"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__kill4__.08568f50.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__kill4__.08568f50.mp3",
+    "sha256": "c04072e72ba2fc934c2c12f20b076c56fdef29125fc6f3f6eebacb5be00b1432"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__kill5__.cf529154.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__kill5__.cf529154.mp3",
+    "sha256": "88f0b54e947672e3f5a5b6ee067be9c705c79c9ca725110d19d9a39df268b063"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__use__.5421e46b.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__use__.5421e46b.mp3",
+    "sha256": "5b086f4b190f7ce1cc38ae9f518c1499b3bdf4b5ae3d564ddd25bb520f8eee05"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__use__.5ab6f364 (2).mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__use__.5ab6f364%20%282%29.mp3",
+    "sha256": "7629885b88d389f57534541f553fbac9279aa5315c7c713bd5591b833e9ad44d"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__use__.5ab6f364.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__use__.5ab6f364.mp3",
+    "sha256": "39117452fa4a656a4e6b871c76538c6ff51c46a352345a6999df1632e5753d9e"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__use__.6f884eb5.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__use__.6f884eb5.mp3",
+    "sha256": "94e4063bdd4831d0a92f59a398511687b51e2da0c89d45e098b6bad0ef01fa3e"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__use__.8dd49954.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__use__.8dd49954.mp3",
+    "sha256": "9ee6d58b8c43cacbbe48ed9c1b4f258e8097e4a7a3bea0c8181617cf0969652d"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__use__.a6197a4d.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__use__.a6197a4d.mp3",
+    "sha256": "c3af04db39a925173315348f78cf662373c5d965bc03672f20487110180234a6"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__whoosh__.634f7dda.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__whoosh__.634f7dda.mp3",
+    "sha256": "4e651a5641d2ac2d86bd4dcef9d6b99eabc56b28bc7b305917a4639ffa3a05d2"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__wound1__.531f0649.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__wound1__.531f0649.mp3",
+    "sha256": "ba07cea193c49194992e4da8403520a706cbc2eeb338accf29f35876ce77d01f"
+  },
+  {
+    "source": "resources/sounds/media pack-2/__wound2__.6d084558.mp3",
+    "url": "assets/kch-library/sounds/media%20pack-2/__wound2__.6d084558.mp3",
+    "sha256": "ba07cea193c49194992e4da8403520a706cbc2eeb338accf29f35876ce77d01f"
+  },
+  {
+    "source": "resources/textures/Iced_Emerald.png",
+    "url": "assets/models/kch/textures/packs/Iced_Emerald.png",
+    "sha256": "8996aaab937d93c81947156023b32eb5368a05b8fbbf5492dbd30a87b4a2483a"
+  },
+  {
+    "source": "resources/textures/image (1).png",
+    "url": "assets/models/kch/textures/packs/image%20%281%29.png",
+    "sha256": "92e22725c99b37696ec6e51b6521825f06613e8ce6e8ed5253aecc71cd66d9b8"
+  },
+  {
+    "source": "resources/textures/image (10).png",
+    "url": "assets/models/kch/textures/packs/image%20%2810%29.png",
+    "sha256": "40ec52336e90849ea023b32e83fb7d5b548cf9c00efbf5cfc7dfa3981f79b8cc"
+  },
+  {
+    "source": "resources/textures/image (11).png",
+    "url": "assets/models/kch/textures/packs/image%20%2811%29.png",
+    "sha256": "69818f9184ee5b43c006ae2bb64461765414be378ac268e358a68a9f46a8700a"
+  },
+  {
+    "source": "resources/textures/image (12).png",
+    "url": "assets/models/kch/textures/packs/image%20%2812%29.png",
+    "sha256": "10e0b4726ffb438d8b0e0b8f85ef4b6cb4241daa3b220b12ec75ede9bbb4e2bc"
+  },
+  {
+    "source": "resources/textures/image (13).png",
+    "url": "assets/models/kch/textures/packs/image%20%2813%29.png",
+    "sha256": "b935a83d836e5eb9507bfd516bb1781c255fcee891aaba574a0709e47dcfd420"
+  },
+  {
+    "source": "resources/textures/image (14).png",
+    "url": "assets/models/kch/textures/packs/image%20%2814%29.png",
+    "sha256": "fa8e825f18e99f751a9cd776b742dbe253394610ddb2d2a65e08715c47e7ce53"
+  },
+  {
+    "source": "resources/textures/image (15).png",
+    "url": "assets/models/kch/textures/packs/image%20%2815%29.png",
+    "sha256": "18273accc893fec50749047f65ec16e876d97c69f9ed1e2f297bc7595afcdb19"
+  },
+  {
+    "source": "resources/textures/image (16).png",
+    "url": "assets/models/kch/textures/packs/image%20%2816%29.png",
+    "sha256": "b5ac9f23186b4258ef0c9e93f4a8c01be0866618b564abb5fa76ac372ee10440"
+  },
+  {
+    "source": "resources/textures/image (17).png",
+    "url": "assets/models/kch/textures/packs/image%20%2817%29.png",
+    "sha256": "ff5263f3a39c7b4d368ed033a3391293e048b789d6952cf943a6e584bcedd172"
+  },
+  {
+    "source": "resources/textures/image (18).png",
+    "url": "assets/models/kch/textures/packs/image%20%2818%29.png",
+    "sha256": "b3e4be5cc8ed0d8b6ec24486965f0c838833bf0cc6f656d630b1ec35e9ed49da"
+  },
+  {
+    "source": "resources/textures/image (2).png",
+    "url": "assets/models/kch/textures/packs/image%20%282%29.png",
+    "sha256": "523f0a9f4fd8c9e43fd7a498020afaf510e0b317a9e963dcc3d4a78172df3d06"
+  },
+  {
+    "source": "resources/textures/image (3).png",
+    "url": "assets/models/kch/textures/packs/image%20%283%29.png",
+    "sha256": "c6ea4004d74aef93c0ee2d54b26e1c9c4c2069233d59e93d1e5ef3b3643f1710"
+  },
+  {
+    "source": "resources/textures/image (4).png",
+    "url": "assets/models/kch/textures/packs/image%20%284%29.png",
+    "sha256": "d4e1975c843ef4774da7129f02b502be8b341736cd178e4778c5d503ce4a8e82"
+  },
+  {
+    "source": "resources/textures/image (5).png",
+    "url": "assets/models/kch/textures/packs/image%20%285%29.png",
+    "sha256": "ec4c7e3bb1355a8e25fa577169a74540533e2a9949d28501244706a1096240fd"
+  },
+  {
+    "source": "resources/textures/image (6).png",
+    "url": "assets/models/kch/textures/packs/image%20%286%29.png",
+    "sha256": "35f487b789cac86a433ed89c8d2a650c48a840bebebe952ce752655def9cd195"
+  },
+  {
+    "source": "resources/textures/image (7).png",
+    "url": "assets/models/kch/textures/packs/image%20%287%29.png",
+    "sha256": "ecc6d790c7ab6bed052b171adfc4ab9de408dd29ed749f268968ae0e8d4ac8fe"
+  },
+  {
+    "source": "resources/textures/image (8).png",
+    "url": "assets/models/kch/textures/packs/image%20%288%29.png",
+    "sha256": "9fad7f2b5aaf13f24668d9cdf76e1d069e71ac78fb636a36e710a4171acd3f46"
+  },
+  {
+    "source": "resources/textures/image (9).png",
+    "url": "assets/models/kch/textures/packs/image%20%289%29.png",
+    "sha256": "83ea3612751ef2eebbb1ea4798501f60f00f13ee7f847d060b464b6ea771ae1b"
+  },
+  {
+    "source": "resources/textures/image.png",
+    "url": "assets/models/kch/textures/packs/image.png",
+    "sha256": "1b5772699b86f205882697893ea10d011f8f85bd88d00c6c82c4029adc3175bb"
+  },
+  {
+    "source": "resources/textures/imagine1_updated.png",
+    "url": "assets/models/kch/textures/packs/imagine1_updated.png",
+    "sha256": "95ba049bfbea7ecad560f4fcd411eeca790ff6c282a99932f868d7071783ad76"
+  },
+  {
+    "source": "resources/textures/img(19).webp",
+    "url": "assets/models/kch/textures/packs/img%2819%29.webp",
+    "sha256": "76dc45e3a775cfe68846f0cb74de7c67c80ecdaa41026cc37795a09b2054799c"
+  },
+  {
+    "source": "resources/textures/Matrix.png",
+    "url": "assets/models/kch/textures/packs/Matrix.png",
+    "sha256": "5d8423f65b124a31b2556ac0e04dbfe9af8d70ae7e80e68093e647471b1ed856"
+  },
+  {
+    "source": "resources/textures/texture.png",
+    "url": "assets/models/kch/textures/packs/texture.png",
+    "sha256": "181178711ddf45dde54e232ab2faa91ffeaee179f37f5eaefe1a3dad32e0a073"
+  },
+  {
+    "source": "resources/textures/texture3.png",
+    "url": "assets/models/kch/textures/packs/texture3.png",
+    "sha256": "8db1d547e6e4805e366c701ba7b1bf5c1ed1af3804909af1f1d3687e537ded9f"
+  },
+  {
+    "source": "resources/textures/texture5.png",
+    "url": "assets/models/kch/textures/packs/texture5.png",
+    "sha256": "da7dd9363318399481e96e518941d2595e86ba64a71403d16e4438f5aa7933a4"
+  },
+  {
+    "source": "resources/obs-page/bgc.gif",
+    "url": "assets/kch-library/obs-page/bgc.gif",
+    "sha256": "495e5ac9526158ac95bdea62ac382a8585f918d66be134b52f1a2b4dfd65a6ee"
+  },
+  {
+    "source": "resources/obs-page/internxtscan.png",
+    "url": "assets/kch-library/obs-page/internxtscan.png",
+    "sha256": "4881970bb830eb898219387a3d3dcfc65cd4b3c27ff66da9ac78371d663d9436"
+  },
+  {
+    "source": "resources/obs-page/Minecraft.ttf",
+    "url": "assets/kch-library/obs-page/Minecraft.ttf",
+    "sha256": "bd47314d301e50ff4d109bff28dfcf637cb7eb13945480259878b848875acc65"
+  },
+  {
+    "source": "resources/obs-page/Obsidian Client.png",
+    "url": "assets/kch-library/obs-page/Obsidian%20Client.png",
+    "sha256": "f13b41628d7219dfddf85403e37b94d804515cc8e99bcf1e43d059d5d8a4bab9"
+  },
+  {
+    "source": "resources/obs-page/opentipscan.png",
+    "url": "assets/kch-library/obs-page/opentipscan.png",
+    "sha256": "66a0bc61e389d87506fd4e93d04842b409319870d49fc1131fd2d3a985feabb0"
+  },
+  {
+    "source": "resources/obs-page/Pixelogist.ttf",
+    "url": "assets/kch-library/obs-page/Pixelogist.ttf",
+    "sha256": "99c8e9c7fbd3cf22b7ae168222d657949abcd8c3e579ce3a2b94017bf44f3c3a"
+  },
+  {
+    "source": "resources/obs-page/sf-bgc.gif",
+    "url": "assets/kch-library/obs-page/sf-bgc.gif",
+    "sha256": "4f530ddee8e9c08d00986ee9eb40dd79ff7a41b6e558badb1c566935a0b20d10"
+  },
+  {
+    "source": "resources/obs-page/virustotalscan.png",
+    "url": "assets/kch-library/obs-page/virustotalscan.png",
+    "sha256": "06135f1f07aa71ba308b3f4e598f86c9761af22633d9ce5ac0497d7fa848d0ab"
+  },
+  {
+    "source": "resources/css-imgs/at the beach_ingame.webp",
+    "url": "assets/kch-library/css-imgs/at%20the%20beach_ingame.webp",
+    "sha256": "fe5b7e9c25468f7aafb89b880beaaffc8ded76815845ff24bd41b63025af171f"
+  },
+  {
+    "source": "resources/css-imgs/at the beach.webp",
+    "url": "assets/kch-library/css-imgs/at%20the%20beach.webp",
+    "sha256": "26ef0db4b853e8e85b773ff74ccd853491e1f681a40f9a76ffa7160ff9da9e34"
+  },
+  {
+    "source": "resources/css-imgs/B L A N K_ingame.webp",
+    "url": "assets/kch-library/css-imgs/B%20L%20A%20N%20K_ingame.webp",
+    "sha256": "61a5fb9a2327dbfaa24e9422bf34c354c22e900e59c41f604b984a4f17d76302"
+  },
+  {
+    "source": "resources/css-imgs/B L A N K.webp",
+    "url": "assets/kch-library/css-imgs/B%20L%20A%20N%20K.webp",
+    "sha256": "51b039224d665a87efdd250340913464a6711dccda88bf58e50fce5281f78d7c"
+  },
+  {
+    "source": "resources/css-imgs/black water_ingame.webp",
+    "url": "assets/kch-library/css-imgs/black%20water_ingame.webp",
+    "sha256": "a90d92900563b9ec80b791e9aeb60aaabb4f36cf9a1bbe3408d8985ac5a4a23f"
+  },
+  {
+    "source": "resources/css-imgs/black water.webp",
+    "url": "assets/kch-library/css-imgs/black%20water.webp",
+    "sha256": "af87426753669d6c060a3e40a13c2682faea438b09125bec1886a1de5693e482"
+  },
+  {
+    "source": "resources/css-imgs/Blossom_Dream_ingame.webp",
+    "url": "assets/kch-library/css-imgs/Blossom_Dream_ingame.webp",
+    "sha256": "93a3022843661c64e85860bc26f0d230462e6092d71fc62b06a8e6fc1e291b0e"
+  },
+  {
+    "source": "resources/css-imgs/Blossom_Dream.webp",
+    "url": "assets/kch-library/css-imgs/Blossom_Dream.webp",
+    "sha256": "fc59555bf4e06fb186e15f36a400e055d8813b05456b667bb9915b8abee3e312"
+  },
+  {
+    "source": "resources/css-imgs/cat gamer_ingame.webp",
+    "url": "assets/kch-library/css-imgs/cat%20gamer_ingame.webp",
+    "sha256": "6fb33a6d2f53e78a67d19ad0e6cdbb6768b54b703b37c51f279726161b820162"
+  },
+  {
+    "source": "resources/css-imgs/cat gamer.webp",
+    "url": "assets/kch-library/css-imgs/cat%20gamer.webp",
+    "sha256": "4edbccae8e7d817b23ea0bb86822c6c61acd18ee892cdcd6b457c757505d8f78"
+  },
+  {
+    "source": "resources/css-imgs/cozygrey_game.png",
+    "url": "assets/kch-library/css-imgs/cozygrey_game.png",
+    "sha256": "a3f9ccea639b4facc5ca186c876375fbbfd675ca0603c010194085cd5629120e"
+  },
+  {
+    "source": "resources/css-imgs/cozygrey.png",
+    "url": "assets/kch-library/css-imgs/cozygrey.png",
+    "sha256": "1a6a6e1ead3cf0db6cc2dffc79eb19233d6eefd549a5286218dab8bcafaed407"
+  },
+  {
+    "source": "resources/css-imgs/cs2 v0.1_ingame.webp",
+    "url": "assets/kch-library/css-imgs/cs2%20v0.1_ingame.webp",
+    "sha256": "e452ef0df272944ca0d3d521edfe5af19d895e11f38f723d75e367a20881ed42"
+  },
+  {
+    "source": "resources/css-imgs/cs2 v0.1.webp",
+    "url": "assets/kch-library/css-imgs/cs2%20v0.1.webp",
+    "sha256": "9d7a997c0880336ef8f0023d349337d2e747005984539aac39bce694014ecad0"
+  },
+  {
+    "source": "resources/css-imgs/Curse.webp",
+    "url": "assets/kch-library/css-imgs/Curse.webp",
+    "sha256": "a69e2f7a1a31429eafdabeea42b1bfb2300222bc427274810b153ac39cbeafda"
+  },
+  {
+    "source": "resources/css-imgs/cybercity_ingame.webp",
+    "url": "assets/kch-library/css-imgs/cybercity_ingame.webp",
+    "sha256": "1eb38b005cb4cea65df92d77017b2fd6cae53164f2a5967fdaf1dbc0b7aa36de"
+  },
+  {
+    "source": "resources/css-imgs/cybercity.webp",
+    "url": "assets/kch-library/css-imgs/cybercity.webp",
+    "sha256": "622092b70d558280301e34e9fea5a60f49ea81f0cc1745990812108d9ea466ba"
+  },
+  {
+    "source": "resources/css-imgs/cyberpunk_ingame.webp",
+    "url": "assets/kch-library/css-imgs/cyberpunk_ingame.webp",
+    "sha256": "3b2d55cfb2c99edc03f09908daa4ff1ac2f71273444f49a49d23b4a483e57fdd"
+  },
+  {
+    "source": "resources/css-imgs/cyberpunk.webp",
+    "url": "assets/kch-library/css-imgs/cyberpunk.webp",
+    "sha256": "3f6f360454de95dacf635127b010530111ec671707ffcdf302e2074269342923"
+  },
+  {
+    "source": "resources/css-imgs/demon_slayer.webp",
+    "url": "assets/kch-library/css-imgs/demon_slayer.webp",
+    "sha256": "d7e9bfb3b391de55795e5657cbe92eca2b4ff7acf9e4ded7144e4dc953a4a2a3"
+  },
+  {
+    "source": "resources/css-imgs/dexter.webp",
+    "url": "assets/kch-library/css-imgs/dexter.webp",
+    "sha256": "df02201598e01a75c4b80adc680aca7decb07e18abdd243436152b6ea1a78c74"
+  },
+  {
+    "source": "resources/css-imgs/Discord Dark _ingame.webp",
+    "url": "assets/kch-library/css-imgs/Discord%20Dark%20_ingame.webp",
+    "sha256": "44c567a93743ef3f5025c28b84efbf5a360e679e6c9474ef14cdbaa273dc1444"
+  },
+  {
+    "source": "resources/css-imgs/Discord Dark.webp",
+    "url": "assets/kch-library/css-imgs/Discord%20Dark.webp",
+    "sha256": "669327e48523d0eeab777e49c574754b69af0c68a500816db8e0135efb656c5a"
+  },
+  {
+    "source": "resources/css-imgs/Eternal_Grove_ingame.webp",
+    "url": "assets/kch-library/css-imgs/Eternal_Grove_ingame.webp",
+    "sha256": "fe305fd0de05cb976e77f85dcbc6fa8089701959790a95cca57c1c8030ebcf67"
+  },
+  {
+    "source": "resources/css-imgs/Eternal_Grove.webp",
+    "url": "assets/kch-library/css-imgs/Eternal_Grove.webp",
+    "sha256": "bce727f26db3746598ec13efb6333ac88beba1dceef92f4bb765bb3829c8e324"
+  },
+  {
+    "source": "resources/css-imgs/Ethereal_Bloom.webp",
+    "url": "assets/kch-library/css-imgs/Ethereal_Bloom.webp",
+    "sha256": "3c7ee9583f4736a22a99457319e3c584511b1de4a7ba347fbdd3d4198c6c2487"
+  },
+  {
+    "source": "resources/css-imgs/fallen_ingame.webp",
+    "url": "assets/kch-library/css-imgs/fallen_ingame.webp",
+    "sha256": "a9ed60fd73a437b5b981d704419e9ec0550538e9d41101cf0c2026a8fbc83d6b"
+  },
+  {
+    "source": "resources/css-imgs/fallen.webp",
+    "url": "assets/kch-library/css-imgs/fallen.webp",
+    "sha256": "e88b05136b84edf980d11a99c8349cd310642ece5c6919367c40c158c1ba2aef"
+  },
+  {
+    "source": "resources/css-imgs/goku_ingame.webp",
+    "url": "assets/kch-library/css-imgs/goku_ingame.webp",
+    "sha256": "05930046830b3b695842f22ca67a1aadc71995b3fc8ff88fedb27b1f76b358e6"
+  },
+  {
+    "source": "resources/css-imgs/goku.webp",
+    "url": "assets/kch-library/css-imgs/goku.webp",
+    "sha256": "219cfbdeb79f538311f665f395199c8bc36ed7cbf96b2f8d8a2e8d0ab482210f"
+  },
+  {
+    "source": "resources/css-imgs/jett_ingame.webp",
+    "url": "assets/kch-library/css-imgs/jett_ingame.webp",
+    "sha256": "b2c7b112a91fd9b7fc99d264a82c7bb3b87f3980c1cea869115d5704704ce870"
+  },
+  {
+    "source": "resources/css-imgs/jett.webp",
+    "url": "assets/kch-library/css-imgs/jett.webp",
+    "sha256": "e491a82a0ec4b0c87e6cf59508c2a914cb66ced486002b40a0aec50ca153bbca"
+  },
+  {
+    "source": "resources/css-imgs/Kaoruko Waguri_ingame.webp",
+    "url": "assets/kch-library/css-imgs/Kaoruko%20Waguri_ingame.webp",
+    "sha256": "2e2adea737d8af7269006f066e0971b4f2f887dd48c7a9b8da91d9da5f6d879f"
+  },
+  {
+    "source": "resources/css-imgs/Kaoruko Waguri.webp",
+    "url": "assets/kch-library/css-imgs/Kaoruko%20Waguri.webp",
+    "sha256": "67aa9beecc14d8da95bbd7993ed0a970db45e1a0fce3e7bb29ab2aaf3244b97f"
+  },
+  {
+    "source": "resources/css-imgs/monochrome_ingame.webp",
+    "url": "assets/kch-library/css-imgs/monochrome_ingame.webp",
+    "sha256": "d8353136023d4c86cdade0767ed449172719ce40c26d0171e765a49dd7564c61"
+  },
+  {
+    "source": "resources/css-imgs/Monochrome.webp",
+    "url": "assets/kch-library/css-imgs/Monochrome.webp",
+    "sha256": "1c1c11684b2e1d4949d7c4dab1007731b138d9b93c76eafe2d36b458a3819e70"
+  },
+  {
+    "source": "resources/css-imgs/neon_eclipse_ingame.webp",
+    "url": "assets/kch-library/css-imgs/neon_eclipse_ingame.webp",
+    "sha256": "aa66c08f8cb322949241a822d76d5c02300e766acad5740f4d7204c28e575799"
+  },
+  {
+    "source": "resources/css-imgs/neon_eclipse.webp",
+    "url": "assets/kch-library/css-imgs/neon_eclipse.webp",
+    "sha256": "0133b8fe145c827c8969f1c786fd9579ae8d27e3a11fabb91171274328fdd6e4"
+  },
+  {
+    "source": "resources/css-imgs/obsidian_ui_ingame.webp",
+    "url": "assets/kch-library/css-imgs/obsidian_ui_ingame.webp",
+    "sha256": "cca54d067cf247c8e61a38c0f9c33ae772008c02487e56f3c44552aba1cd297e"
+  },
+  {
+    "source": "resources/css-imgs/obsidian_ui.webp",
+    "url": "assets/kch-library/css-imgs/obsidian_ui.webp",
+    "sha256": "1984f634bda8b644a8f4bf2003ba411120a472b2414ee70409668f6776408e1f"
+  },
+  {
+    "source": "resources/css-imgs/Pixel Twilight_ingame.webp",
+    "url": "assets/kch-library/css-imgs/Pixel%20Twilight_ingame.webp",
+    "sha256": "eff74ebbf22d64dbcbd825772d4da10a8289b2737c6cea063787305c5eba1e3a"
+  },
+  {
+    "source": "resources/css-imgs/Pixel Twilight.webp",
+    "url": "assets/kch-library/css-imgs/Pixel%20Twilight.webp",
+    "sha256": "de39b371d9fba743fa90c3d47bbba666e1e3a579cf4b846f1981ab30f5ea2d2b"
+  },
+  {
+    "source": "resources/css-imgs/PurpleHour_ingame.webp",
+    "url": "assets/kch-library/css-imgs/PurpleHour_ingame.webp",
+    "sha256": "36b09fc1b6e29088efc35689678050b355b9ba0b9f5ec37928ddb9f191d79a06"
+  },
+  {
+    "source": "resources/css-imgs/PurpleHour.webp",
+    "url": "assets/kch-library/css-imgs/PurpleHour.webp",
+    "sha256": "9208c303cdcfa576b31ccf97019586a98680467ddcd417d2fababc5c739b8179"
+  },
+  {
+    "source": "resources/css-imgs/quiet-sky_ingame.webp",
+    "url": "assets/kch-library/css-imgs/quiet-sky_ingame.webp",
+    "sha256": "dfbb0f0aab723e1077065d93100b24da20d8ba42b91b0c5338cf69766832a793"
+  },
+  {
+    "source": "resources/css-imgs/quiet-sky.webp",
+    "url": "assets/kch-library/css-imgs/quiet-sky.webp",
+    "sha256": "659add525dc7467895381e32bd6ef0c4b92a725b497eadfd6d1a131cc7ec1242"
+  },
+  {
+    "source": "resources/css-imgs/rickandmorty_ingame.webp",
+    "url": "assets/kch-library/css-imgs/rickandmorty_ingame.webp",
+    "sha256": "dc32a3b07e8214129ed3a24ab21368812bf42ef0e0c83cad8bc25427c26d0b9b"
+  },
+  {
+    "source": "resources/css-imgs/rickandmorty.webp",
+    "url": "assets/kch-library/css-imgs/rickandmorty.webp",
+    "sha256": "fa74e85a691d9d9ac7fdd194fc36c9a809658079e93ee44f4f9990c8bea63bf2"
+  },
+  {
+    "source": "resources/css-imgs/rune-clan_ingame.png",
+    "url": "assets/kch-library/css-imgs/rune-clan_ingame.png",
+    "sha256": "5d54d6aa7de2746988be76bc5505a9c600b5bf3a4c4444f1005784d099cbfa7a"
+  },
+  {
+    "source": "resources/css-imgs/rune-clan.png",
+    "url": "assets/kch-library/css-imgs/rune-clan.png",
+    "sha256": "007df8f11ddc199cfc395abebc6ebd4bd8ce83db382160cc60b806c4753402be"
+  },
+  {
+    "source": "resources/css-imgs/sagefps _ingame.webp",
+    "url": "assets/kch-library/css-imgs/sagefps%20_ingame.webp",
+    "sha256": "8aa1909d592c35b37bfa34038a9850e6b9cc5fb3578d677ce27a810992816cb1"
+  },
+  {
+    "source": "resources/css-imgs/sagefps.webp",
+    "url": "assets/kch-library/css-imgs/sagefps.webp",
+    "sha256": "7c608647002f5f0d1900e8f1d10fcf33e532fc0d4ba0965f7ca57034b27200f2"
+  },
+  {
+    "source": "resources/css-imgs/shades of night_ingame.webp",
+    "url": "assets/kch-library/css-imgs/shades%20of%20night_ingame.webp",
+    "sha256": "3d6be57d02e13ad7e86e324398eb77c60f1450cfc00aaadc8634d04065799d30"
+  },
+  {
+    "source": "resources/css-imgs/shades of night.webp",
+    "url": "assets/kch-library/css-imgs/shades%20of%20night.webp",
+    "sha256": "0ffe53f49d33574edc1cfe04fc7ba196594e6661e295f8db62dd949a7a854d92"
+  },
+  {
+    "source": "resources/css-imgs/SolarFlare_ingame.webp",
+    "url": "assets/kch-library/css-imgs/SolarFlare_ingame.webp",
+    "sha256": "94374a4b0d5e11250ea57dd4ad769d7e4e2cd95920a012abe2189903d8674808"
+  },
+  {
+    "source": "resources/css-imgs/SolarFlare.webp",
+    "url": "assets/kch-library/css-imgs/SolarFlare.webp",
+    "sha256": "8852825a82f98b8c79f16654e3da9e6cbb67de25669295be208da11218fcf6bf"
+  },
+  {
+    "source": "resources/css-imgs/synthwave_samurai .webp",
+    "url": "assets/kch-library/css-imgs/synthwave_samurai%20.webp",
+    "sha256": "1935ed222003d8921538c2fe231226abb929b1455e1e1e14a0f16ecf606f7a70"
+  },
+  {
+    "source": "resources/css-imgs/titans_ingame.webp",
+    "url": "assets/kch-library/css-imgs/titans_ingame.webp",
+    "sha256": "c22d94c1b216eb00e5e3990f11fc07923d23f342212218cc1c8408deefe867b9"
+  },
+  {
+    "source": "resources/css-imgs/titans.webp",
+    "url": "assets/kch-library/css-imgs/titans.webp",
+    "sha256": "04beb84c076ce0eb82aaea61b025e4fb5b174b1aeed8b68187a4f902776e374d"
+  },
+  {
+    "source": "resources/css-imgs/tokyo ghoul_ingame.webp",
+    "url": "assets/kch-library/css-imgs/tokyo%20ghoul_ingame.webp",
+    "sha256": "9f76d658a9521d4a81f7659eb404b0531ae3a7894d6330c88e04085599457abc"
+  },
+  {
+    "source": "resources/css-imgs/tokyo ghoul.webp",
+    "url": "assets/kch-library/css-imgs/tokyo%20ghoul.webp",
+    "sha256": "0965a4fad5bee6c6ac1b81a32ebdb0ec71dd9a9ccf310c256702d010d23643e4"
+  },
+  {
+    "source": "resources/css-imgs/Wolfey_ingame.webp",
+    "url": "assets/kch-library/css-imgs/Wolfey_ingame.webp",
+    "sha256": "a0b981b96447cb823a76fa13d99c6abab357784ddc1b0ea94a9ddf38a07a45ac"
+  },
+  {
+    "source": "resources/css-imgs/Wolfey.webp",
+    "url": "assets/kch-library/css-imgs/Wolfey.webp",
+    "sha256": "99583e0145773252bfc523bd977a8fcae644c78f4011f020232df37b67325235"
+  },
+  {
+    "source": "resources/map-imgs/Acid.webp",
+    "url": "assets/kch-library/map-imgs/Acid.webp",
+    "sha256": "ec8e3f6e40b3a2873ec93c8d450b5f1668119f64edb9d3210d01b1f07eeb09f1"
+  },
+  {
+    "source": "resources/map-imgs/Ancient.webp",
+    "url": "assets/kch-library/map-imgs/Ancient.webp",
+    "sha256": "f45fd55373ae45c520806f9ed19bea5d396a77688688e5346e8d51a79e5a7795"
+  },
+  {
+    "source": "resources/map-imgs/Antfarm.webp",
+    "url": "assets/kch-library/map-imgs/Antfarm.webp",
+    "sha256": "2384d29da652b56a546d42e5454842c0d567d4c11184969a0e8b4cc8bd08f42e"
+  },
+  {
+    "source": "resources/map-imgs/Apartment.webp",
+    "url": "assets/kch-library/map-imgs/Apartment.webp",
+    "sha256": "d88f8a8cf750019144383adfcbcb6b4b0bed6e34928d085729983a20204e7475"
+  },
+  {
+    "source": "resources/map-imgs/Bed.webp",
+    "url": "assets/kch-library/map-imgs/Bed.webp",
+    "sha256": "c516114b3a8b63640246d24f671af0131e32b4d7cc4d1352f6616072a79d8fb1"
+  },
+  {
+    "source": "resources/map-imgs/Blossom.webp",
+    "url": "assets/kch-library/map-imgs/Blossom.webp",
+    "sha256": "dd36e06e86656b44a50ba18e458b89982b6d31648d2979b19758859020c80993"
+  },
+  {
+    "source": "resources/map-imgs/Castle.webp",
+    "url": "assets/kch-library/map-imgs/Castle.webp",
+    "sha256": "3069533ca9301282d446cbfedcf443fc45a97b4c6022ecbe29252d2c6b85f8e2"
+  },
+  {
+    "source": "resources/map-imgs/Cathedral.webp",
+    "url": "assets/kch-library/map-imgs/Cathedral.webp",
+    "sha256": "76dc41763a0226e5e526b322d8cf7265a90615bfa45d900e9397e6816cf08aff"
+  },
+  {
+    "source": "resources/map-imgs/Cave.webp",
+    "url": "assets/kch-library/map-imgs/Cave.webp",
+    "sha256": "00a51c903e0e77e5a4bfa3309b82d8e36233ae3c555a889be3e5cf120648ec48"
+  },
+  {
+    "source": "resources/map-imgs/Ceres.webp",
+    "url": "assets/kch-library/map-imgs/Ceres.webp",
+    "sha256": "1bc11c45ec50e6618dd17315b3387131740a63730be73984f5d9dac793b7a6dd"
+  },
+  {
+    "source": "resources/map-imgs/Clash.webp",
+    "url": "assets/kch-library/map-imgs/Clash.webp",
+    "sha256": "d4f53618bec88e98612334b708bf761af35e1f080256c663c958945b3ee472a4"
+  },
+  {
+    "source": "resources/map-imgs/Cleft.webp",
+    "url": "assets/kch-library/map-imgs/Cleft.webp",
+    "sha256": "e78c1fb072b4a6196980cfbe46fa2763336ce6679e71858119a82e54827b1a7b"
+  },
+  {
+    "source": "resources/map-imgs/CO2.webp",
+    "url": "assets/kch-library/map-imgs/CO2.webp",
+    "sha256": "cdde8b5a4f91649469e924cbfe2b2b90d2af46951e16cfa86e86982eb4ce1444"
+  },
+  {
+    "source": "resources/map-imgs/Collision.webp",
+    "url": "assets/kch-library/map-imgs/Collision.webp",
+    "sha256": "fa32ca955ddb331b682cbe44ac75d17fabf73071311c53ff28d66d550bd06789"
+  },
+  {
+    "source": "resources/map-imgs/Colyseum.webp",
+    "url": "assets/kch-library/map-imgs/Colyseum.webp",
+    "sha256": "1242db97c151cd006fdfb634cf6002d1dc8bfecaca005bfcb9e6bc33d518cadf"
+  },
+  {
+    "source": "resources/map-imgs/Derelict.webp",
+    "url": "assets/kch-library/map-imgs/Derelict.webp",
+    "sha256": "ba1149a776428654e9bbe6c8d9347435df48140897b07ff2628bd130282f6e3f"
+  },
+  {
+    "source": "resources/map-imgs/Desty.webp",
+    "url": "assets/kch-library/map-imgs/Desty.webp",
+    "sha256": "0d619f8bc54b98d5f6af21c8887defe6c665f3cbe1ab2795aa8dbf8b576e88b2"
+  },
+  {
+    "source": "resources/map-imgs/Dethroned.webp",
+    "url": "assets/kch-library/map-imgs/Dethroned.webp",
+    "sha256": "e017425787eb81b38615d01415cd3e8b6a34ecb89b6c7915b4ab990e6101953e"
+  },
+  {
+    "source": "resources/map-imgs/Diablo.webp",
+    "url": "assets/kch-library/map-imgs/Diablo.webp",
+    "sha256": "3d0fba8745c290bdb0c24d6056dbd71563164d99f5a873122b2d52c0ccd0360d"
+  },
+  {
+    "source": "resources/map-imgs/Digsite.webp",
+    "url": "assets/kch-library/map-imgs/Digsite.webp",
+    "sha256": "1ea3a4b5d11260f592c255fe0917dbab62fcbfb7c8374fe97eb7737718831566"
+  },
+  {
+    "source": "resources/map-imgs/Dunes.webp",
+    "url": "assets/kch-library/map-imgs/Dunes.webp",
+    "sha256": "424fea89ac3a7e82a86a8cddb9ef4a1ca998ed4e70e40b94447c873edb69790a"
+  },
+  {
+    "source": "resources/map-imgs/Dust.webp",
+    "url": "assets/kch-library/map-imgs/Dust.webp",
+    "sha256": "424fea89ac3a7e82a86a8cddb9ef4a1ca998ed4e70e40b94447c873edb69790a"
+  },
+  {
+    "source": "resources/map-imgs/Eruption.webp",
+    "url": "assets/kch-library/map-imgs/Eruption.webp",
+    "sha256": "d6a0b04a0f6ef8b8656561538070b1135392332872d2e00e64523e4fdded2f0e"
+  },
+  {
+    "source": "resources/map-imgs/Favela.webp",
+    "url": "assets/kch-library/map-imgs/Favela.webp",
+    "sha256": "3d09c2f783464ee2010e2a4a923dc4bf4569491bcde7af16571a6f8379216a07"
+  },
+  {
+    "source": "resources/map-imgs/Flora.webp",
+    "url": "assets/kch-library/map-imgs/Flora.webp",
+    "sha256": "59ad83062d22ba694102014c15c501383390e30452cbc55b97fc3b8767299faf"
+  },
+  {
+    "source": "resources/map-imgs/Fortress.webp",
+    "url": "assets/kch-library/map-imgs/Fortress.webp",
+    "sha256": "41c40474a0786a1831a64d91bd4a2249285993955fe8e574470d79974aaeb39e"
+  },
+  {
+    "source": "resources/map-imgs/Funeral.webp",
+    "url": "assets/kch-library/map-imgs/Funeral.webp",
+    "sha256": "35b94a84399ad21687242bd05277f6393c38c958569de6f9654b082bcfd0779e"
+  },
+  {
+    "source": "resources/map-imgs/Gulag.webp",
+    "url": "assets/kch-library/map-imgs/Gulag.webp",
+    "sha256": "7e611499c5dd9561b9f6fd8780a5d36210566a24a841004f11535d8725fb0f03"
+  },
+  {
+    "source": "resources/map-imgs/Gym.webp",
+    "url": "assets/kch-library/map-imgs/Gym.webp",
+    "sha256": "82b2fabab94485bd03197978769c95b4fe3050467a956f6e2aec4b38f9e43ea8"
+  },
+  {
+    "source": "resources/map-imgs/Haji.webp",
+    "url": "assets/kch-library/map-imgs/Haji.webp",
+    "sha256": "fcaf60ec5faca9b1559edf4e70cc75404ebba3f00babd9b8829f5a666349ff5e"
+  },
+  {
+    "source": "resources/map-imgs/Hallway.webp",
+    "url": "assets/kch-library/map-imgs/Hallway.webp",
+    "sha256": "b8e97974207343bc98483ea3cabf2d12042a18a474bdf246cb0bf6f678b6d588"
+  },
+  {
+    "source": "resources/map-imgs/Highrises.webp",
+    "url": "assets/kch-library/map-imgs/Highrises.webp",
+    "sha256": "13eba2834c4756bd2e6bb4106cd0d008d1b0fecebfae45f4cb14d74364cfed6c"
+  },
+  {
+    "source": "resources/map-imgs/Inferno.webp",
+    "url": "assets/kch-library/map-imgs/Inferno.webp",
+    "sha256": "6c5d17ebb1d99df48f07a42a83172f2069c243a9c21168bcae9c6410e74fdb90"
+  },
+  {
+    "source": "resources/map-imgs/Islands.webp",
+    "url": "assets/kch-library/map-imgs/Islands.webp",
+    "sha256": "dc8cd1be530f0a74d3e0a43a19459094ac5ce4cc7ed8ed112ec12db7d4c455cb"
+  },
+  {
+    "source": "resources/map-imgs/Juxt.webp",
+    "url": "assets/kch-library/map-imgs/Juxt.webp",
+    "sha256": "21562b1bfc832081b5fdb3b4d630455b84b6942b86c34b841e86d139c3090b14"
+  },
+  {
+    "source": "resources/map-imgs/Labs.webp",
+    "url": "assets/kch-library/map-imgs/Labs.webp",
+    "sha256": "011c845a27b1c68b79e2e576a2890b2a1e474d58c5eb8158278e276040ae53d4"
+  },
+  {
+    "source": "resources/map-imgs/Lava.webp",
+    "url": "assets/kch-library/map-imgs/Lava.webp",
+    "sha256": "e8f64353a4aac23fa1d2ea8605f86b239ddb5170d9a2ca20be829a45abadbc2f"
+  },
+  {
+    "source": "resources/map-imgs/Lotus.webp",
+    "url": "assets/kch-library/map-imgs/Lotus.webp",
+    "sha256": "78c91f6f979909e85aac66a615e888aec71e622d4587cae3d72cfefa15d9f2ef"
+  },
+  {
+    "source": "resources/map-imgs/Metro.webp",
+    "url": "assets/kch-library/map-imgs/Metro.webp",
+    "sha256": "a3e3e42ac5cacbceb10af6c28f17d76a49ee4ce3728b6ee7bbaf440cd973c1fe"
+  },
+  {
+    "source": "resources/map-imgs/Minimart.webp",
+    "url": "assets/kch-library/map-imgs/Minimart.webp",
+    "sha256": "fb1bef6e085bbaa687554b2421757e23818c91e3c869a1f461c4cc8d5f7b785b"
+  },
+  {
+    "source": "resources/map-imgs/Mirage.webp",
+    "url": "assets/kch-library/map-imgs/Mirage.webp",
+    "sha256": "e9ae8608c96a6c82919f4fd34c940c7b5dfccb6f444941668a76e350be88bd21"
+  },
+  {
+    "source": "resources/map-imgs/Nebu.webp",
+    "url": "assets/kch-library/map-imgs/Nebu.webp",
+    "sha256": "495d483ab1a7850e0b8d2458c84ac2e5cfb4a64e0956682d31203505f397618f"
+  },
+  {
+    "source": "resources/map-imgs/North.webp",
+    "url": "assets/kch-library/map-imgs/North.webp",
+    "sha256": "64055226375dc70ca511877f2e741608000fe4d55aa625a8c8161319c5253c4b"
+  },
+  {
+    "source": "resources/map-imgs/Nuke.webp",
+    "url": "assets/kch-library/map-imgs/Nuke.webp",
+    "sha256": "a500d1758c3e69cbfa20aa09fa6a348e599286862413ce4bac8801498345360f"
+  },
+  {
+    "source": "resources/map-imgs/Nuketown.webp",
+    "url": "assets/kch-library/map-imgs/Nuketown.webp",
+    "sha256": "e6cc621046fbb3454b21be000d206a5ce7fbe8e371c0a30d1ede3dd70c132aa5"
+  },
+  {
+    "source": "resources/map-imgs/Obstruction.webp",
+    "url": "assets/kch-library/map-imgs/Obstruction.webp",
+    "sha256": "936877fbc105476f5607a340a562d56de4ecd2980c0a9e71f35fed07e138364f"
+  },
+  {
+    "source": "resources/map-imgs/Palace.webp",
+    "url": "assets/kch-library/map-imgs/Palace.webp",
+    "sha256": "dd2bb1dc8a36cbb564e438080949023c4d1c2c75fd2bf1b5b6dc0457d84798e5"
+  },
+  {
+    "source": "resources/map-imgs/Pitfall.webp",
+    "url": "assets/kch-library/map-imgs/Pitfall.webp",
+    "sha256": "0b8cf9dbed67d78012c8c8ca639205f5020b7d774104d7571e74495c19fbc489"
+  },
+  {
+    "source": "resources/map-imgs/Pool.webp",
+    "url": "assets/kch-library/map-imgs/Pool.webp",
+    "sha256": "594a7f4709886d51fae91a4d5079986a9e6e0f0804483c5d8bbfdad45c5227fb"
+  },
+  {
+    "source": "resources/map-imgs/Poussiere.webp",
+    "url": "assets/kch-library/map-imgs/Poussiere.webp",
+    "sha256": "638951f952eda2c10f751b1bd371418d6e2daf50e3a624006cb623770ed91fb3"
+  },
+  {
+    "source": "resources/map-imgs/Prison.webp",
+    "url": "assets/kch-library/map-imgs/Prison.webp",
+    "sha256": "4a83b5d1eba6f4f36beac00be35813cc60a705a9b2a5256a03a3da70f25564a4"
+  },
+  {
+    "source": "resources/map-imgs/Race.webp",
+    "url": "assets/kch-library/map-imgs/Race.webp",
+    "sha256": "a8616790b7ed3ff383b6e14b09ae9957f6d74c1f3ee81d088a2a50fa90085aa4"
+  },
+  {
+    "source": "resources/map-imgs/Rialto.webp",
+    "url": "assets/kch-library/map-imgs/Rialto.webp",
+    "sha256": "f76c630972cf92fdb805a11e38f30a4dbf02aca755555d7902dd11583f165977"
+  },
+  {
+    "source": "resources/map-imgs/Royale.webp",
+    "url": "assets/kch-library/map-imgs/Royale.webp",
+    "sha256": "d4294a92cd5859f0409c3d54495dd241b2359ba3a458ea7c9df71024986fb9b4"
+  },
+  {
+    "source": "resources/map-imgs/Ruins.webp",
+    "url": "assets/kch-library/map-imgs/Ruins.webp",
+    "sha256": "fd176f5f944c9fee21b6e5cdc87f8988da625833ec1c4fc9f88fe41585f679a0"
+  },
+  {
+    "source": "resources/map-imgs/Rust.webp",
+    "url": "assets/kch-library/map-imgs/Rust.webp",
+    "sha256": "8d964c3b6afaf6b12fcf4ff570d9069a0896a3f7d294b3f34e04b7067cec407b"
+  },
+  {
+    "source": "resources/map-imgs/Sanctuary.webp",
+    "url": "assets/kch-library/map-imgs/Sanctuary.webp",
+    "sha256": "2eca2a5497b04dc6fa1c3540f39dae8fd411deab439dddadbcbd14ab9537a2b3"
+  },
+  {
+    "source": "resources/map-imgs/Sandstorm.webp",
+    "url": "assets/kch-library/map-imgs/Sandstorm.webp",
+    "sha256": "1e32a78f7c0779f4578b428eabffb02fdd560041591f690abfe8003f826f2e3f"
+  },
+  {
+    "source": "resources/map-imgs/Sandtown.webp",
+    "url": "assets/kch-library/map-imgs/Sandtown.webp",
+    "sha256": "f07cfdc641eeca0db959f04719aa47756dbd328d4aab9af1acd9d993488caeed"
+  },
+  {
+    "source": "resources/map-imgs/Schism.webp",
+    "url": "assets/kch-library/map-imgs/Schism.webp",
+    "sha256": "718d760a53c35f6b89135c48295ba97c13a786e1cdc979faca4fdeb92e0ecebd"
+  },
+  {
+    "source": "resources/map-imgs/Sealed.webp",
+    "url": "assets/kch-library/map-imgs/Sealed.webp",
+    "sha256": "f477ea8c25d923b9a7e86f266cbe18494d8ea2652823b1fde12d5ade6871ccde"
+  },
+  {
+    "source": "resources/map-imgs/Shipment.webp",
+    "url": "assets/kch-library/map-imgs/Shipment.webp",
+    "sha256": "bbe36a27dac24957724db0523e70e70e2ee5f884e1f06b90b33e7601644c963b"
+  },
+  {
+    "source": "resources/map-imgs/Shore.webp",
+    "url": "assets/kch-library/map-imgs/Shore.webp",
+    "sha256": "da7c99f0468a45cd4d6313fbffc0db857cf3499144baa8c2f86834ff307e946a"
+  },
+  {
+    "source": "resources/map-imgs/Sidehalls.webp",
+    "url": "assets/kch-library/map-imgs/Sidehalls.webp",
+    "sha256": "dbd9399b5161401ba48968cefc88a6d465f701e9405bfae9aa3bc276255030fd"
+  },
+  {
+    "source": "resources/map-imgs/Siege.webp",
+    "url": "assets/kch-library/map-imgs/Siege.webp",
+    "sha256": "1e60b1a7e98e423a1dbfb842203f51c33cd3764d2872c909bfdc9891f1ccec76"
+  },
+  {
+    "source": "resources/map-imgs/Ski.webp",
+    "url": "assets/kch-library/map-imgs/Ski.webp",
+    "sha256": "28edbd850748e3e6b1be67ebc4dd083e22413efc7c6c0989ba7366806ae35c89"
+  },
+  {
+    "source": "resources/map-imgs/Skyfel.webp",
+    "url": "assets/kch-library/map-imgs/Skyfel.webp",
+    "sha256": "4af8d9b0b9df785065bdcc021d348f6c0ff9f6f76d6887393b84623439adea22"
+  },
+  {
+    "source": "resources/map-imgs/Skyhigh.webp",
+    "url": "assets/kch-library/map-imgs/Skyhigh.webp",
+    "sha256": "f565a65dce13b7827149e2ed59a24a423e253d28a009920a11e4e53fd7194ecc"
+  },
+  {
+    "source": "resources/map-imgs/Skytown.webp",
+    "url": "assets/kch-library/map-imgs/Skytown.webp",
+    "sha256": "833d809e7f9a85052e88a1675f59b8612adc16e77a98813170b4b6249712aa3a"
+  },
+  {
+    "source": "resources/map-imgs/Slate.webp",
+    "url": "assets/kch-library/map-imgs/Slate.webp",
+    "sha256": "06ebfd7fc064511eab5d60175c8a3af9499b37b1627f059ac27e26f6015d6b55"
+  },
+  {
+    "source": "resources/map-imgs/Snowfort.webp",
+    "url": "assets/kch-library/map-imgs/Snowfort.webp",
+    "sha256": "11de709cfa2c7ea8bdbcbadf1c7a2cbcd464c81b110578f6df909d44f405d027"
+  },
+  {
+    "source": "resources/map-imgs/Station.webp",
+    "url": "assets/kch-library/map-imgs/Station.webp",
+    "sha256": "9b9569d43d18512ed38d90dc53015fdfe9addcd0e796340a2cc5df92e11910d5"
+  },
+  {
+    "source": "resources/map-imgs/Sundial.webp",
+    "url": "assets/kch-library/map-imgs/Sundial.webp",
+    "sha256": "c128ebd57b979b08ce4b4f14cab0ef664a8c6d64a979dc43d50dcfb5aae066b8"
+  },
+  {
+    "source": "resources/map-imgs/Tectonic.webp",
+    "url": "assets/kch-library/map-imgs/Tectonic.webp",
+    "sha256": "5ac193254faba247f87bc102c8ac5be58dfea8ff6735b6355ebdd39968d65c65"
+  },
+  {
+    "source": "resources/map-imgs/Temple.webp",
+    "url": "assets/kch-library/map-imgs/Temple.webp",
+    "sha256": "85a4972440f28498e58a3f8e5ae4dbac79b75cc65f454236c114761ae678a673"
+  },
+  {
+    "source": "resources/map-imgs/Terminal.webp",
+    "url": "assets/kch-library/map-imgs/Terminal.webp",
+    "sha256": "774d9ec09e930fc1f7794ef9b6d4d7ba357bbf989b30dd57f1502051fffe3af6"
+  },
+  {
+    "source": "resources/map-imgs/Terra.webp",
+    "url": "assets/kch-library/map-imgs/Terra.webp",
+    "sha256": "7dfc551281fb0fe4599c83f63f1b196ffa0e60143fc5ad5f89c6e7b0b1f8a0d3"
+  },
+  {
+    "source": "resources/map-imgs/Time.webp",
+    "url": "assets/kch-library/map-imgs/Time.webp",
+    "sha256": "3dd0e9cae475480fb0872191ef43aebab7e0f1bb153edfb1dec724a42d21213b"
+  },
+  {
+    "source": "resources/map-imgs/Toilet.webp",
+    "url": "assets/kch-library/map-imgs/Toilet.webp",
+    "sha256": "e3d16f147ec1d6b44b8cddadec8f5af390aa7944e0499d202261fd62fec0796e"
+  },
+  {
+    "source": "resources/map-imgs/Tomesha.webp",
+    "url": "assets/kch-library/map-imgs/Tomesha.webp",
+    "sha256": "6770a3307ef6b4719d30eee906a36ed7902835f85ccc18e94ceca964cf294d90"
+  },
+  {
+    "source": "resources/map-imgs/Tower.webp",
+    "url": "assets/kch-library/map-imgs/Tower.webp",
+    "sha256": "08e52051c07291f45635801e27b2df05376c4b120ce3d7560e6022662cafb4c8"
+  },
+  {
+    "source": "resources/map-imgs/Towers.webp",
+    "url": "assets/kch-library/map-imgs/Towers.webp",
+    "sha256": "226090b124fb05e1e73d48e48db4e2fb58bb47060a5971b464d5fe46c4067912"
+  },
+  {
+    "source": "resources/map-imgs/Town.webp",
+    "url": "assets/kch-library/map-imgs/Town.webp",
+    "sha256": "078e59fa76b74f298306ce41e18d62ca60761d0ca559556e046cb5633ced853b"
+  },
+  {
+    "source": "resources/map-imgs/Train.webp",
+    "url": "assets/kch-library/map-imgs/Train.webp",
+    "sha256": "d05ea68fe63a5577e017715fbc0179d885bad28034b6694d6cc5d0b2f244973e"
+  },
+  {
+    "source": "resources/map-imgs/Tunnel.webp",
+    "url": "assets/kch-library/map-imgs/Tunnel.webp",
+    "sha256": "df92fc0b6476ca69d323e685d400174445ad721f46ffe0b72c4baea24f39f315"
+  },
+  {
+    "source": "resources/map-imgs/Underwater.webp",
+    "url": "assets/kch-library/map-imgs/Underwater.webp",
+    "sha256": "386ce59cd40975214529d40bc2d9881c7c57e02d0e2ac03ca290c31aadd2fbe2"
+  },
+  {
+    "source": "resources/map-imgs/Verdant.webp",
+    "url": "assets/kch-library/map-imgs/Verdant.webp",
+    "sha256": "0136b3614ce559308b848e4ae98e18ee590439d38733bac3870d072ab4b22d97"
+  },
+  {
+    "source": "resources/map-imgs/Vertigo.webp",
+    "url": "assets/kch-library/map-imgs/Vertigo.webp",
+    "sha256": "4156bb01005642c6a35d27ec9c4f363c73257ded40be292d01305502ec58d37a"
+  },
+  {
+    "source": "resources/map-imgs/Village.webp",
+    "url": "assets/kch-library/map-imgs/Village.webp",
+    "sha256": "55f48bd723a3f7074917d0d8361c73bc2dafeb186362243f155dd23b7337bae8"
+  },
+  {
+    "source": "resources/map-imgs/Warehouse.webp",
+    "url": "assets/kch-library/map-imgs/Warehouse.webp",
+    "sha256": "da9c09e1d4f4b5363c11d64551b5ec3cb62ef91f97fb3deaeb36bdba67c46cd5"
+  },
+  {
+    "source": "resources/map-imgs/Zenith.webp",
+    "url": "assets/kch-library/map-imgs/Zenith.webp",
+    "sha256": "152e9f55d433aec2568a684c91cc2868a0e4e5fe27c223dbbba1434d8f46b0b9"
+  }
+]

@@ -10,6 +10,7 @@ import { Audio } from './engine/audio'
 import { Assets, KCH_GAME_MAPS, KCH_GAME_MODELS, KCH_GAME_TEXTURES } from './engine/assets'
 import type { GameModels } from './game/game'
 import { normalizeKchMapData } from './game/kch-map'
+import { KCH_TEXTURE_PACKS } from './game/kch-texture-packs'
 import { I18n, resolveLocale } from './engine/i18n'
 import { Input } from './engine/input'
 import { GameLoop } from './engine/loop'
@@ -42,7 +43,7 @@ async function boot(): Promise<void> {
   let loaded = 0
   const modelKeys = Object.keys(KCH_GAME_MODELS) as Array<keyof typeof KCH_GAME_MODELS>
   const defaultMapId: MapId = 'pool'
-  const bootTaskCount = 5 + modelKeys.length
+  const bootTaskCount = 5 + modelKeys.length + KCH_TEXTURE_PACKS.length
   const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(Math.min(0.9, 0.08 + loaded / bootTaskCount * 0.82)); return value })
   const optionalModel = (key: keyof typeof KCH_GAME_MODELS) => {
     const model = KCH_GAME_MODELS[key]
@@ -60,12 +61,20 @@ async function boot(): Promise<void> {
     texture.needsUpdate = true
     return texture
   }).catch(error => { console.warn('Optional KCH map atlas unavailable', error); return null }))
+  const optionalTexturePack = (pack: typeof KCH_TEXTURE_PACKS[number]) => track(assets.textureVerified(pack.url, pack.sha256, { color: true, flipY: false }).then(texture => {
+    texture.magFilter = THREE.NearestFilter
+    texture.minFilter = THREE.NearestMipmapNearestFilter
+    texture.generateMipmaps = true
+    texture.needsUpdate = true
+    return texture
+  }).catch(error => { console.warn(`Optional KCH texture pack unavailable: ${pack.url}`, error); return null }))
   ui.setBootProgress(0.08)
-  const [{ Game }, { Renderer }, , loadedModels, defaultMap, mapAtlas] = await Promise.all([
+  const [{ Game }, { Renderer }, , loadedModels, defaultMap, mapAtlas, loadedTexturePacks] = await Promise.all([
     track(import('./game/game')), track(import('./engine/renderer')), track(document.fonts.ready),
-    Promise.all(modelKeys.map(optionalModel)), optionalMap(defaultMapId), optionalKchTexture(),
+    Promise.all(modelKeys.map(optionalModel)), optionalMap(defaultMapId), optionalKchTexture(), Promise.all(KCH_TEXTURE_PACKS.map(optionalTexturePack)),
   ])
-  const models = Object.fromEntries(modelKeys.map((key, index) => [key, loadedModels[index] ?? null])) as unknown as Omit<GameModels, 'kchMaps' | 'modelTexture'>
+  const models = Object.fromEntries(modelKeys.map((key, index) => [key, loadedModels[index] ?? null])) as unknown as Omit<GameModels, 'kchMaps' | 'modelTexture' | 'kchTexturePacks'>
+  const kchTexturePacks = loadedTexturePacks.filter((texture): texture is THREE.Texture => texture !== null)
   if (defaultMap) kchMaps[defaultMapId] = defaultMap
   loadKchMap = async (id: MapId): Promise<boolean> => {
     if (kchMaps[id]) return true
@@ -82,7 +91,7 @@ async function boot(): Promise<void> {
     }
   }
   const renderer = new Renderer(canvas, save.data.quality)
-  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps, modelTexture: null, kchMapTexture: mapAtlas })
+  game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps, modelTexture: null, kchMapTexture: mapAtlas, kchTexturePacks })
   game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
     step: dt => { game?.step(dt) },

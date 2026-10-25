@@ -1220,7 +1220,11 @@ export class Game {
   private handleReload(dt: number): void { if (this.reloadLeft <= 0 && this.input.consume('reload') && this.ammo < WEAPONS[this.currentWeapon].magazine) { this.reloadLeft = WEAPONS[this.currentWeapon].reload; this.reloadDuration = this.reloadLeft; this.audio.play('reload', this.player.root.position) } if (this.reloadLeft > 0 && this.reloadLeft <= dt) this.ammo = WEAPONS[this.currentWeapon].magazine }
   private handleFire(): void {
     const weapon = WEAPONS[this.currentWeapon]
-    if ((this.matchType === 'search' && (this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0)) || this.reloadLeft > 0 || this.playerDeadUntil || !this.input.held('shoot') || this.fireCooldown > 0) return
+    // Preserve a tap that starts and ends between fixed simulation steps. Semi-
+    // automatic weapons fire once per press; automatic weapons continue while held.
+    const triggerPressed = this.input.consume('shoot')
+    const firing = weapon.automatic ? this.input.held('shoot') || triggerPressed : triggerPressed
+    if ((this.matchType === 'search' && (this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0)) || this.reloadLeft > 0 || this.playerDeadUntil || !firing || this.fireCooldown > 0) return
     if (this.ammo <= 0) { this.audio.play('empty'); this.fireCooldown = 0.18; return }
     this.ammo -= 1; this.run.shots += 1; this.fireCooldown = 1 / weapon.fireRate
     this.recoil = weapon.recoil; this.viewSpringVelocity.x += (Math.random() - 0.5) * weapon.recoil * 0.7; this.viewSpringVelocity.y -= weapon.recoil * 0.22; this.viewSpringVelocity.z += weapon.recoil * 1.8; this.flash = 1 / 60

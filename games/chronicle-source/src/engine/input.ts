@@ -49,16 +49,24 @@ export class Input {
       }
     } catch { /* A cross-origin embed keeps input scoped to its own focused canvas. */ }
     on(window, 'blur', () => { this.keys.clear(); this.mouse.clear(); this.lookRequested = false; this.fallbackLook = false })
+    const isGameSurface = (target: EventTarget | null): boolean => {
+      if (document.pointerLockElement !== canvas && !this.fallbackLook) return false
+      const element = target instanceof HTMLElement ? target : null
+      return !element?.closest('button, input, select, textarea, [role="button"], [data-action]')
+    }
     on(window, 'mousedown', e => {
-      if (document.pointerLockElement !== canvas && !this.fallbackLook) return
+      // While mouse-look falls back to the canvas, ignore clicks on HUD and menu
+      // controls so they do not also shoot or aim in the game behind them. HUD
+      // backgrounds still count as the game surface, keeping crosshair clicks responsive.
+      if (!isGameSurface(e.target)) return
       this.mouse.add(e.button)
       this.method = 'keyboard'
       if (e.button === 0) this.pressed_.add('shoot')
       if (e.button === 2) this.pressed_.add('ads')
     })
     on(window, 'mouseup', e => this.mouse.delete(e.button))
-    on(window, 'contextmenu', e => { if (document.pointerLockElement === canvas || this.fallbackLook) e.preventDefault() })
-    on(window, 'wheel', e => { if (document.pointerLockElement === canvas || this.fallbackLook) { this.wheelDelta += Math.sign(e.deltaY); e.preventDefault() } }, { passive: false })
+    on(window, 'contextmenu', e => { if (isGameSurface(e.target)) e.preventDefault() })
+    on(window, 'wheel', e => { if (isGameSurface(e.target)) { this.wheelDelta += Math.sign(e.deltaY); e.preventDefault() } }, { passive: false })
     on(window, 'mousemove', e => {
       const fallbackCanvasLook = this.fallbackLook && e.target === canvas
       if (document.pointerLockElement !== canvas && !fallbackCanvasLook) return

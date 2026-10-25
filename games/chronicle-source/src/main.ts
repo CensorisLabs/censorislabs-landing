@@ -24,7 +24,6 @@ async function boot(): Promise<void> {
   const input = new Input(canvas)
   const audio = new Audio()
   let game: import('./game/game').Game | undefined
-  let lockLostAt = 0
   const kchMaps: GameModels['kchMaps'] = {}
   let loadKchMap: (id: MapId) => Promise<boolean> = async () => false
   const applySettings = () => { input.sensitivity = save.data.sensitivity; input.invertY = save.data.invertY; audio.setVolumes(save.data.musicVolume, save.data.sfxVolume, save.data.muted); if (game) { game.setQuality(save.data.quality); game.setFov(save.data.fov) } }
@@ -86,12 +85,26 @@ async function boot(): Promise<void> {
   game = new Game(renderer, input, audio, save, { popup: (text, at, kind) => ui.popup(text, at, kind), hitmarker: headshot => ui.hitmarker(headshot), hurt: () => ui.hurt(), killfeed: (text, headshot) => ui.killfeed(text, headshot), banner: text => ui.banner(text), end: run => window.setTimeout(() => ui.showResults(run), 500) }, { ...models, kchMaps, modelTexture: null, kchMapTexture: mapAtlas })
   game.setFov(save.data.fov); ui.setGame(game); ui.setBootProgress(1)
   const loop = new GameLoop({
-    step: dt => { if (input.consume('pause') && performance.now() - lockLostAt > 300) { if (game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } else if (game?.mode === 'paused') { game.resume(); ui.show('hud'); input.lockPointer() } } game?.step(dt) },
-    render: (alpha, frameSeconds) => { input.update(); ui.frame(frameSeconds); if (game) { loop.paused = game.mode === 'paused' || game.mode === 'attract' || game.mode === 'ended'; game.render(alpha, frameSeconds); if (game.mode === 'playing' || game.mode === 'ended') ui.updateHud(game.snapshot()) } },
+    step: dt => { game?.step(dt) },
+    render: (alpha, frameSeconds) => {
+      input.update(); ui.frame(frameSeconds)
+      if (game) {
+        // Rendering and input keep running in menus, so Escape/P can resume a
+        // paused match without advancing its simulation while it is paused.
+        if (input.consume('pause')) {
+          if (game.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') }
+          else if (game.mode === 'paused') { game.resume(); ui.show('hud'); input.lockPointer() }
+        }
+        loop.paused = game.mode === 'paused' || game.mode === 'attract' || game.mode === 'ended'
+        game.render(alpha, frameSeconds)
+        if (game.mode === 'playing' || game.mode === 'ended') ui.updateHud(game.snapshot())
+      }
+    },
   })
   loop.start()
-  window.addEventListener('keydown', event => { if (event.code === 'Escape' && game?.mode === 'playing') { event.preventDefault(); game.pause(); input.unlockPointer(); ui.show('pause') } })
-  document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && game?.mode === 'playing') { lockLostAt = performance.now(); input.consume('pause'); game.pause(); ui.show('pause') } })
+  // Escape is already bound to the pause action in Input. Route it through the
+  // fixed-step handler so fallback mouse mode cannot pause and immediately resume.
+  document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && game?.mode === 'playing') { input.consume('pause'); game.pause(); ui.show('pause') } })
   document.addEventListener('visibilitychange', () => { if (document.hidden && game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } })
   canvas.addEventListener('click', () => { if (game?.mode === 'playing') input.lockPointer() })
   window.setTimeout(() => ui.show('title'), 260)

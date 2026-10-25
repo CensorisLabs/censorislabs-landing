@@ -41,7 +41,7 @@ async function boot(): Promise<void> {
   const assets = new Assets()
   let loaded = 0
   const modelKeys = Object.keys(KCH_GAME_MODELS) as Array<keyof typeof KCH_GAME_MODELS>
-  const defaultMapId: MapId = 'dunes'
+  const defaultMapId: MapId = 'pool'
   const bootTaskCount = 5 + modelKeys.length
   const track = <T,>(promise: Promise<T>) => promise.then(value => { loaded += 1; ui.setBootProgress(Math.min(0.9, 0.08 + loaded / bootTaskCount * 0.82)); return value })
   const optionalModel = (key: keyof typeof KCH_GAME_MODELS) => {
@@ -104,7 +104,7 @@ async function boot(): Promise<void> {
   loop.start()
   // Escape is already bound to the pause action in Input. Route it through the
   // fixed-step handler so fallback mouse mode cannot pause and immediately resume.
-  document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && game?.mode === 'playing') { input.consume('pause'); game.pause(); ui.show('pause') } })
+  document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && game?.mode === 'playing' && !document.querySelector('.hud-chat:focus-within')) { input.consume('pause'); game.pause(); ui.show('pause') } })
   document.addEventListener('visibilitychange', () => { if (document.hidden && game?.mode === 'playing') { game.pause(); input.unlockPointer(); ui.show('pause') } })
   canvas.addEventListener('click', () => { if (game?.mode === 'playing') input.lockPointer() })
   window.setTimeout(() => ui.show('title'), 260)

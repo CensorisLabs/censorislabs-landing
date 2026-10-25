@@ -57,6 +57,9 @@
 .screen-hud .radar-footer strong{color:#fff;font-size:15px;font-weight:900;letter-spacing:.05em;text-shadow:var(--hud-shadow)}
 .screen-hud .match-ribbon{position:absolute;top:12px;left:0;width:100%;padding:0;transform:none;text-align:center}
 .screen-hud .match-mode{display:none}
+.screen-hud .match-mode.is-respawning{position:fixed;z-index:5;top:61px;left:50%;display:flex;align-items:center;gap:8px;padding:7px 12px;transform:translateX(-50%);border-left:3px solid #ffca30;background:rgba(39,60,98,.82);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.65);white-space:nowrap}
+.screen-hud .match-mode.is-respawning .status-dot{background:#ffca30;box-shadow:0 0 8px rgba(255,202,48,.7)}
+.screen-hud .match-mode.is-respawning small,.screen-hud .match-mode.is-respawning b{display:inline;color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em}
 .screen-hud .match-core{display:flex;justify-content:center;gap:12px;margin:0;pointer-events:none}
 .screen-hud .match-clock{position:fixed;top:10px;left:16px;min-width:0;display:block;text-align:left;z-index:3}
 .screen-hud .match-clock small{display:none}
@@ -110,6 +113,28 @@
 .screen-hud .score-head{border-color:rgba(255,255,255,.25);color:#d8e3f6}
 .screen-hud.is-low-health .hud-bottom-left{animation:kirka-low-health .7s ease-in-out infinite alternate}
 @keyframes kirka-low-health{to{filter:drop-shadow(0 0 8px rgba(255,69,74,.8))}}
+/* Match HUD follows the compact layout in the Pool reference screenshot. */
+.screen-hud .match-clock{min-width:78px;padding:5px 10px;background:rgba(40,58,96,.78);text-align:center}
+.screen-hud .team-score.team-red{order:1}
+.screen-hud .match-clock{order:2}
+.screen-hud .team-score.team-blue{order:3}
+.screen-hud .hud-control-hints{position:absolute;z-index:4;left:16px;bottom:clamp(270px,42vh,310px);display:flex;flex-wrap:wrap;gap:5px 10px;max-width:min(390px,43vw);color:#fff;font:700 9px/1 Arial,Helvetica,sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.75);pointer-events:none}
+.screen-hud .hud-control-hints span{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.screen-hud .hud-control-hints kbd{padding:4px 6px;background:rgba(246,247,249,.9);color:#344463;font:900 8px Arial,Helvetica,sans-serif;text-shadow:none}
+.screen-hud .hud-chat{position:absolute;z-index:4;left:16px;bottom:62px;width:min(380px,42vw);font-family:Arial,Helvetica,sans-serif;pointer-events:auto}
+.screen-hud .hud-chat-log{display:flex;flex-direction:column;justify-content:flex-end;gap:2px;max-height:min(25vh,188px);overflow:auto;padding:7px 11px;background:rgba(44,61,96,.58);color:#5be194;text-shadow:0 1px 2px rgba(0,0,0,.65);scrollbar-width:thin}
+.screen-hud .hud-chat-line{display:flex;gap:5px;margin:0;font-size:12px;line-height:1.25}
+.screen-hud .hud-chat-line b{flex:none;color:#5be194;font-weight:800}
+.screen-hud .hud-chat-line.is-system,.screen-hud .hud-chat-line.is-system b{color:#a7d8ff}
+.screen-hud .hud-chat-line.is-player,.screen-hud .hud-chat-line.is-player b{color:#fff}
+.screen-hud .hud-chat-compose{display:grid;grid-template-columns:minmax(0,1fr) 66px;gap:6px;margin-top:4px}
+.screen-hud .hud-chat-compose input{min-width:0;height:34px;padding:0 10px;border:1px solid rgba(255,255,255,.48);background:rgba(55,72,108,.82);color:#fff;font:700 12px Arial,Helvetica,sans-serif;pointer-events:auto}
+.screen-hud .hud-chat-compose input::placeholder{color:#f0f3f8;opacity:.95}
+.screen-hud .hud-chat-compose input:focus-visible{outline:2px solid #ffd044;outline-offset:1px}
+.screen-hud .hud-chat-compose button{height:34px;border:1px solid rgba(255,255,255,.48);background:#f4f6f8;color:#394a69;font:800 12px Arial,Helvetica,sans-serif;cursor:pointer}
+.screen-hud .hud-bottom-left{bottom:12px;width:min(380px,42vw)}
+@media(max-width:620px){.screen-hud .match-ribbon{left:0;width:100vw;transform:none}}
+@media(max-width:620px){.screen-hud .hud-control-hints{left:7px;bottom:clamp(188px,30vh,235px);gap:4px 6px;max-width:calc(50vw - 12px);font-size:7px}.screen-hud .hud-control-hints span:nth-child(2){display:none}.screen-hud .hud-control-hints kbd{padding:3px 4px;font-size:6px}.screen-hud .hud-chat{left:7px;bottom:57px;width:calc(50vw - 13px)}.screen-hud .hud-chat-log{max-height:16vh;padding:5px 7px}.screen-hud .hud-chat-line{font-size:8px}.screen-hud .hud-chat-compose{grid-template-columns:minmax(0,1fr) 46px;gap:3px}.screen-hud .hud-chat-compose input,.screen-hud .hud-chat-compose button{height:27px;padding:0 6px;font-size:8px}.screen-hud .hud-bottom-left{bottom:7px;width:calc(50% - 13px)}}
 /* Match-end progression is the only in-match level indicator. */
 .results-level{display:grid;gap:7px;padding:11px 12px;background:rgba(24,39,71,.6);border:1px solid rgba(210,224,249,.2)}
 .results-level>div{display:flex;justify-content:space-between;gap:8px;color:#d2dced;font-size:9px;font-weight:900;letter-spacing:.1em}
@@ -122,3 +147,11 @@
 @media(max-width:900px){.screen-title .lobby-shell{grid-template-columns:78px minmax(0,1fr)}.screen-title .lobby-nav{padding:7px 4px}.screen-title .lobby-nav button{min-height:60px;font-size:7px}.screen-title .lobby-nav button i{font-size:20px}.screen-title .lobby-panel{right:12px;bottom:13px;width:min(316px,calc(100vw - 100px));padding:10px}.screen-title .lobby-settings{width:41px;height:41px}.screen-hud .radar-card{top:56px;left:12px}.screen-hud .match-clock{top:8px;left:10px}.screen-hud .killfeed{right:9px;top:9px}.screen-hud .hud-bottom-left{left:10px;bottom:10px;width:min(280px,43vw)}.screen-hud .hud-bottom-right{right:10px;bottom:9px}.screen-hud .weapon-slots{right:10px;bottom:90px}.screen-hud .hud-pause{right:10px;top:54px}}
 @media(max-width:620px){.screen-title .lobby-top{height:61px;padding:6px 8px}.screen-title .lobby-shell{inset:61px 0 0;grid-template-columns:58px minmax(0,1fr)}.screen-title .brand{top:9px;gap:5px}.screen-title .brand-mark{width:35px;height:35px;font-size:20px}.screen-title .logo-text{font-size:16px}.screen-title .brand small{font-size:6px}.screen-title .top-status{gap:4px}.screen-title .top-status>span:not(.status-dot),.screen-title .top-status b{display:none}.screen-title .lobby-settings{width:36px;height:36px}.screen-title .lobby-nav{gap:2px;padding:5px 3px}.screen-title .lobby-nav button{min-height:52px;gap:2px;font-size:6px}.screen-title .lobby-nav button i{font-size:18px}.screen-title .lobby-panel{right:8px;bottom:9px;width:min(300px,calc(100vw - 76px));max-height:min(53dvh,420px);padding:8px}.local-room{font-size:12px}.quick-actions{gap:5px;margin:6px 0}.quick-actions button{min-height:32px;font-size:9px}.queue-settings summary{padding:7px 8px;font-size:9px}.screen-title .menu-play{min-height:62px;font-size:28px}.lobby-hint{font-size:6px}.screen-hud .radar-card{top:48px;left:8px}.screen-hud .radar-footer strong{font-size:11px}.screen-hud .match-clock{top:4px;left:8px}.screen-hud .match-clock strong{font-size:21px}.screen-hud .match-ribbon{top:9px;width:54vw}.screen-hud .team-score{min-width:40px;padding:2px 5px}.screen-hud .team-score b{font-size:16px}.screen-hud .match-stats{top:35px;gap:8px}.screen-hud .match-stat>b{font-size:9px}.screen-hud .killfeed{top:54px;max-width:48vw}.screen-hud .feed-item{padding:4px 6px;font-size:7px}.screen-hud .hud-bottom-left{left:7px;bottom:8px;width:calc(50% - 13px)}.screen-hud .vital-row{grid-template-columns:34px minmax(35px,1fr);gap:5px;margin-top:4px}.screen-hud .vital-row>b{font-size:8px}.screen-hud .health-track,.screen-hud .armor-track{height:6px}.screen-hud .hud-bottom-right{right:7px;bottom:7px}.screen-hud .weapon-slots{right:7px;bottom:76px;width:min(152px,42vw);gap:3px}.screen-hud .weapon-slot{min-height:30px;gap:5px;padding:3px}.screen-hud .weapon-slot b{max-width:118px;font-size:9px}.screen-hud .weapon-slot small{font-size:6px}.screen-hud .weapon-slot kbd{width:19px;height:19px;font-size:10px}.screen-hud .hud-bottom-right .hud-label{font-size:10px}.screen-hud .weapon-ammo strong{font-size:31px}.screen-hud .weapon-ammo>span:last-child{font-size:12px}.screen-hud .ammo-divider{font-size:13px}.screen-hud .ammo-help{max-width:42vw;font-size:6px}.screen-hud .hud-pause{top:42px;right:7px;padding:3px 6px}.screen-hud .scoreboard{inset:17% 4%;padding:10px}.screen-hud .spawn-shield{top:80px;font-size:8px}}
 @media(max-height:480px){.screen-title .lobby-panel{max-height:66dvh}.screen-title .menu-play{min-height:55px}.screen-title .lobby-nav button{min-height:45px}.screen-hud .weapon-slots{bottom:76px}.screen-hud .hud-bottom-left{bottom:6px}.screen-hud .hud-bottom-right{bottom:5px}}
+.screen-hud .scope-overlay{display:grid;visibility:hidden;opacity:0;transform:scale(.92);background:radial-gradient(circle at center,transparent 0 36%,rgba(0,0,0,.3) 36.5%,rgba(0,0,0,.84) 38% 100%);transition:opacity .2s ease,transform .24s cubic-bezier(.18,.72,.26,1),visibility 0s linear .24s}
+.screen-hud .scope-overlay::before{content:"";position:absolute;width:min(76dvh,76vw);aspect-ratio:1;border:1px solid rgba(236,243,238,.82);border-radius:50%;box-shadow:0 0 0 2px rgba(4,8,12,.35),inset 0 0 18px rgba(7,12,16,.12);pointer-events:none}
+.screen-hud .scope-overlay.is-visible{display:grid;visibility:visible;opacity:1;transform:scale(1);transition:opacity .2s ease,transform .24s cubic-bezier(.18,.72,.26,1)}
+.screen-hud .scope-overlay .scope-line{background:rgba(12,18,22,.85);box-shadow:0 0 1px rgba(255,255,255,.5)}
+.screen-hud .scope-overlay span{top:auto;bottom:calc(50% + min(38dvh,38vw) + 10px);padding:5px 8px;background:rgba(8,12,17,.62);color:#eee8d6;font-size:9px}
+.screen-hud .crosshair{transition:opacity .12s ease,transform .12s ease}
+.screen-hud .crosshair.is-scoped{opacity:0;transform:translate(-50%,-50%) scale(.7)}
+@media(max-width:620px){.screen-hud .match-ribbon{left:0;width:100vw!important;transform:none}}

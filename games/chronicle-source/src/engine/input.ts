@@ -32,6 +32,7 @@ export class Input {
       this.listeners.push(() => target.removeEventListener(type, fn as EventListener, opts))
     }
     const keyDown = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable="true"]')) return
       if (e.repeat) return
       this.keys.add(e.code)
       this.method = 'keyboard'

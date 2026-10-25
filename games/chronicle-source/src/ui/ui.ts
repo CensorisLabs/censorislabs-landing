@@ -15,7 +15,8 @@ export class Ui {
   private readonly root: HTMLElement
   private panel = 'queue'
   private selectedMode: MatchType = 'tdm'
-  private selectedMap: MapId = 'dunes'
+  private selectedMap: MapId = 'pool'
+  private hudChatMatch = ''
   private customMap: CustomMap = readCustomMap()
   private mapBrush: 'block' | 'player-spawn' | 'bot-spawn' | 'site-a' | 'site-b' = 'block'
   private brush = { width: 4, depth: 4, height: 2, color: '#7d7467', surface: 'concrete' as MapSurface }
@@ -30,6 +31,9 @@ export class Ui {
   constructor(private readonly i18n: I18n, private readonly save: SaveStore, private readonly audio: Audio, private readonly input: Input, private readonly actions: UiActions) {
     this.root = document.getElementById('ui')!
     this.root.innerHTML = this.template()
+    this.root.querySelector<HTMLElement>('[data-screen="hud"]')?.insertAdjacentHTML('beforeend', `
+      <div class="hud-control-hints" aria-label="Movement controls"><span><kbd>SHIFT</kbd> SPRINT</span><span><kbd>CTRL + SHIFT</kbd> SLIDE</span><span><kbd>E</kbd> DASH</span><span><kbd>TAB</kbd> SCOREBOARD</span></div>
+      <section class="hud-chat" aria-label="Match chat"><div class="hud-chat-log" data-slot="hud-chat-log" role="log" aria-live="polite"></div><form class="hud-chat-compose"><input name="hudChat" maxlength="120" autocomplete="off" aria-label="Match chat message" placeholder="MESSAGE..."><button type="submit">ENTER</button></form></section>`)
     this.claimDailyLogin()
     this.root.insertAdjacentHTML('beforeend', '<section class="screen screen-map-editor" data-screen="map-editor" aria-hidden="true"><div class="map-editor-content"></div></section>')
 
@@ -39,6 +43,15 @@ export class Ui {
     this.root.addEventListener('click', event => this.onClick(event))
     this.root.addEventListener('input', event => this.onInput(event))
     this.root.addEventListener('change', event => { if (event.target instanceof HTMLSelectElement || event.target instanceof HTMLInputElement && event.target.name === 'customMapFile') this.onInput(event) })
+    this.root.addEventListener('submit', event => {
+      const form = event.target
+      if (!(form instanceof HTMLFormElement) || !form.matches('.hud-chat-compose')) return
+      event.preventDefault()
+      const input = form.querySelector<HTMLInputElement>('input[name="hudChat"]')
+      const message = input?.value.trim().slice(0, 120)
+      if (message) this.appendHudChat('YOU', message, 'player')
+      if (input) input.value = ''
+    })
     window.addEventListener('keydown', event => this.onKey(event))
     i18n.onChange(() => this.translate())
     this.translate(); this.refreshSettings()
@@ -46,6 +59,20 @@ export class Ui {
   setGame(_game: Game): void {}
   show(screen: Screen): void { this.screen = screen; this.root.dataset.activeScreen = screen; for (const el of this.root.querySelectorAll<HTMLElement>('[data-screen]')) { const active = el.dataset.screen === screen; el.classList.toggle('is-active', active); el.setAttribute('aria-hidden', String(!active)) } if (screen === 'title') this.renderPanel(this.panel); if (screen === 'armory') this.renderArmory(); if (screen === 'map-editor') this.renderMapEditor(); if (screen === 'leaderboard') this.renderLeaderboard(); requestAnimationFrame(() => this.root.querySelector<HTMLElement>(`[data-screen="${screen}"] [data-nav]`)?.focus({ preventScroll: true })) }
   setBootProgress(progress: number): void { const bar = this.root.querySelector<HTMLElement>('.boot-bar i'); if (bar) bar.style.transform = `scaleX(${Math.max(0.04, Math.min(1, progress))})` }
+  private appendHudChat(name: string, message: string, tone: 'system' | 'team' | 'player'): void {
+    const log = this.root.querySelector<HTMLElement>('[data-slot="hud-chat-log"]')
+    if (!log) return
+    const entry = document.createElement('p')
+    entry.className = `hud-chat-line is-${tone}`
+    const speaker = document.createElement('b')
+    speaker.textContent = name
+    const text = document.createElement('span')
+    text.textContent = message
+    entry.append(speaker, text)
+    log.append(entry)
+    while (log.childElementCount > 6) log.firstElementChild?.remove()
+    log.scrollTop = log.scrollHeight
+  }
   refreshSettings(): void { const d = this.save.data; const set = (name: string, value: string) => { const el = this.root.querySelector<HTMLInputElement>(`[name="${name}"]`); if (el) el.value = value }; set('musicVolume', String(d.musicVolume)); set('sfxVolume', String(d.sfxVolume)); set('sensitivity', String(d.sensitivity)); set('fov', String(d.fov)); set('crosshairColor', d.crosshairColor); set('crosshairGap', String(d.crosshairGap)); set('crosshairThickness', String(d.crosshairThickness)); this.root.querySelectorAll<HTMLButtonElement>('.toggle').forEach(button => { const key = button.dataset.setting as keyof SaveData; button.setAttribute('aria-pressed', String(d[key] === true)) }); this.root.querySelectorAll<HTMLButtonElement>('[data-setting="quality"] button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === d.quality))); this.root.querySelectorAll<HTMLButtonElement>('[data-setting="locale"] button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === this.i18n.locale))) }
   updateHud(snapshot: GameSnapshot): void {
     const mapName = snapshot.mapName || HISTORIC_MAPS.find(map => map.id === snapshot.mapId)?.name.toUpperCase() || 'AURELIAN FORUM'
@@ -54,6 +81,13 @@ export class Ui {
     const seconds = (wholeSeconds % 60).toString().padStart(2, '0')
     const alive = snapshot.aliveBots + (snapshot.phase === 'playing' ? 1 : 0)
     const mode = ({ royale: 'FRONTIER ROYALE', tdm: 'TEAM DEATHMATCH', training: 'AIM RANGE', gungame: 'GUN GAME', ffa: 'FREE FOR ALL', domination: 'DOMINATION', hardpoint: 'HARDPOINT', ctf: 'CAPTURE THE STANDARD', search: 'SEARCH & DEFUSE' } satisfies Record<MatchType, string>)[snapshot.matchType]
+    const chatMatch = `${snapshot.mapId}:${snapshot.matchType}`
+    if (chatMatch !== this.hudChatMatch) {
+      this.hudChatMatch = chatMatch
+      this.root.querySelector<HTMLElement>('[data-slot="hud-chat-log"]')?.replaceChildren()
+      this.appendHudChat('SYSTEM', `${mapName} // ${mode}`, 'system')
+      this.appendHudChat('BOT SQUAD', 'joined the local arena', 'team')
+    }
     this.setText('hud-score', String(snapshot.score).padStart(4, '0'))
     this.setText('hud-kills', String(snapshot.kills))
     this.setText('hud-deaths', String(snapshot.deaths))
@@ -76,7 +110,8 @@ export class Ui {
     this.setText('lobby-credits', `${snapshot.credits} CR`)
     this.setText('hud-mode', mode)
     this.setText('hud-map', mapName)
-    this.setText('hud-objective', snapshot.objective)
+    this.setText('hud-objective', snapshot.respawnIn > 0 ? `RESPAWN IN ${Math.ceil(snapshot.respawnIn)}S` : snapshot.objective)
+    this.root.querySelector('.match-mode')?.classList.toggle('is-respawning', snapshot.respawnIn > 0)
     this.setText('hud-team-blue', String(snapshot.blueScore).padStart(2, '0'))
     this.setText('hud-team-red', String(snapshot.redScore).padStart(2, '0'))
     this.setText('hud-royale-alive', String(alive).padStart(2, '0'))
@@ -101,7 +136,8 @@ export class Ui {
     this.setText('hud-kills-bottom', String(snapshot.kills))
     this.setText('hud-deaths-bottom', String(snapshot.deaths))
     const crosshair = this.root.querySelector<HTMLElement>('.crosshair')
-    if (crosshair) { crosshair.style.setProperty('--crosshair-color', this.save.data.crosshairColor); crosshair.style.setProperty('--crosshair-gap', `${this.save.data.crosshairGap + snapshot.crosshairBloom}px`); crosshair.style.setProperty('--crosshair-thickness', `${this.save.data.crosshairThickness}px`); crosshair.classList.toggle('is-aiming', snapshot.aimed) }
+    const scoped = snapshot.aimed && snapshot.weapon === 'awp'
+    if (crosshair) { crosshair.style.setProperty('--crosshair-color', this.save.data.crosshairColor); crosshair.style.setProperty('--crosshair-gap', `${this.save.data.crosshairGap + snapshot.crosshairBloom}px`); crosshair.style.setProperty('--crosshair-thickness', `${this.save.data.crosshairThickness}px`); crosshair.classList.toggle('is-aiming', snapshot.aimed); crosshair.classList.toggle('is-scoped', scoped) }
     const board = this.root.querySelector<HTMLElement>('.scoreboard-list')
     const boardHtml = snapshot.scoreboard.map(row => `<li class="${row.you ? 'is-you' : row.team === 'blue' ? 'is-ally' : 'is-rival'}"><span><b>${this.escape(row.name)}</b><small>${row.you ? 'YOU' : row.team === 'blue' ? 'SQUAD' : 'BOT'}</small></span><strong>${row.kills}</strong><strong>${row.deaths}</strong><em>${row.you ? 'LOCAL' : 'CPU'}</em></li>`).join('')
     if (board && boardHtml !== this.scoreboardCache) { board.innerHTML = boardHtml; this.scoreboardCache = boardHtml }
@@ -111,7 +147,7 @@ export class Ui {
     if (spectatorStatus) spectatorStatus.textContent = snapshot.spectating ? 'SPECTATING // PRESS X TO CYCLE' : ''
     const scoreboard = this.root.querySelector<HTMLElement>('.scoreboard')
     if (scoreboard) scoreboard.classList.toggle('is-visible', this.input.held('scoreboard'))
-    this.root.querySelector('.scope-overlay')?.classList.toggle('is-visible', snapshot.aimed && snapshot.weapon === 'awp')
+    this.root.querySelector('.scope-overlay')?.classList.toggle('is-visible', scoped)
   }
   popup(text: string, at: { x: number; y: number }, kind: 'score' | 'hurt'): void { const el = document.createElement('div'); el.className = `popup popup-${kind}`; el.textContent = text; el.style.left = `${at.x}px`; el.style.top = `${at.y}px`; this.root.querySelector('.popups')?.append(el); el.addEventListener('animationend', () => el.remove()) }
   hurt(): void { const el = this.root.querySelector('.hurt-vignette'); el?.classList.remove('flash'); void (el as HTMLElement | undefined)?.offsetWidth; el?.classList.add('flash') }
@@ -271,7 +307,18 @@ export class Ui {
     if (el.type === 'range') this.actions.settings({ [el.name]: Number(el.value) } as Partial<SaveData>)
     if (el.type === 'color' && el.name === 'crosshairColor') this.actions.settings({ crosshairColor: el.value })
   }
-  private onKey(event: KeyboardEvent): void { if (event.code === 'Escape' && this.screen === 'buy-menu') { event.preventDefault(); this.actions.resume(); return } if (event.code === 'KeyB' && this.screen === 'hud' && !event.repeat) { event.preventDefault(); this.actions.openBuy(); return } if (event.code === 'Escape' && (this.screen === 'settings' || this.screen === 'leaderboard')) { event.preventDefault(); this.show('title') } }
+  private onKey(event: KeyboardEvent): void {
+    const target = event.target instanceof HTMLElement ? event.target : null
+    const typing = !!target?.closest('input, textarea, select, [contenteditable="true"]')
+    if (event.code === 'Enter' && this.screen === 'hud' && !typing) {
+      event.preventDefault()
+      this.root.querySelector<HTMLInputElement>('.hud-chat-compose input')?.focus()
+      return
+    }
+    if (event.code === 'Escape' && this.screen === 'buy-menu') { event.preventDefault(); this.actions.resume(); return }
+    if (event.code === 'KeyB' && this.screen === 'hud' && !event.repeat && !typing) { event.preventDefault(); this.actions.openBuy(); return }
+    if (event.code === 'Escape' && (this.screen === 'settings' || this.screen === 'leaderboard')) { event.preventDefault(); this.show('title') }
+  }
   private claimDailyLogin(): void { const today = new Date().toISOString().slice(0, 10); const previous = new Date(Date.now() - 86400000).toISOString().slice(0, 10); const login = this.save.data.dailyLogin; if (login.date === today) { this.loginReward = login.reward; return } const streak = login.date === previous ? login.streak + 1 : 1; this.loginReward = 100 + Math.min(6, streak - 1) * 50; this.save.update({ dailyLogin: { date: today, streak, reward: this.loginReward }, credits: this.save.data.credits + this.loginReward }) }
   private renderLeaderboard(): void { const list = this.root.querySelector<HTMLElement>('.board'); if (!list) return; const board = this.save.data.leaderboard; list.innerHTML = board.length ? board.map((e, i) => `<li><b>${i + 1}</b><span>${this.escape(e.name)}</span><em>${e.score}</em></li>`).join('') : '<li class="empty">No local scores yet. Win a match to be first.</li>' }
   private renderPanel(panel: string): void {

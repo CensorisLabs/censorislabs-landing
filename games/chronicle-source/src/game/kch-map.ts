@@ -3,6 +3,7 @@ export type KchMapData = {
   mapName: string
   spawnPlaces: { firstTeam: KchSpawn[]; secondTeam: KchSpawn[] }
   chunks: Record<string, Array<[number, number, number]>>
+  brightness?: number
   skyboxColor?: string
   fogColor?: string
   fogNear?: number
@@ -57,6 +58,7 @@ export function normalizeKchMapData(value: unknown): KchMapData | null {
     mapName: typeof raw.mapName === 'string' ? raw.mapName : '',
     spawnPlaces: { firstTeam: normalizeSpawns(places?.firstTeam), secondTeam: normalizeSpawns(places?.secondTeam) },
     chunks: normalizeKchChunks(raw.chunks),
+    ...(typeof raw.brightness === 'number' ? { brightness: raw.brightness } : {}),
     ...(typeof raw.skyboxColor === 'string' ? { skyboxColor: raw.skyboxColor } : {}),
     ...(typeof raw.fogColor === 'string' ? { fogColor: raw.fogColor } : {}),
     ...(typeof raw.fogNear === 'number' ? { fogNear: raw.fogNear } : {}),

@@ -12,6 +12,12 @@ import type { KchMapData, KchSpawn } from './kch-map'
 export type Mode = 'attract' | 'playing' | 'paused' | 'ended'
 export type GameSnapshot = { phase: 'playing' | 'won' | 'lost'; xpEarned: number; matchType: MatchType; crosshairBloom: number; grenades: number; spectating: boolean; mapId: MapId; mapName: string; objective: string; respawnIn: number; timeLeft: number; elapsed: number; score: number; kills: number; deaths: number; headshots: number; shots: number; hits: number; accuracy: number; health: number; armor: number; ammo: number; magazine: number; weapon: WeaponId; weaponName: string; aimed: boolean; reload: number; level: number; xp: number; nextXp: number; credits: number; blueScore: number; redScore: number; round: number; roundPhase: 'buy' | 'live' | 'planted' | 'post'; spawnProtection: number; aliveBots: number; stormRadius: number; playerX: number; playerZ: number; yaw: number; scoreboard: { name: string; kills: number; deaths: number; you?: boolean; team?: 'blue' | 'red' }[] }
 export type GameHooks = { popup(text: string, screen: { x: number; y: number }, kind: 'score' | 'hurt'): void; hitmarker(headshot: boolean): void; hurt(): void; killfeed(text: string, headshot: boolean): void; banner(text: string): void; end(run: GameSnapshot): void }
+/**
+ * KCH block ids that are collision-only: the map author uses them to seal the
+ * playable volume. Drawing them covers every arena in invisible walls.
+ */
+const KCH_INVISIBLE_BLOCKS = new Set<number>([27])
+
 type BotAnimation = { mixer: THREE.AnimationMixer; idle: THREE.AnimationAction; move: THREE.AnimationAction; active: THREE.AnimationAction }
 type Bot = { id: number; name: string; style: number; root: THREE.Group; hitMeshes: THREE.Object3D[]; teamMarker: THREE.Mesh; health: number; nextShot: number; respawnAt: number; spawn: THREE.Vector3; phase: number; visualPhase: number; walking: boolean; kills: number; deaths: number; alive: boolean; team: 'blue' | 'red'; stormTime: number; spawnProtectedUntil: number; animation?: BotAnimation }
 function colorizeKchOperator(mesh: THREE.SkinnedMesh, cloth: string): void {
@@ -117,6 +123,8 @@ export class Game {
   private cameraLanding = 0
   private weaponSwayX = 0
   private weaponSwayY = 0
+  /** Where the imported gun's firing grip sits inside the weapon view rig. */
+  private readonly viewGripAnchor = new THREE.Vector3(0.27, -0.37, -0.6)
   private readonly viewSpringPosition = new THREE.Vector3(0.08, -0.04, -0.65)
   private readonly viewSpringVelocity = new THREE.Vector3()
   private strideTimer = 0
@@ -298,24 +306,18 @@ export class Game {
     const mapBrightness = Math.max(1, Math.min(1.8, Math.sqrt(Math.max(1, data.brightness ?? 1))))
     const poolColors: Record<number, string> = { 148: '#b77a49', 149: '#a43d57', 150: '#eadbd1', 151: '#138cc7', 152: '#eee2d8', 153: '#bd8050', 154: '#d34364', 156: '#f4e7dc' }
     const grouped = new Map<string, { blocks: Array<{ x: number; y: number; z: number }>; texture?: number; poolTile?: number; color?: string }>()
-    const fenceEdges: [Array<{ x: number; y: number; z: number }>, Array<{ x: number; y: number; z: number }>, Array<{ x: number; y: number; z: number }>] = [[], [], []]
-    const fenceEdgeKeys = new Set<string>()
-    const addFenceEdge = (axis: 0 | 1 | 2, x: number, y: number, z: number) => {
-      const key = `${axis}:${x},${y},${z}`
-      if (fenceEdgeKeys.has(key)) return
-      fenceEdgeKeys.add(key)
-      fenceEdges[axis].push({ x, y, z })
-    }
-    const blockColors: Record<number, string> = { 30: '#c8c7c2', 200: '#2676d4', 201: '#cb4b50' }
+    // Only the team floor blocks keep a flat tint; everything else uses the map
+    // atlas so large surfaces read as material instead of bare grey polygons.
+    const blockColors: Record<number, string> = { 200: '#2676d4', 201: '#cb4b50' }
     this.kchColumns.clear()
     for (const block of rawBlocks) {
       const x = (block.x - xCenter) * this.kchCellScale
       const y = (block.y - yOrigin) * this.kchCellScale
       const z = (block.z - zCenter) * this.kchCellScale
-      if (block.texture === 27) {
-        for (const dy of [-0.5, 0.5]) for (const dz of [-0.5, 0.5]) addFenceEdge(0, block.x, block.y + dy, block.z + dz)
-        for (const dx of [-0.5, 0.5]) for (const dz of [-0.5, 0.5]) addFenceEdge(1, block.x + dx, block.y, block.z + dz)
-        for (const dx of [-0.5, 0.5]) for (const dy of [-0.5, 0.5]) addFenceEdge(2, block.x + dx, block.y + dy, block.z)
+      if (KCH_INVISIBLE_BLOCKS.has(block.texture)) {
+        // KCH authors seal a map's playable volume with invisible barrier
+        // blocks. They carry collision through kchColumns below, but drawing
+        // them turned every arena into a visible cage of thin bars.
       } else {
         const color = blockColors[block.texture]
         const hasAtlasTile = this.mapId !== 'pool' && !!this.models.kchMapTexture && block.texture >= 0 && block.texture < 128
@@ -361,7 +363,7 @@ export class Game {
       const material = group.poolTile !== undefined
         ? (() => { const map = this.poolBlockTexture(group.poolTile!, color ?? '#f3e7dc'); return new THREE.MeshLambertMaterial({ map, emissiveMap: map, emissive: '#dcecff', emissiveIntensity: 0.28 }) })()
         : group.texture !== undefined && this.models.kchMapTexture
-        ? new THREE.MeshLambertMaterial({ map: this.models.kchMapTexture, emissiveMap: this.models.kchMapTexture, emissive: '#dcecff', emissiveIntensity: 1.15 * mapBrightness, color: '#ffffff' })
+        ? new THREE.MeshLambertMaterial({ map: this.models.kchMapTexture, emissiveMap: this.models.kchMapTexture, emissive: '#dcecff', emissiveIntensity: 0.05 * mapBrightness, color: '#ffffff' })
         : this.mapId === 'pool'
           ? new THREE.MeshLambertMaterial({ color: color ?? '#f3e7dc', emissive: color ?? '#f3e7dc', emissiveIntensity: 0.22 })
           : this.mat(color ?? '#c8c7c2')
@@ -375,20 +377,6 @@ export class Game {
       this.arenaRoot.add(mesh)
     }
     if (!usesBaseGeometry) geometry.dispose()
-    const edgeGeometries = [new THREE.BoxGeometry(1, 0.055, 0.055), new THREE.BoxGeometry(0.055, 1, 0.055), new THREE.BoxGeometry(0.055, 0.055, 1)]
-    for (let axis = 0; axis < fenceEdges.length; axis += 1) {
-      const edges = fenceEdges[axis]!
-      if (!edges.length) continue
-      const mesh = new THREE.InstancedMesh(edgeGeometries[axis]!, new THREE.MeshLambertMaterial({ color: '#995c3b' }), edges.length)
-      mesh.name = `KCH ${data.mapName} lattice`
-      mesh.userData.surfaceType = 'metal'
-      mesh.castShadow = false; mesh.receiveShadow = true
-      edges.forEach((edge, index) => {
-        dummy.position.set((edge.x - xCenter) * this.kchCellScale, (edge.y - yOrigin) * this.kchCellScale, (edge.z - zCenter) * this.kchCellScale)
-        dummy.scale.setScalar(this.kchCellScale); dummy.updateMatrix(); mesh.setMatrixAt(index, dummy.matrix)
-      })
-      mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); this.arenaRoot.add(mesh)
-    }
     const sourceSpawnRecords = (list: KchSpawn[]) => list.filter(spawn => spawn?.pos?.length === 3 && spawn.pos.every(Number.isFinite)).map(spawn => ({
       point: new THREE.Vector3((spawn.pos[0] - xCenter) * this.kchCellScale, (spawn.pos[1] - yOrigin) * this.kchCellScale, (spawn.pos[2] - zCenter) * this.kchCellScale),
       yaw: Number.isFinite(spawn.rotation?.[1]) ? spawn.rotation[1] : 0,
@@ -414,6 +402,16 @@ export class Game {
     this.objectivePoints[2]!.copy(center.clone().addScaledVector(axis, 0.2))
     const mapSky = this.mapId === 'pool' ? '#62b7ee' : data.skyboxColor
     this.scene.background = this.models.kchSkybox ?? new THREE.Color(mapSky && /^#[0-9a-f]{6}$/i.test(mapSky) ? mapSky : this.mapId === 'labs' ? '#87c9d8' : this.mapId === 'dunes' || this.mapId === 'antfarm' ? '#83c3ec' : '#73bce9')
+    this.applyDistanceFog(Math.max(width, depth) * this.kchCellScale * this.mapScale)
+  }
+  /**
+   * Distance haze tinted to the sky. Without it, a 50 m voxel arena renders as
+   * one flat wall of colour; with it, corridors and pillars gain depth.
+   */
+  private applyDistanceFog(span: number): void {
+    const sky = this.scene.background instanceof THREE.CubeTexture ? '#8fc3e8' : (this.scene.background as THREE.Color | null)?.getStyle() ?? '#8fc3e8'
+    const radius = Math.max(28, Math.min(220, span))
+    this.scene.fog = new THREE.Fog(sky, radius * 0.42, radius * 1.35)
   }
   private poolBlockTexture(textureId: number, base: string): THREE.CanvasTexture {
     const canvas = document.createElement('canvas')
@@ -454,6 +452,7 @@ export class Game {
   private buildFallbackArena(terrain: string): void {
     this.activeKchMap = null; this.kchColumns.clear(); this.kchSpawnTeams = { first: [], second: [] }
     this.scene.background = this.models.kchSkybox ?? new THREE.Color('#77bde9')
+    this.applyDistanceFog(64)
     const floor = this.block(new THREE.Vector3(64, 0.4, 64), new THREE.Vector3(0, -0.2, 0), terrain)
     floor.userData.surfaceType = 'concrete'
     for (const [x, z, sx, sz, sy] of [[-12, -12, 4, 3, 2], [-7, -12, 3, 3, 2], [10, -8, 4, 3, 3], [15, -8, 3, 3, 2], [-15, 8, 3, 4, 2], [-9, 12, 5, 3, 2], [11, 12, 3, 5, 2], [3, 19, 4, 3, 2], [-20, -1, 3, 3, 3], [20, 0, 3, 3, 3], [0, 4, 3, 6, 2], [0, -4, 3, 6, 2]] as const) this.block(new THREE.Vector3(sx, sy, sz), new THREE.Vector3(x, sy / 2, z), '#c4b384')
@@ -999,7 +998,6 @@ export class Game {
     wrapper.add(model)
     const fit = this.currentWeapon === 'knife' ? [0.3, -0.42, -0.8] : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? [0.68, -0.56, -0.8] : this.currentWeapon === 'mp5' ? [0.82, -0.64, -0.82] : this.currentWeapon === 'awp' ? [0.94, -0.68, -0.8] : [0.94, -0.68, -0.8]
     const compactView = THREE.MathUtils.clamp(1 - this.cameraInternal.aspect / 1.15, 0, 0.65)
-    let weaponGrip: THREE.Vector3 | undefined
     if (this.currentWeapon === 'knife') {
       wrapper.position.set(fit[0]! - compactView * 0.78, fit[1]!, fit[2]!)
     } else {
@@ -1007,8 +1005,7 @@ export class Game {
       // the normalized model center so the marker lands on the same hand point
       // across the different source mesh scales.
       const gripOnModel = gripSource.clone().sub(center).multiplyScalar(scale).applyEuler(orientation)
-      wrapper.position.copy(new THREE.Vector3(0.45, -0.53, -0.48).sub(gripOnModel))
-      weaponGrip = gripOnModel
+      wrapper.position.copy(this.viewGripAnchor.clone().sub(gripOnModel))
     }
     // KCH firearms are each one authored mesh. A separate box used as a
     // detachable magazine floated outside the receiver and made the model
@@ -1017,70 +1014,12 @@ export class Game {
     wrapper.userData.basePosition = wrapper.position.clone()
     this.viewModelRig.add(wrapper)
     this.importedViewModel = wrapper
-    const operatorSkin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
-    this.addImportedArms(wrapper, operatorSkin.cloth, 'field-cloth', seed + 31, weaponGrip)
     const muzzle = model.getObjectByName('Muzzle')
     if (muzzle) {
       this.weaponView.updateMatrixWorld(true)
       this.muzzleFlashGroup.position.copy(this.weaponView.worldToLocal(muzzle.getWorldPosition(new THREE.Vector3())))
     }
     return wrapper
-  }
-  private addImportedArms(parent: THREE.Group, cloth: string, pattern: string, seed: number, weaponGrip?: THREE.Vector3): void {
-    const source = this.models.arms
-    if (!source) return
-    const armRig = new THREE.Group()
-    const model = source.scene.clone(true)
-    model.updateMatrixWorld(true)
-    const bounds = new THREE.Box3().setFromObject(model)
-    const size = bounds.getSize(new THREE.Vector3())
-    const center = bounds.getCenter(new THREE.Vector3())
-    const scale = 0.76 / Math.max(0.001, size.z)
-    const leftArm = model.getObjectByName('LeftArm')
-    const rightArm = model.getObjectByName('RightArm')
-    const leftBounds = leftArm ? new THREE.Box3().setFromObject(leftArm) : null
-    const rightBounds = rightArm ? new THREE.Box3().setFromObject(rightArm) : null
-    const leftHand = leftBounds ? new THREE.Vector3((leftBounds.min.x + leftBounds.max.x) * 0.5, (leftBounds.min.y + leftBounds.max.y) * 0.5, leftBounds.min.z) : null
-    const rightHand = rightBounds ? new THREE.Vector3((rightBounds.min.x + rightBounds.max.x) * 0.5, (rightBounds.min.y + rightBounds.max.y) * 0.5, rightBounds.max.z) : null
-    const handAxis = leftHand && rightHand ? leftHand.clone().sub(rightHand) : null
-    if (handAxis) handAxis.y = 0
-    // This KCH arms file is a posed pair of static meshes. Turn the wrists so
-    // they follow the rifle axis, then place the trigger wrist on its grip
-    // marker instead of relying on a guessed arm angle and offset.
-    const armYaw = handAxis && handAxis.lengthSq() > 1e-8 ? Math.atan2(handAxis.x, -handAxis.z) : Math.PI / 4
-    armRig.rotation.y = weaponGrip ? armYaw : Math.PI / 4
-    model.scale.setScalar(scale)
-    model.position.set(-center.x * scale, -center.y * scale, -center.z * scale)
-    if (weaponGrip && rightHand) {
-      const triggerHandLocal = rightHand.clone().sub(center).multiplyScalar(scale).applyEuler(armRig.rotation)
-      armRig.position.copy(weaponGrip.clone().sub(triggerHandLocal))
-    } else {
-      armRig.position.set(-0.16, -0.18, -0.14)
-    }
-    const sleeveTexture = this.weaponFinishTexture(cloth, pattern, seed)
-    model.traverse(object => {
-      if (!(object instanceof THREE.Mesh)) return
-      object.castShadow = false
-      object.receiveShadow = false
-      const cloneMaterial = (material: THREE.Material) => {
-        const copy = material.clone()
-        if (copy instanceof THREE.MeshStandardMaterial) {
-          copy.map = sleeveTexture
-          copy.color.set('#ffffff')
-          copy.metalness = 0.04
-          copy.roughness = 0.78
-          copy.needsUpdate = true
-        }
-        return copy
-      }
-      object.material = Array.isArray(object.material) ? object.material.map(cloneMaterial) : cloneMaterial(object.material)
-    })
-    armRig.add(model)
-    // The arm rig is a child of the exact same wrapper as the weapon, so recoil,
-    // aiming, inspection and reload all share one transform hierarchy.
-    armRig.userData.basePosition = armRig.position.clone()
-    parent.add(armRig)
-    this.importedArms = armRig
   }
   private updateViewModel(): void {
     for (const part of this.viewParts) { part.removeFromParent(); part.geometry.dispose(); const materials = Array.isArray(part.material) ? part.material : [part.material]; materials.forEach(material => material.dispose()) }
@@ -1109,7 +1048,11 @@ export class Game {
           : this.currentWeapon === 'mp5' ? this.models.mac10
             : this.currentWeapon === 'awp' ? this.models.vita
               : rifleModels[(selectedGun?.model ?? 0) % rifleModels.length]
-    const importedLength = this.currentWeapon === 'knife' ? 0.76 : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? 0.72 : this.currentWeapon === 'mp5' ? 1.28 : this.currentWeapon === 'awp' ? 1.9 : 1.7
+    const importedLength = this.currentWeapon === 'knife' ? 0.62 : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? 0.58 : this.currentWeapon === 'mp5' ? 1.05 : this.currentWeapon === 'awp' ? 1.5 : 1.4
+    // The KCH models are centred on the firing grip, so the anchor has to clear
+    // the stock as well as the muzzle or the rear of the rifle ends up behind
+    // the near plane and smears the whole weapon across the screen.
+    this.viewGripAnchor.set(0.27, -0.37, -Math.max(0.5, importedLength * 0.42))
     const importedGun = Boolean(importedSource && this.currentWeapon !== 'knife')
     const ornament = new THREE.Color(primary).lerp(new THREE.Color('#f5deb0'), 0.48).getStyle()
     const addBox = (size: [number, number, number], pos: [number, number, number], color: string, metal = false) => {
@@ -1129,15 +1072,22 @@ export class Game {
       sleeve.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize())
       sleeve.castShadow = true; this.viewModelRig.add(sleeve); this.viewParts.push(sleeve)
     }
-    if (!importedSource || !this.models.arms) {
-      const supportHand: [number, number, number] = importedGun ? [0.1, -0.52, -0.78] : [0.36, -0.52, -0.88]
-      const triggerHand: [number, number, number] = importedGun ? [0.45, -0.53, -0.48] : [0.36, -0.53, -0.38]
-      addSleeve([-0.28, -0.76, 0.02], supportHand, 0.085)
-      addBox([0.13, 0.09, 0.13], supportHand, '#202630')
-      addSleeve([0.67, -0.76, 0.02], triggerHand, 0.09)
-      this.reloadHand = addBox([0.13, 0.1, 0.14], triggerHand, '#202630')
-      this.reloadHand.userData.basePosition = this.reloadHand.position.clone()
-    }
+    // Gloved hands are always procedural. The KCH arm rigs are authored at wildly
+    // different scales per weapon and landed as detached slabs floating beside
+    // the sights, so the deterministic sleeves are what the player sees.
+    const triggerHand: [number, number, number] = importedGun
+      ? this.viewGripAnchor.toArray() as [number, number, number]
+      : [0.36, -0.53, -0.38]
+    const supportHand: [number, number, number] = importedGun
+      ? [triggerHand[0] - 0.22, triggerHand[1] - 0.02, triggerHand[2] - 0.34]
+      : [0.36, -0.52, -0.88]
+    // Forearms start below the frustum instead of beside the camera. Anchoring
+    // them at the camera plane drew two metre-wide tubes across the screen.
+    addSleeve([-0.42, -1.55, -0.66], supportHand, 0.055)
+    addBox([0.13, 0.09, 0.13], supportHand, '#202630')
+    addSleeve([0.78, -1.55, -0.66], triggerHand, 0.06)
+    this.reloadHand = addBox([0.13, 0.1, 0.14], triggerHand, '#202630')
+    this.reloadHand.userData.basePosition = this.reloadHand.position.clone()
     if (importedSource) {
       this.addImportedViewModel(importedSource, this.currentWeapon === 'knife' ? -Math.PI / 4 : Math.PI * 7 / 12, importedLength, primary, this.currentWeapon === 'knife' ? -Math.PI / 2 : 0, motif, motifCode)
     } else if (this.currentWeapon === 'knife') {
@@ -1449,7 +1399,7 @@ export class Game {
   }
   pause(): void { if (this.mode === 'playing') this.mode = 'paused' }
   resume(): void { if (this.mode !== 'paused') return; this.mode = 'playing'; this.input.endFrame(); this.input.takeLook() }
-  toTitle(): void { this.mode = 'attract'; this.scene.background = new THREE.Color('#1d4b9b'); this.yaw = 0; this.pitch = 0; this.teleport(new THREE.Vector3()); this.arenaRoot.visible = false; this.bots.forEach(bot => { bot.root.visible = false }); if (this.lobbyPreview) this.lobbyPreview.visible = true; this.run = this.newRun() }
+  toTitle(): void { this.mode = 'attract'; this.scene.background = new THREE.Color('#1d4b9b'); this.scene.fog = null; this.yaw = 0; this.pitch = 0; this.teleport(new THREE.Vector3()); this.arenaRoot.visible = false; this.bots.forEach(bot => { bot.root.visible = false }); if (this.lobbyPreview) this.lobbyPreview.visible = true; this.run = this.newRun() }
   private handleGrenade(): void { if (!this.input.consume('grenade') || this.matchType !== 'search' || this.roundClock < SEARCH_ROUND.buySeconds || this.roundBreak > 0 || this.playerDeadUntil || this.grenadeCount <= 0 || this.grenadeProjectile) return; this.grenadeCount -= 1; const geometry = new THREE.IcosahedronGeometry(0.16, 0); const material = new THREE.MeshStandardMaterial({ color: '#ffffff', map: this.weaponFinishTexture('#bf6947', 'field-grenade', 4), emissive: '#3d1207', roughness: 0.78 }); const mesh = new THREE.Mesh(geometry, material); const direction = new THREE.Vector3(Math.sin(this.yaw), 0.3, -Math.cos(this.yaw)).normalize(); mesh.position.copy(this.cameraInternal.position).addScaledVector(direction, 0.7); this.scene.add(mesh); this.grenadeProjectile = { mesh, velocity: direction.multiplyScalar(14).add(new THREE.Vector3(0, 3, 0)), fuse: 1.25 }; this.audio.play('plant', mesh.position) }
   private stepGrenade(dt: number): void { const projectile = this.grenadeProjectile; if (!projectile) return; projectile.fuse -= dt; projectile.velocity.y -= 10 * dt; projectile.mesh.position.addScaledVector(projectile.velocity, dt); if (projectile.mesh.position.y < 0.18) { projectile.mesh.position.y = 0.18; projectile.velocity.y = Math.abs(projectile.velocity.y) * 0.42; projectile.velocity.x *= 0.72; projectile.velocity.z *= 0.72 } if (projectile.fuse > 0) return; const point = projectile.mesh.position.clone(); for (const bot of this.bots) { if (!bot.alive || bot.id >= this.activeBotCount || this.matchType === 'search' && this.matchTime < bot.spawnProtectedUntil) continue; const distance = bot.root.position.clone().add(new THREE.Vector3(0, 1.2, 0)).distanceTo(point); if (distance > 7) continue; const damage = 120 * (1 - distance / 8); bot.health -= damage; this.run.hits += 1; this.hooks.popup(`${Math.round(damage)} FRAG`, this.project(bot.root.position.clone().add(new THREE.Vector3(0, 1.2, 0))), 'score'); if (bot.health <= 0) this.killBot(bot, false) } this.audio.play('plant', point); projectile.mesh.removeFromParent(); projectile.mesh.geometry.dispose(); (projectile.mesh.material as THREE.Material).dispose(); this.grenadeProjectile = null }
   setQuality(quality: 'low' | 'medium' | 'high'): void { this.renderer.applyQuality(quality) }

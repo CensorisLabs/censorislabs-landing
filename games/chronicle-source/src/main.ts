@@ -67,6 +67,18 @@ async function boot(): Promise<void> {
     const faces = ['right-min.png', 'left-min.png', 'up-min.png', 'down-min.png', 'front-min.png', 'back-min.png']
       .map(face => new URL(`${folder}${face}`, document.baseURI).href)
     new THREE.CubeTextureLoader().load(faces, texture => {
+      // A cube map must have six square, identically sized faces. These
+      // community packs are often cropped, and WebGL rejects the whole cube
+      // (GL_INVALID_VALUE), which painted every arena's sky solid black.
+      const images = (texture.image ?? []) as Array<{ width: number; height: number } | undefined>
+      const size = images[0]?.width ?? 0
+      const uniform = images.length === 6 && size > 0 && images.every(image => image && image.width === image.height && image.width === size)
+      if (!uniform) {
+        console.warn('KCH skybox faces are not square and uniform; falling back to the map sky colour')
+        texture.dispose()
+        resolve(null)
+        return
+      }
       texture.colorSpace = THREE.SRGBColorSpace
       texture.generateMipmaps = true
       texture.minFilter = THREE.LinearMipmapLinearFilter

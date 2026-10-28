@@ -67,24 +67,36 @@ async function boot(): Promise<void> {
     const faces = ['right-min.png', 'left-min.png', 'up-min.png', 'down-min.png', 'front-min.png', 'back-min.png']
       .map(face => new URL(`${folder}${face}`, document.baseURI).href)
     new THREE.CubeTextureLoader().load(faces, texture => {
-      // A cube map must have six square, identically sized faces. These
-      // community packs are often cropped, and WebGL rejects the whole cube
-      // (GL_INVALID_VALUE), which painted every arena's sky solid black.
-      const images = (texture.image ?? []) as Array<{ width: number; height: number } | undefined>
-      const size = images[0]?.width ?? 0
-      const uniform = images.length === 6 && size > 0 && images.every(image => image && image.width === image.height && image.width === size)
+      // A cube map needs six square, identically sized faces; WebGL rejects the
+      // whole cube otherwise, which used to paint every sky solid black. These
+      // community packs are cropped at random sizes, so each face is redrawn
+      // into a fixed square canvas instead of being discarded.
+      const images = (texture.image ?? []) as Array<HTMLImageElement | undefined>
+      const faceSize = 512
+      const uniform = images.length === 6 && images.every(image => image && image.width > 0 && image.height > 0)
       if (!uniform) {
-        console.warn('KCH skybox faces are not square and uniform; falling back to the map sky colour')
+        console.warn('KCH skybox faces are missing; falling back to the map sky colour')
         texture.dispose()
         resolve(null)
         return
       }
-      texture.colorSpace = THREE.SRGBColorSpace
-      texture.generateMipmaps = true
-      texture.minFilter = THREE.LinearMipmapLinearFilter
-      texture.magFilter = THREE.LinearFilter
-      texture.needsUpdate = true
-      resolve(texture)
+      texture.dispose()
+      const normalized = new THREE.CubeTexture(images.map(image => {
+        const canvas = document.createElement('canvas')
+        canvas.width = faceSize; canvas.height = faceSize
+        const context = canvas.getContext('2d')!
+        context.imageSmoothingEnabled = false
+        const source = image as HTMLImageElement
+        const side = Math.min(source.width, source.height)
+        context.drawImage(source, (source.width - side) / 2, (source.height - side) / 2, side, side, 0, 0, faceSize, faceSize)
+        return canvas
+      }))
+      normalized.colorSpace = THREE.SRGBColorSpace
+      normalized.generateMipmaps = true
+      normalized.minFilter = THREE.LinearMipmapLinearFilter
+      normalized.magFilter = THREE.LinearFilter
+      normalized.needsUpdate = true
+      resolve(normalized)
     }, undefined, error => { console.warn('Optional KCH skybox unavailable', error); resolve(null) })
   }))
   const optionalTexturePack = (pack: typeof KCH_TEXTURE_PACKS[number]) => track(assets.textureVerified(pack.url, pack.sha256, { color: true, flipY: false }).then(texture => {

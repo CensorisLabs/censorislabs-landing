@@ -5,8 +5,9 @@ import type { Audio } from '../engine/audio'
 import type { Input } from '../engine/input'
 import type { Renderer } from '../engine/renderer'
 import { ACHIEVEMENTS, SaveStore, xpForLevel } from '../engine/save'
-import { DAILY_CONTRACTS, GUN_GAME_ORDER, HISTORIC_MAPS, KNIFE_SKINS, OPERATOR_SKINS, SKINS, WEAPONS, armoryGun, operatorSkinForLevel, skinFor, type BotDifficulty, type MapId, type MatchSettings, type MatchType, type WeaponId } from './fps'
+import { DAILY_CONTRACTS, GUN_GAME_ORDER, HISTORIC_MAPS, KNIFE_SKINS, OPERATOR_SKINS, SKINS, WEAPONS, armoryGun, operatorSkinForLevel, skinFor, type BotDifficulty, type MapId, type MatchSettings, type MatchType, type OperatorSkin, type WeaponId } from './fps'
 import { validateCustomMap, type CustomMap } from './custom-map'
+import { kchSkinTextureIndex } from './kch-skins'
 import type { KchMapData, KchSpawn } from './kch-map'
 
 export type Mode = 'attract' | 'playing' | 'paused' | 'ended'
@@ -19,18 +20,28 @@ export type GameHooks = { popup(text: string, screen: { x: number; y: number }, 
 const KCH_INVISIBLE_BLOCKS = new Set<number>([27])
 
 type BotAnimation = { mixer: THREE.AnimationMixer; idle: THREE.AnimationAction; move: THREE.AnimationAction; active: THREE.AnimationAction }
-type Bot = { id: number; name: string; style: number; root: THREE.Group; hitMeshes: THREE.Object3D[]; teamMarker: THREE.Mesh; health: number; nextShot: number; respawnAt: number; spawn: THREE.Vector3; phase: number; visualPhase: number; walking: boolean; kills: number; deaths: number; alive: boolean; team: 'blue' | 'red'; stormTime: number; spawnProtectedUntil: number; animation?: BotAnimation }
-function colorizeKchOperator(mesh: THREE.SkinnedMesh, cloth: string): void {
+type Bot = { id: number; name: string; style: number; root: THREE.Group; hitMeshes: THREE.Object3D[]; teamMarker: THREE.Mesh; health: number; nextShot: number; respawnAt: number; spawn: THREE.Vector3; phase: number; visualPhase: number; walking: boolean; kills: number; deaths: number; alive: boolean; team: 'blue' | 'red'; stormTime: number; spawnProtectedUntil: number; animation?: BotAnimation; /** Materials tinted by the crosshair highlight, 0 = none. */ highlightMaterials: THREE.MeshStandardMaterial[]; highlight: number }
+/**
+ * The KCH operator is a single skinned mesh, so its "skin" is painted per bone
+ * group instead of by UV island: torso and shoulders take the operator's cloth,
+ * forearms and gloves the trim, legs the cloth darkened, boots a fixed leather.
+ * Community texture packs are 64x64 skins authored for other rigs and scramble
+ * on these UVs, which is why the operators looked mis-textured.
+ */
+function colorizeKchOperator(mesh: THREE.SkinnedMesh, skin: OperatorSkin, seed = 0): void {
   const joints = mesh.geometry.getAttribute('skinIndex')
   const weights = mesh.geometry.getAttribute('skinWeight')
   if (!joints || !weights) return
   const geometry = mesh.geometry.clone()
+  const trousers = new THREE.Color(skin.trim).multiplyScalar(0.58).getStyle()
+  const boots = '#1b222b'
+  const tone = ['#c9a97f', '#a87c55', '#e0c39c', '#8d5f3f'][seed % 4]!
   const boneColors = new Map<string, THREE.Color>([
-    ['head', new THREE.Color('#cdb390')], ['body2', new THREE.Color('#26313e')],
-    ['leftArm1', new THREE.Color(cloth)], ['rightArm1', new THREE.Color(cloth)],
-    ['leftArm2', new THREE.Color('#c7cdd0')], ['rightArm2', new THREE.Color('#c7cdd0')],
-    ['leftLeg1', new THREE.Color('#202833')], ['rightLeg1', new THREE.Color('#202833')],
-    ['leftLeg2', new THREE.Color('#a9b0b4')], ['rightLeg2', new THREE.Color('#a9b0b4')],
+    ['head', new THREE.Color(tone)], ['body2', new THREE.Color(skin.cloth)],
+    ['leftArm1', new THREE.Color(skin.cloth)], ['rightArm1', new THREE.Color(skin.cloth)],
+    ['leftArm2', new THREE.Color(skin.trim)], ['rightArm2', new THREE.Color(skin.trim)],
+    ['leftLeg1', new THREE.Color(trousers)], ['rightLeg1', new THREE.Color(trousers)],
+    ['leftLeg2', new THREE.Color(boots)], ['rightLeg2', new THREE.Color(boots)],
   ])
   const colors = new Float32Array(joints.count * 3)
   for (let vertex = 0; vertex < joints.count; vertex += 1) {
@@ -87,6 +98,8 @@ export class Game {
   private royalePlayers: 30 | 50 | 60 | 100 = 60
   private teamSize: 1 | 4 | 5 = 5
   private mapScale = 1
+  /** Local half-size of the active arena, used to keep the player inside it. */
+  private arenaHalfExtent = 27
   private kchCellScale = 1
   private kchCenterX = 0
   private kchCenterZ = 0
@@ -143,7 +156,7 @@ export class Game {
   private reloadLeft = 0
   private reloadDuration = 0
   private reloadMagazine: THREE.Mesh | null = null
-  private reloadHand: THREE.Mesh | null = null
+  private reloadHand: THREE.Object3D | null = null
   private readonly muzzleFlashGroup = new THREE.Group()
   private yaw = 0
   private pitch = 0
@@ -287,7 +300,11 @@ export class Game {
     const spawnEntries = [...(data.spawnPlaces?.firstTeam ?? []), ...(data.spawnPlaces?.secondTeam ?? [])].filter(spawn => spawn?.pos?.length === 3 && spawn.pos.every(Number.isFinite))
     const yOrigin = spawnEntries.length ? spawnEntries.reduce((sum, spawn) => sum + spawn.pos[1], 0) / spawnEntries.length : Math.min(...rawBlocks.map(block => block.y))
     const width = maxX - minX + 1, depth = maxZ - minZ + 1
-    this.kchCellScale = Math.min(1.2, 52 / Math.max(width, depth))
+    // Target a much larger footprint than the original 52-unit box while keeping
+    // single voxels below the jump-and-mantle height (2.25 * mapScale) so every
+    // step stays climbable.
+    this.kchCellScale = Math.min(1.45, 96 / Math.max(width, depth))
+    this.arenaHalfExtent = Math.max(width, depth) * this.kchCellScale * 0.5 + 6
     this.kchCenterX = xCenter; this.kchCenterZ = zCenter
     const palettes: Partial<Record<MapId, string[]>> = {
       antfarm: ['#c79a4b', '#e4c777', '#82785d', '#6f9271', '#dbb970', '#566e72', '#f0dc9b', '#a87a50'],
@@ -451,6 +468,7 @@ export class Game {
   }
   private buildFallbackArena(terrain: string): void {
     this.activeKchMap = null; this.kchColumns.clear(); this.kchSpawnTeams = { first: [], second: [] }
+    this.arenaHalfExtent = 34
     this.scene.background = this.models.kchSkybox ?? new THREE.Color('#77bde9')
     this.applyDistanceFog(64)
     const floor = this.block(new THREE.Vector3(64, 0.4, 64), new THREE.Vector3(0, -0.2, 0), terrain)
@@ -563,17 +581,111 @@ export class Game {
     return texture
   }
   private voxelPart(parent: THREE.Group, size: [number, number, number], pos: [number, number, number], color: string, zone: 'head' | 'body' | 'limb'): THREE.Mesh { const m = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color)); m.position.set(...pos); m.userData = { zone, botId: parent.userData.botId }; m.castShadow = false; parent.add(m); return m }
+  /**
+   * Fits an imported KCH weapon into a character's hand.
+   *
+   * The source weapons are authored several metres long and every one carries
+   * `Lever` (grip) and `Muzzle` helpers. Scaling by the bounding box alone
+   * produced seven-metre rifles, so this measures the authored muzzle axis,
+   * scales the model to a human length, aims the muzzle down the holder's
+   * forward (-Z) axis with the weapon upright, and then slides it so the
+   * authored grip lands exactly on the hand joint.
+   */
+  private fitHeldWeapon(weapon: THREE.Object3D, hand: THREE.Object3D, targetLength: number): void {
+    weapon.position.set(0, 0, 0); weapon.rotation.set(0, 0, 0); weapon.scale.setScalar(1)
+    weapon.updateMatrixWorld(true)
+    const bounds = new THREE.Box3().setFromObject(weapon)
+    const size = bounds.getSize(new THREE.Vector3())
+    const center = bounds.getCenter(new THREE.Vector3())
+    const muzzlePoint = weapon.getObjectByName('Muzzle')?.getWorldPosition(new THREE.Vector3())
+    const gripPoint = weapon.getObjectByName('Lever')?.getWorldPosition(new THREE.Vector3())
+    const muzzleAxis = (muzzlePoint ?? center.clone().add(new THREE.Vector3(1, 0, 0))).sub(center)
+    const grip = (gripPoint ?? center.clone().add(new THREE.Vector3(0.1, -0.045, 0))).sub(center)
+    if (muzzleAxis.lengthSq() < 1e-8) muzzleAxis.set(1, 0, 0)
+    muzzleAxis.normalize()
+    let length = Math.max(size.x, size.y, size.z)
+    let minAlong = Number.POSITIVE_INFINITY
+    let maxAlong = Number.NEGATIVE_INFINITY
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+      const projection = new THREE.Vector3(x, y, z).sub(center).dot(muzzleAxis)
+      minAlong = Math.min(minAlong, projection); maxAlong = Math.max(maxAlong, projection)
+    }
+    if (maxAlong - minAlong > 1e-4) length = maxAlong - minAlong
+    // The hand joint inherits the operator rig's scale (about 6.9x on this GLB),
+    // so divide it out or a hand-local 1 m rifle measures seven metres in world
+    // space and dwarfs the bot holding it.
+    const handScale = hand.getWorldScale(new THREE.Vector3())
+    const inherited = (Math.abs(handScale.x) + Math.abs(handScale.y) + Math.abs(handScale.z)) / 3
+    const scale = targetLength / Math.max(0.001, length) / Math.max(0.001, inherited)
+    // Aim the muzzle along -Z, then roll about that axis until the weapon's own
+    // up direction is vertical. Without the roll pass the guns hang sideways.
+    const up = Math.abs(muzzleAxis.y) > 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0)
+    const orientation = new THREE.Quaternion().setFromUnitVectors(muzzleAxis, new THREE.Vector3(0, 0, -1))
+    const rolledUp = up.applyQuaternion(orientation)
+    orientation.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.atan2(rolledUp.x, rolledUp.y)))
+    // Match the holder's world rotation, then undo it so the weapon keeps the
+    // world-aligned orientation captured at rig build time.
+    const local = hand.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(orientation)
+    weapon.quaternion.copy(local)
+    weapon.scale.setScalar(scale)
+    weapon.position.copy(center.clone().multiplyScalar(-scale).applyQuaternion(local))
+    weapon.position.sub(grip.clone().multiplyScalar(scale).applyQuaternion(local))
+    weapon.userData.heldWeapon = true
+    hand.add(weapon)
+  }
   private kchTexturePack(seed: number): THREE.Texture | null {
     const packs = this.models.kchTexturePacks
     if (!packs.length) return null
     return packs[Math.abs(Math.trunc(seed)) % packs.length] ?? null
+  }
+  /**
+   * Measures a skinned operator by sampling its real skinned vertices.
+   *
+   * The KCH rigs author their bind geometry at a much smaller scale than the
+   * skeleton, so `Box3.setFromObject` reported roughly 0.27 m for a 1.8 m
+   * operator. That made the bots scale up 6.9x and stand seven metres tall.
+   */
+  private skinnedExtent(root: THREE.Object3D): { height: number; minY: number; centerX: number; centerZ: number } {
+    root.updateMatrixWorld(true)
+    const point = new THREE.Vector3()
+    const vertex = new THREE.Vector3()
+    let minY = Number.POSITIVE_INFINITY, maxY = Number.NEGATIVE_INFINITY
+    let minX = Number.POSITIVE_INFINITY, maxX = Number.NEGATIVE_INFINITY
+    let minZ = Number.POSITIVE_INFINITY, maxZ = Number.NEGATIVE_INFINITY
+    root.traverse(object => {
+      if (!(object instanceof THREE.SkinnedMesh)) return
+      const position = object.geometry.getAttribute('position')
+      if (!position) return
+      const step = Math.max(1, Math.floor(position.count / 320))
+      for (let index = 0; index < position.count; index += step) {
+        vertex.fromBufferAttribute(position, index)
+        object.applyBoneTransform(index, vertex).applyMatrix4(object.matrixWorld)
+        point.copy(vertex)
+        minY = Math.min(minY, point.y); maxY = Math.max(maxY, point.y)
+        minX = Math.min(minX, point.x); maxX = Math.max(maxX, point.x)
+        minZ = Math.min(minZ, point.z); maxZ = Math.max(maxZ, point.z)
+      }
+    })
+    if (!Number.isFinite(minY)) return { height: 0, minY: 0, centerX: 0, centerZ: 0 }
+    return { height: maxY - minY, minY, centerX: (minX + maxX) / 2, centerZ: (minZ + maxZ) / 2 }
+  }
+  /** Scales an operator to an exact height, then centres it with its feet on the floor. */
+  private fitSkinnedModel(model: THREE.Object3D, targetHeight: number): void {
+    model.scale.setScalar(1)
+    model.position.set(0, 0, 0)
+    const raw = this.skinnedExtent(model)
+    if (raw.height <= 0.0001) return
+    model.scale.setScalar(targetHeight / raw.height)
+    const fitted = this.skinnedExtent(model)
+    model.position.set(-fitted.centerX, -fitted.minY, -fitted.centerZ)
   }
   private buildBots(): void {
     const starts = Array.from({ length: 99 }, (_, id) => { const angle = id / 99 * Math.PI * 2; const radius = 18 + (id % 5) * 1.2; return [Math.sin(angle) * radius, Math.cos(angle) * radius] as const })
     starts.forEach(([x, z], id) => {
       const group = new THREE.Group(); group.userData.botId = id
       const proxyRoot = new THREE.Group(); proxyRoot.userData.botId = id; group.add(proxyRoot)
-      const skin = OPERATOR_SKINS[(id * 3) % OPERATOR_SKINS.length]!
+      // Spread the roster so neighbouring bots never share an outfit.
+      const skin = OPERATOR_SKINS[(id * 11 + 5) % OPERATOR_SKINS.length]!
       const head = this.voxelPart(proxyRoot, [0.9, 0.9, 0.9], [0, 2.55, 0], skin.trim, 'head')
       const body = this.voxelPart(proxyRoot, [1.2, 1.2, 0.8], [0, 1.45, 0], skin.cloth, 'body')
       const leftArm = new THREE.Group(); leftArm.userData.botId = id; leftArm.position.set(-0.78, 2.02, 0); proxyRoot.add(leftArm)
@@ -623,51 +735,47 @@ export class Game {
       }
       const teamMarker = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.34, 0.14), this.mat('#cb6657'))
       teamMarker.position.set(0.79, 2.03, 0.18); proxyRoot.add(teamMarker)
+      const operatorMaterials: THREE.MeshStandardMaterial[] = []
       let animation: BotAnimation | undefined
       if (this.models.player) {
         proceduralVisuals.forEach(part => { part.visible = false })
         const operator = cloneSkinnedScene(this.models.player.scene)
-        const bounds = new THREE.Box3().setFromObject(operator)
-        const size = bounds.getSize(new THREE.Vector3())
-        const scale = PLAYER_MODEL_HEIGHT / Math.max(0.001, size.y)
-        operator.scale.setScalar(scale)
-        operator.position.set(-(bounds.min.x + bounds.max.x) * scale / 2, -bounds.min.y * scale, -(bounds.min.z + bounds.max.z) * scale / 2)
-        const fabric = this.operatorFabricTexture(skin.model)
-        const texture = this.kchTexturePack(id * 7 + skin.model)
+        this.fitSkinnedModel(operator, PLAYER_MODEL_HEIGHT)
         operator.traverse(object => {
           if (!(object instanceof THREE.Mesh)) return
-          if (!texture && object instanceof THREE.SkinnedMesh) colorizeKchOperator(object, skin.cloth)
+          if (object instanceof THREE.SkinnedMesh) colorizeKchOperator(object, skin, id)
           object.castShadow = false; object.receiveShadow = false
-          const tint = new THREE.Color(skin.cloth)
           const cloneMaterial = (material: THREE.Material) => {
             const copy = material.clone()
             if (copy instanceof THREE.MeshStandardMaterial) {
+              copy.map = null
               copy.color.set('#ffffff')
               copy.vertexColors = object.geometry.hasAttribute('color')
-              if (object.geometry.getAttribute('uv')) copy.map = texture ?? fabric
               copy.roughness = Math.max(copy.roughness, 0.78)
               copy.needsUpdate = true
-            } else if ('color' in copy && copy.color instanceof THREE.Color) copy.color.lerp(tint, 0.16)
+            }
             return copy
           }
           object.material = Array.isArray(object.material) ? object.material.map(cloneMaterial) : cloneMaterial(object.material)
+        })
+        // A skinned mesh keeps the bounding sphere of its bind pose, which on
+        // these rigs is a fraction of the posed size. Frustum culling therefore
+        // dropped bots in and out of view as they walked, which read as glitching.
+        operator.traverse(object => {
+          if (object instanceof THREE.SkinnedMesh) object.frustumCulled = false
+          else if (object instanceof THREE.Mesh) object.frustumCulled = false
+          if (!(object instanceof THREE.Mesh)) return
+          const materials = Array.isArray(object.material) ? object.material : [object.material]
+          for (const material of materials) if (material instanceof THREE.MeshStandardMaterial && !operatorMaterials.includes(material)) operatorMaterials.push(material)
         })
         group.add(operator)
         const heldWeaponSource = this.models.ar9 ?? this.models.lar ?? this.models.scar
         const rightHand = operator.getObjectByName('rightArm2') ?? operator.getObjectByName('rightArm1')
         if (heldWeaponSource && rightHand) {
           const heldWeapon = heldWeaponSource.scene.clone(true)
-          const weaponBounds = new THREE.Box3().setFromObject(heldWeapon)
-          const weaponSize = weaponBounds.getSize(new THREE.Vector3())
-          const weaponScale = 1.08 / Math.max(0.001, weaponSize.x)
           operator.updateMatrixWorld(true)
-          const handRotation = rightHand.getWorldQuaternion(new THREE.Quaternion())
-          const forwardRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
-          heldWeapon.quaternion.copy(handRotation.invert().multiply(forwardRotation))
-          heldWeapon.scale.setScalar(weaponScale)
-          const grip = new THREE.Vector3(0.1, -0.045, 0).multiplyScalar(weaponScale).applyQuaternion(heldWeapon.quaternion)
-          heldWeapon.position.copy(grip).negate()
-          const finishTexture = this.kchTexturePack(id * 11 + skin.model) ?? this.weaponFinishTexture(skin.accent, 'operator-rifle', skin.model)
+          this.fitHeldWeapon(heldWeapon, rightHand, 1.02)
+          const finishTexture = this.weaponFinishTexture(skin.accent, 'operator-rifle', skin.model)
           heldWeapon.traverse(object => {
             if (!(object instanceof THREE.Mesh)) return
             object.castShadow = false; object.receiveShadow = false
@@ -680,7 +788,6 @@ export class Game {
             }
             object.material = Array.isArray(object.material) ? object.material.map(applyFinish) : applyFinish(object.material)
           })
-          rightHand.add(heldWeapon)
         }
         const idleClip = this.models.player.animations.find(clip => /idle|stand/i.test(clip.name)) ?? this.models.player.animations[0]
         const moveClip = this.models.player.animations.find(clip => /walk|run|sprint|jog/i.test(clip.name)) ?? idleClip
@@ -701,9 +808,57 @@ export class Game {
       proxyRoot.position.y = -proxyBounds.min.y * proxyScale
       group.position.set(x, 0, z); this.scene.add(group)
       const profiles = ['MICA', 'HOLLOW', 'TUNDRA', 'RUST', 'KITE', 'MALLOW', 'QUARRY', 'WISP', 'TALLOW', 'CROW', 'SABLE', 'BRAMBLE', 'OCHRE', 'NORTH', 'FLINT', 'REED', 'CIRRUS', 'CLOVE', 'BASALT', 'LARK', 'MERCURY', 'PIPER', 'CINDER', 'WREN']
-      const bot: Bot = { id, name: profiles[id]!, style: id % 4, root: group, hitMeshes, teamMarker, health: 100, nextShot: 1 + id * 0.4, respawnAt: 0, spawn: new THREE.Vector3(x, 0, z), phase: id * 1.7, visualPhase: id * 1.7, walking: false, kills: 0, deaths: 0, alive: true, team: 'red', stormTime: 0, spawnProtectedUntil: 0, animation }
+      const bot: Bot = { id, name: profiles[id]!, style: id % 4, root: group, hitMeshes, teamMarker, health: 100, nextShot: 1 + id * 0.4, respawnAt: 0, spawn: new THREE.Vector3(x, 0, z), phase: id * 1.7, visualPhase: id * 1.7, walking: false, kills: 0, deaths: 0, alive: true, team: 'red', stormTime: 0, spawnProtectedUntil: 0, animation, highlightMaterials: operatorMaterials, highlight: 0 }
       this.bots.push(bot); this.hitTargets.push(...hitMeshes)
     })
+  }
+  /**
+   * Crosshair highlight: rivals tint red, squadmates blue, and the tint fades
+   * instead of snapping so it stays readable while strafing across a target.
+   */
+  private updateAimHighlight(dt: number): void {
+    const looking = this.mode === 'playing' && !this.playerDeadUntil
+    let target: Bot | undefined
+    if (looking) {
+      // Angular test against the view axis rather than a mesh raycast: bot world
+      // matrices are refreshed during rendering, so raycasting their hit boxes
+      // silently missed while the simulation ran ahead of the last draw.
+      const eye = this.cameraInternal.position
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.cameraInternal.quaternion)
+      const rel = new THREE.Vector3()
+      // Sample points up the bot's body and measure the perpendicular distance
+      // from the view ray. A pure centre-point angle test missed standing bots
+      // because their chest sits below eye height at close range.
+      let bestAlong = Number.POSITIVE_INFINITY
+      for (const bot of this.bots) {
+        if (!bot.alive || bot.id >= this.activeBotCount) continue
+        for (const [height, radius] of [[0.45, 0.42], [0.95, 0.44], [1.3, 0.42], [1.55, 0.34], [1.75, 0.32]] as const) {
+          rel.set(bot.root.position.x, bot.root.position.y + height, bot.root.position.z).sub(eye)
+          const along = rel.dot(forward)
+          if (along <= 0.5 || along > 90 || along >= bestAlong) continue
+          if (rel.addScaledVector(forward, -along).length() > radius) continue
+          bestAlong = along
+          target = bot
+        }
+      }
+      if (target) {
+        // Only the chosen bot pays for an occlusion cast.
+        this.raycaster.set(eye, rel.set(target.root.position.x, target.root.position.y + 1.3, target.root.position.z).sub(eye).normalize())
+        const wall = this.raycaster.intersectObjects(this.arenaRoot.children, true)[0]
+        if (wall && wall.distance < this.cameraInternal.position.distanceTo(target.root.position) - 0.3) target = undefined
+      }
+    }
+    for (const bot of this.bots) {
+      if (!bot.highlightMaterials.length) continue
+      const wanted = bot === target ? 1 : 0
+      bot.highlight = THREE.MathUtils.damp(bot.highlight, wanted, 16, dt)
+      if (bot.highlight < 0.002 && wanted === 0) continue
+      const color = bot.team === 'red' ? '#ff3a2f' : '#2f8bff'
+      for (const material of bot.highlightMaterials) {
+        material.emissive.set(color)
+        material.emissiveIntensity = bot.highlight * 0.85
+      }
+    }
   }
   private buildLobbyPreview(): void {
     if (!this.models.player) return
@@ -715,27 +870,22 @@ export class Game {
     // The KCH operator's face points down local +Z; turn it toward the lobby camera.
     model.rotation.y = Math.PI
     model.updateMatrixWorld(true)
-    const bounds = new THREE.Box3().setFromObject(model)
-    const size = bounds.getSize(new THREE.Vector3())
+    const skin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
     // Match the reference lobby framing instead of letting the showcase model
     // dominate the narrow game panel.
-    const scale = 2.55 / Math.max(0.001, size.y)
-    const skin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
-    model.scale.setScalar(scale)
-    model.position.set(-(bounds.min.x + bounds.max.x) * scale / 2, 0.045 - bounds.min.y * scale, -(bounds.min.z + bounds.max.z) * scale / 2)
-    const fabric = this.operatorFabricTexture(skin.model)
-    const texture = this.kchTexturePack(skin.model)
+    this.fitSkinnedModel(model, 2.55)
+    model.position.y += 0.045
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
-      if (!texture && object instanceof THREE.SkinnedMesh) colorizeKchOperator(object, skin.cloth)
+      if (object instanceof THREE.SkinnedMesh) colorizeKchOperator(object, skin, skin.model)
       object.userData.lobbyOperator = true
       object.castShadow = false; object.receiveShadow = false
       const colorize = (material: THREE.Material) => {
         const copy = material.clone()
         if (copy instanceof THREE.MeshStandardMaterial) {
+          copy.map = null
           copy.color.set('#ffffff')
           copy.vertexColors = object.geometry.hasAttribute('color')
-          if (object.geometry.getAttribute('uv')) copy.map = texture ?? fabric
           copy.roughness = Math.max(copy.roughness, 0.78)
           copy.needsUpdate = true
         }
@@ -773,7 +923,7 @@ export class Game {
         if (!(object instanceof THREE.Mesh)) return
         object.castShadow = false; object.receiveShadow = false
         object.renderOrder = 8
-        const finishTexture = this.kchTexturePack(skin.model + 5) ?? this.weaponFinishTexture('#34788e', 'operator-rifle', skin.model)
+        const finishTexture = this.weaponFinishTexture(skin.accent, 'operator-rifle', skin.model)
         const applyTexture = (material: THREE.Material) => { const copy = material.clone(); if ('depthTest' in copy) { copy.depthTest = false; copy.depthWrite = false }; if (copy instanceof THREE.MeshStandardMaterial) { copy.color.set('#ffffff'); copy.emissive.set('#101c23'); copy.metalness = 0.22; copy.roughness = 0.62; if (object.geometry.getAttribute('uv')) copy.map = finishTexture; copy.needsUpdate = true }; return copy }
         object.material = Array.isArray(object.material) ? object.material.map(applyTexture) : applyTexture(object.material)
         object.userData.lobbyWeapon = true
@@ -787,9 +937,7 @@ export class Game {
   private updateLobbyPreviewSkin(): void {
     if (!this.lobbyPreview) return
     const skin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
-    const fabric = this.operatorFabricTexture(skin.model)
-    const texture = this.kchTexturePack(skin.model)
-    const weaponTexture = this.kchTexturePack(skin.model + 5)
+    const weaponTexture = this.weaponFinishTexture(skin.accent, 'operator-rifle', skin.model)
     this.lobbyPreview.traverse(object => {
       if (object instanceof THREE.Mesh && object.userData.lobbyWeapon === true) {
         const materials = Array.isArray(object.material) ? object.material : [object.material]
@@ -803,13 +951,12 @@ export class Game {
         return
       }
       if (!(object instanceof THREE.SkinnedMesh) || object.userData.lobbyOperator !== true) return
-      if (!texture) colorizeKchOperator(object, skin.cloth)
       const materials = Array.isArray(object.material) ? object.material : [object.material]
       for (const material of materials) {
         if (material instanceof THREE.MeshStandardMaterial) {
           material.color.set('#ffffff')
           material.vertexColors = object.geometry.hasAttribute('color')
-          if (object.geometry.getAttribute('uv')) material.map = texture ?? fabric
+          material.map = null
           material.needsUpdate = true
         }
       }
@@ -901,14 +1048,19 @@ export class Game {
     context.fillStyle = paint(dark); context.fillRect(22, 112, 24, 5); context.fillRect(82, 112, 24, 5)
     context.fillStyle = paint(bright); context.font = 'bold 8px sans-serif'; context.fillText(pattern.slice(0, 12).toUpperCase(), 20, 16)
 
-    const kchImage = this.kchTexturePack(seed)?.image as CanvasImageSource | undefined
+    const plateIndex = kchSkinTextureIndex(pattern)
+    const plate = plateIndex !== null ? this.models.kchTexturePacks[plateIndex] : this.kchTexturePack(seed)
+    const kchImage = plate?.image as CanvasImageSource | undefined
     if (kchImage) {
+      // The plates are dark concrete/wood masks. Multiply sinks them into the
+      // base colour and the screen pass lifts the grain back out, so the gun
+      // stays bright while the selected plate still drives its texture.
       context.save()
       context.globalCompositeOperation = 'multiply'
-      context.globalAlpha = 0.26
+      context.globalAlpha = 0.42
       context.drawImage(kchImage, 0, 0, 128, 128)
       context.globalCompositeOperation = 'screen'
-      context.globalAlpha = 0.1
+      context.globalAlpha = 0.3
       context.drawImage(kchImage, 0, 0, 128, 128)
       context.restore()
     }
@@ -941,36 +1093,38 @@ export class Game {
     const center = bounds.getCenter(new THREE.Vector3())
     const muzzleMarker = model.getObjectByName('Muzzle')
     const gripSource = model.getObjectByName('Lever')?.getWorldPosition(new THREE.Vector3()).clone() ?? new THREE.Vector3(0.1, -0.045, 0)
-    let weaponYaw = yaw
+    // Derive the true muzzle axis from the authored helper and measure the model
+    // along it. Guessing a shared yaw left every KCH gun tilted, so the
+    // viewmodel read as a shapeless tube instead of a rifle silhouette.
+    const muzzleAxis = muzzleMarker ? muzzleMarker.getWorldPosition(new THREE.Vector3()).sub(center) : new THREE.Vector3(1, 0, 0)
+    if (muzzleAxis.lengthSq() < 1e-8) muzzleAxis.set(1, 0, 0)
+    muzzleAxis.normalize()
     let axisLength = Math.max(size.x, size.y, size.z)
-    if (muzzleMarker) {
-      // KCH firearms expose a muzzle helper. Derive their forward direction
-      // from that authored marker instead of guessing a shared rotation; the
-      // imported gun meshes point their muzzle along local -X.
-      const muzzleDirection = muzzleMarker.getWorldPosition(new THREE.Vector3()).sub(center)
-      muzzleDirection.y = 0
-      if (muzzleDirection.lengthSq() > 1e-8) {
-        muzzleDirection.normalize()
-        weaponYaw = Math.atan2(muzzleDirection.x, -muzzleDirection.z)
-        let minAlongAxis = Number.POSITIVE_INFINITY
-        let maxAlongAxis = Number.NEGATIVE_INFINITY
-        for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
-          const projection = new THREE.Vector3(x, y, z).sub(center).dot(muzzleDirection)
-          minAlongAxis = Math.min(minAlongAxis, projection)
-          maxAlongAxis = Math.max(maxAlongAxis, projection)
-        }
-        axisLength = maxAlongAxis - minAlongAxis
-      }
+    let minAlongAxis = Number.POSITIVE_INFINITY
+    let maxAlongAxis = Number.NEGATIVE_INFINITY
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+      const projection = new THREE.Vector3(x, y, z).sub(center).dot(muzzleAxis)
+      minAlongAxis = Math.min(minAlongAxis, projection)
+      maxAlongAxis = Math.max(maxAlongAxis, projection)
     }
-    const orientation = new THREE.Euler(pitch, weaponYaw, 0)
+    if (maxAlongAxis - minAlongAxis > 1e-4) axisLength = maxAlongAxis - minAlongAxis
     const scale = targetLength / Math.max(0.001, axisLength)
     const kchFinish = this.weaponFinishTexture(tint, pattern, seed)
-    const kchTexture = this.kchTexturePack(seed)
+    // Aim the muzzle down -Z, then roll about that axis until the weapon stands
+    // upright, and finally add the authored pitch as a small display tilt.
+    const orientation = new THREE.Quaternion().setFromUnitVectors(muzzleAxis, new THREE.Vector3(0, 0, -1))
+    const localUp = Math.abs(muzzleAxis.y) > 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0)
+    const rolledUp = localUp.applyQuaternion(orientation)
+    orientation.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.atan2(rolledUp.x, rolledUp.y)))
+    // Cant the muzzle a little to the left so the camera sees the weapon's side
+    // profile. Pointing it straight down -Z showed only the stock end and made
+    // every gun read as a shapeless blob.
+    orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.04 + pitch * 0.18, 0.32 + yaw * 0.02, 0.03)))
     model.scale.setScalar(scale)
-    model.rotation.copy(orientation)
+    model.quaternion.copy(orientation)
     // A rotated center must be removed in the rotated basis too, or the
     // normalized model drifts sideways when its muzzle axis is aligned.
-    model.position.copy(center.clone().multiplyScalar(-scale).applyEuler(orientation))
+    model.position.copy(center.clone().multiplyScalar(-scale).applyQuaternion(orientation))
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
       object.castShadow = false; object.receiveShadow = false
@@ -981,14 +1135,20 @@ export class Game {
             // The KCH GLBs contain UVs but no embedded base-color maps. Use
             // the matching KCH skin atlas directly so its UV islands line up;
             // the generic procedural finish is only a fallback.
-            copy.map = copy.map ?? kchTexture ?? kchFinish
+            // The KCH gun UVs land almost entirely in the empty black half of
+            // the 256px skin atlases, which painted every viewmodel solid black.
+            // The painted finish below is full coverage, so it carries the skin
+            // colour and pattern while the atlas only modulates it.
+            copy.map = kchFinish
+            copy.emissive.set(tint).multiplyScalar(0.17)
+            copy.emissiveMap = null
             copy.color.set('#ffffff')
             copy.vertexColors = object.geometry.hasAttribute('color')
           } else {
             copy.color.set('#526d80').lerp(new THREE.Color(tint), 0.24)
           }
-          copy.metalness = Math.max(copy.metalness, 0.28)
-          copy.roughness = Math.min(copy.roughness, 0.62)
+          copy.metalness = 0.06
+          copy.roughness = 0.52
         } else if ('color' in copy && copy.color instanceof THREE.Color) copy.color.set('#526d80')
         copy.needsUpdate = true
         return copy
@@ -1004,7 +1164,7 @@ export class Game {
       // The KCH Lever helper sits by each weapon's firing grip. Account for
       // the normalized model center so the marker lands on the same hand point
       // across the different source mesh scales.
-      const gripOnModel = gripSource.clone().sub(center).multiplyScalar(scale).applyEuler(orientation)
+      const gripOnModel = gripSource.clone().sub(center).multiplyScalar(scale).applyQuaternion(orientation)
       wrapper.position.copy(this.viewGripAnchor.clone().sub(gripOnModel))
     }
     // KCH firearms are each one authored mesh. A separate box used as a
@@ -1048,11 +1208,11 @@ export class Game {
           : this.currentWeapon === 'mp5' ? this.models.mac10
             : this.currentWeapon === 'awp' ? this.models.vita
               : rifleModels[(selectedGun?.model ?? 0) % rifleModels.length]
-    const importedLength = this.currentWeapon === 'knife' ? 0.62 : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? 0.58 : this.currentWeapon === 'mp5' ? 1.05 : this.currentWeapon === 'awp' ? 1.5 : 1.4
+    const importedLength = this.currentWeapon === 'knife' ? 0.74 : this.currentWeapon === 'glock' || this.currentWeapon === 'deagle' ? 0.78 : this.currentWeapon === 'mp5' ? 1.42 : this.currentWeapon === 'awp' ? 1.7 : 1.66
     // The KCH models are centred on the firing grip, so the anchor has to clear
     // the stock as well as the muzzle or the rear of the rifle ends up behind
     // the near plane and smears the whole weapon across the screen.
-    this.viewGripAnchor.set(0.27, -0.37, -Math.max(0.5, importedLength * 0.42))
+    this.viewGripAnchor.set(0.33, -0.4, -Math.max(0.52, importedLength * 0.36))
     const importedGun = Boolean(importedSource && this.currentWeapon !== 'knife')
     const ornament = new THREE.Color(primary).lerp(new THREE.Color('#f5deb0'), 0.48).getStyle()
     const addBox = (size: [number, number, number], pos: [number, number, number], color: string, metal = false) => {
@@ -1064,13 +1224,31 @@ export class Game {
       const part = new THREE.Mesh(new THREE.BoxGeometry(...size), material)
       part.position.set(...pos); part.castShadow = true; this.viewModelRig.add(part); this.viewParts.push(part); return part
     }
-    const addSleeve = (from: [number, number, number], to: [number, number, number], radius: number) => {
-      const start = new THREE.Vector3(...from), end = new THREE.Vector3(...to)
-      const direction = end.clone().sub(start)
-      const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.76, radius, direction.length(), 7, 1), this.mat('#282f3a'))
-      sleeve.position.copy(start).add(end).multiplyScalar(0.5)
-      sleeve.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize())
-      sleeve.castShadow = true; this.viewModelRig.add(sleeve); this.viewParts.push(sleeve)
+    /**
+     * A gloved fist that actually wraps a grip: palm, four curled fingers, a
+     * thumb and a short cuff. The previous version was a bare box on the end of
+     * a long cylinder, which read as two poles resting against the gun.
+     */
+    const addHand = (origin: THREE.Vector3, forward: THREE.Vector3, color: string): THREE.Group => {
+      const hand = new THREE.Group()
+      hand.position.copy(origin)
+      hand.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forward.clone().normalize())
+      const add = (size: [number, number, number], pos: [number, number, number]) => {
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color))
+        mesh.position.set(...pos); mesh.castShadow = true
+        hand.add(mesh); this.viewParts.push(mesh)
+        return mesh
+      }
+      const palm = add([0.105, 0.09, 0.115], [0, 0, 0])
+      for (let finger = 0; finger < 4; finger += 1) add([0.022, 0.07, 0.03], [-0.036 + finger * 0.024, 0.052, -0.05])
+      add([0.03, 0.055, 0.07], [0.056, 0.028, -0.012])
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.058, 0.3, 8, 1), this.mat(color))
+      cuff.position.set(0.028, -0.115, 0.2); cuff.rotation.set(-0.62, 0, 0.12)
+      cuff.castShadow = true
+      hand.add(cuff); this.viewParts.push(cuff)
+      this.viewModelRig.add(hand)
+      void palm
+      return hand
     }
     // Gloved hands are always procedural. The KCH arm rigs are authored at wildly
     // different scales per weapon and landed as detached slabs floating beside
@@ -1081,12 +1259,19 @@ export class Game {
     const supportHand: [number, number, number] = importedGun
       ? [triggerHand[0] - 0.22, triggerHand[1] - 0.02, triggerHand[2] - 0.34]
       : [0.36, -0.52, -0.88]
-    // Forearms start below the frustum instead of beside the camera. Anchoring
-    // them at the camera plane drew two metre-wide tubes across the screen.
-    addSleeve([-0.42, -1.55, -0.66], supportHand, 0.055)
-    addBox([0.13, 0.09, 0.13], supportHand, '#202630')
-    addSleeve([0.78, -1.55, -0.66], triggerHand, 0.06)
-    this.reloadHand = addBox([0.13, 0.1, 0.14], triggerHand, '#202630')
+    // The viewmodel is canted left, so the support hand has to travel down the
+    // barrel rather than sit straight ahead of the trigger hand.
+    const gunForward = new THREE.Vector3(-Math.sin(0.32), 0, -Math.cos(0.32))
+    if (importedGun) {
+      const reach = Math.max(0.34, importedLength * 0.42)
+      supportHand[0] = triggerHand[0] + gunForward.x * reach
+      supportHand[1] = triggerHand[1] - 0.012
+      supportHand[2] = triggerHand[2] + gunForward.z * reach
+    }
+    // Sit the fists under and outside the receiver line so they wrap the grip
+    // instead of covering the weapon's body.
+    this.reloadHand = addHand(new THREE.Vector3(triggerHand[0] + 0.012, triggerHand[1] - 0.055, triggerHand[2] + 0.01), gunForward, '#2b3340')
+    addHand(new THREE.Vector3(supportHand[0] - 0.012, supportHand[1] - 0.055, supportHand[2]), gunForward, '#2b3340')
     this.reloadHand.userData.basePosition = this.reloadHand.position.clone()
     if (importedSource) {
       this.addImportedViewModel(importedSource, this.currentWeapon === 'knife' ? -Math.PI / 4 : Math.PI * 7 / 12, importedLength, primary, this.currentWeapon === 'knife' ? -Math.PI / 2 : 0, motif, motifCode)
@@ -1339,7 +1524,9 @@ export class Game {
     this.royalePlayers = settings.royalePlayers === 30 || settings.royalePlayers === 50 || settings.royalePlayers === 100 ? settings.royalePlayers : 60
     this.teamSize = settings.teamSize === 1 || settings.teamSize === 4 ? settings.teamSize : 5
     const teamMode = ['tdm', 'domination', 'hardpoint', 'ctf', 'search'].includes(matchType)
-    this.mapScale = matchType === 'training' ? 0.72 : teamMode ? (this.teamSize === 1 ? 0.48 : this.teamSize === 4 ? 0.68 : 0.82) : matchType === 'ffa' || matchType === 'gungame' ? 0.82 : 1
+    // The arena is scaled relative to the player, so these values are what make
+    // a map feel roomy: 0.82 crossed a match arena in about four seconds.
+    this.mapScale = matchType === 'training' ? 0.9 : teamMode ? (this.teamSize === 1 ? 0.62 : this.teamSize === 4 ? 0.85 : 1) : matchType === 'ffa' || matchType === 'gungame' ? 1 : 1.15
     this.arenaRoot.scale.setScalar(this.mapScale)
     this.activeBotCount = matchType === 'training' ? 6 : matchType === 'ffa' || matchType === 'gungame' ? 8 : matchType === 'royale' ? this.royalePlayers - 1 : teamMode ? this.teamSize * 2 - 1 : 6
     this.objective = ({ gungame: 'ELIMINATE YOUR WAY THROUGH SEVEN WEAPONS', ffa: 'FIRST TO 12 ELIMINATIONS', tdm: 'FIRST TEAM TO 16 ELIMINATIONS', royale: 'BE THE LAST OPERATOR STANDING', training: 'MOVING TARGET PRACTICE', domination: 'CAPTURE AND HOLD THREE ZONES', hardpoint: 'CONTROL THE ROTATING HARDPOINT', ctf: 'STEAL THE ENEMY STANDARD', search: 'PLANT OR DEFUSE THE RELIC CHARGE' } satisfies Record<MatchType, string>)[matchType]
@@ -1445,6 +1632,7 @@ export class Game {
     if (this.mode !== 'playing') return
     this.captureInterpolationState()
     this.matchTime += dt; this.run.elapsed = this.matchTime; this.run.timeLeft = this.matchType === 'search' ? this.searchTimeLeft() : Math.max(0, (this.matchType === 'royale' ? 360 : this.matchType === 'training' ? 0 : 240) - this.matchTime); this.reloadLeft = Math.max(0, this.reloadLeft - dt); this.fireCooldown = Math.max(0, this.fireCooldown - dt); this.recoil = Math.max(0, this.recoil - dt * 4); this.flash = Math.max(0, this.flash - dt)
+    this.updateAimHighlight(dt)
     this.handleWeaponInput(); if (this.playerDeadUntil === Number.POSITIVE_INFINITY && this.input.consume('spectate')) this.cycleSpectator(); if (this.input.consume('ping')) this.hooks.banner(`SQUAD PING // GRID ${Math.round(this.player.root.position.x + 30)}:${Math.round(this.player.root.position.z + 30)}`); this.handleMovement(dt); this.stepFootsteps(dt); this.stepRelics(dt); this.handleReload(dt); this.handleFire(); this.stepGrenade(dt); this.handleGrenade(); this.stepBots(dt)
     if (this.matchType === 'tdm') this.stepTeamScore(dt)
     if (this.matchType === 'royale') this.stepRoyale(dt)
@@ -1588,8 +1776,8 @@ export class Game {
       if (!amount) return
       const candidate = this.player.root.position.clone()
       candidate[axis] += amount
-      candidate.x = THREE.MathUtils.clamp(candidate.x, -27 * this.mapScale, 27 * this.mapScale)
-      candidate.z = THREE.MathUtils.clamp(candidate.z, -27 * this.mapScale, 27 * this.mapScale)
+      candidate.x = THREE.MathUtils.clamp(candidate.x, -this.arenaHalfExtent * this.mapScale, this.arenaHalfExtent * this.mapScale)
+      candidate.z = THREE.MathUtils.clamp(candidate.z, -this.arenaHalfExtent * this.mapScale, this.arenaHalfExtent * this.mapScale)
       const hit = this.collisionAt(candidate)
       if (hit) {
         const rise = hit.top - this.player.root.position.y
@@ -1989,7 +2177,7 @@ export class Game {
     this.viewSpringVelocity.sub(springStep.multiplyScalar(springFrequency)).multiplyScalar(decay)
     this.weaponView.position.copy(this.viewSpringPosition)
     this.weaponView.rotation.set(-this.sprintPose * 0.38 + this.recoil * 0.7 + this.weaponSwayY + Math.sin(Math.PI * reloadProgress) * 0.13 - (this.dashLeft > 0 ? 0.1 : 0), -this.weaponSwayX * 0.65, -this.horizontalVelocity.x * 0.012 - Math.sin(Math.PI * reloadProgress) * 0.08)
-    this.weaponView.scale.setScalar((0.62 + this.aimBlend * 0.035) * viewFit)
+    this.weaponView.scale.setScalar((0.94 + this.aimBlend * 0.04) * viewFit)
     if (this.lobbyPreview && this.mode === 'attract') { this.lobbyPreview.rotation.y = Math.sin(this.lastFrame * 0.32) * 0.13; this.lobbyAnimation?.update(dt) }
     this.lastFrame += dt
     // Blend moving bots between fixed simulation ticks while drawing, then restore the exact

@@ -1,5 +1,6 @@
 import type { CustomMap } from './custom-map'
 import { KCH_MAP_CATALOG } from './kch-map-catalog'
+import { KCH_OPERATOR_SKINS, KCH_WEAPON_SKINS } from './kch-skins'
 
 export type WeaponId = 'glock' | 'deagle' | 'mp5' | 'ak47' | 'm4a4' | 'awp' | 'knife'
 export type MatchType = 'ffa' | 'tdm' | 'royale' | 'training' | 'domination' | 'hardpoint' | 'ctf' | 'search' | 'gungame'
@@ -64,6 +65,8 @@ export const SKINS: SkinItem[] = [
   { id: 'awp-rosequartz', weapon: 'awp', name: 'Rose Quartz', rarity: 'Classified', color: '#ec77a8', pattern: 'constellation' },
   { id: 'knife-jade', weapon: 'knife', name: 'Jade Oath', rarity: 'Legendary', color: '#51b99c', pattern: 'jade' },
   { id: 'knife-ivory', weapon: 'knife', name: 'Ivory Vow', rarity: 'Covert', color: '#e9ddbe', pattern: 'ivory' },
+  // Every KCH skin plate that ships in the asset folder is a real, selectable finish.
+  ...KCH_WEAPON_SKINS,
   ...Array.from({ length: 1000 }, (_, i) => { const bases: WeaponId[] = ['glock', 'deagle', 'mp5', 'ak47', 'm4a4', 'awp']; const names = ['Tidal Archive', 'Copper Constellation', 'Basalt Bloom', 'Cedar Cipher', 'Amber Current', 'Frosted Quarry', 'Mosslight', 'Starfall Mosaic', 'Ochre Circuit', 'Violet Cartographer', 'Saltwind Lattice', 'Ember Filigree', 'Quartz Compass', 'Marble Runes', 'Rain-etched Bronze', 'Lantern Static']; const colors = ['#4b9f9b', '#b47a4d', '#687784', '#bd9e55', '#7f65a5', '#718b61', '#b75e50', '#567ca0', '#c5a96f', '#59706b', '#a46786', '#668da0']; const rarities: Rarity[] = ['Consumer', 'Industrial', 'Mil-Spec', 'Restricted', 'Classified', 'Covert']; return { id: `chronicle-finish-${i + 1}`, weapon: bases[i % bases.length]!, name: `${names[i % names.length]} ${String(Math.floor(i / names.length) + 1).padStart(2, '0')}`, rarity: rarities[Math.floor(i / 16) % rarities.length]!, color: colors[(i * 5) % colors.length]!, pattern: ['strata', 'rune', 'mosaic', 'stipple', 'braid', 'constellation', 'weathering', 'inlay'][i % 8]! } }),
 ]
 
@@ -102,6 +105,8 @@ export const OPERATOR_SKINS: OperatorSkin[] = [
   { id: 'long-winter', name: 'Long Winter', level: 30, cloth: '#536f88', trim: '#d9e3e4', accent: '#8c5f70', model: 5 },
   { id: 'first-chronicle', name: 'First Chronicle', level: 40, cloth: '#5b4a79', trim: '#efd48b', accent: '#6fae97', model: 6 },
   { id: 'world-keeper', name: 'World Keeper', level: 50, cloth: '#9b6b38', trim: '#f5e6b5', accent: '#64bcb1', model: 7 },
+  // The operator plates that ship in the KCH folder.
+  ...KCH_OPERATOR_SKINS,
   ...Array.from({ length: 16 }, (_, i) => ({ id: `chronicle-operator-${i + 33}`, name: ['Quartz Ranger', 'Brass Navigator', 'Wildfire Scout', 'Harbor Marshal', 'Pinewatch', 'Dune Cartographer', 'Blueglass Guard', 'Ashen Courier', 'Copper Pathfinder', 'Moonlit Sentinel', 'Cedar Banner', 'Saltwind Keeper', 'Stormline Scout', 'Gilded Surveyor', 'Violet Wayfarer', 'First Light'][i]!, level: 31 + i, cloth: ['#65768a', '#865c42', '#597454', '#674f71', '#4b7780', '#a17845', '#526187', '#776853'][i % 8]!, trim: ['#d1be91', '#d0a85f', '#c4d19a', '#d8c9e4'][i % 4]!, accent: ['#ad624f', '#4b9890', '#bc8651', '#7189b6'][i % 4]!, model: i % 8 })),
 ]
 
@@ -124,7 +129,13 @@ export function skinFor(id: string | undefined): SkinItem | undefined {
 }
 
 export function defaultInventory(): SkinItem[] {
-  return [...SKINS.filter(skin => skin.rarity === 'Consumer' || skin.rarity === 'Industrial').slice(0, 2), ...SKINS.filter(skin => skin.weapon === 'awp')]
+  // The KCH plates ship with the game, so every one of them is owned from the
+  // first run instead of sitting behind the unlock ladder.
+  return [
+    ...KCH_WEAPON_SKINS,
+    ...SKINS.filter(skin => skin.rarity === 'Consumer' || skin.rarity === 'Industrial').slice(0, 2),
+    ...SKINS.filter(skin => skin.weapon === 'awp'),
+  ]
 }
 
 

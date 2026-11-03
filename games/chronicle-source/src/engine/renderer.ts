@@ -31,6 +31,11 @@ export class Renderer {
   private preset: Preset
   private scene?: THREE.Scene
   private camera?: THREE.PerspectiveCamera
+  /** Resolution multiplier applied on top of the preset to hold the frame budget. */
+  private dynamicScale = 1
+  private frameAverage = 1 / 60
+  private sampleFrames = 0
+  private lastStamp = 0
 
   constructor(readonly canvas: HTMLCanvasElement, quality: Quality) {
     this.preset = QUALITY_PRESETS[quality]
@@ -50,6 +55,9 @@ export class Renderer {
   applyQuality(quality: Quality): void {
     this.preset = QUALITY_PRESETS[quality]
     this.gl.shadowMap.enabled = this.preset.shadows
+    this.dynamicScale = 1
+    this.frameAverage = 1 / 60
+    this.sampleFrames = 0
     this.gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.preset.pixelRatio))
     this.bloom?.dispose()
     this.composer?.dispose()
@@ -84,7 +92,33 @@ export class Renderer {
     }
   }
 
+  /**
+   * Trades a little resolution for frame rate when the scene gets heavy.
+   *
+   * A crowded arena means dozens of skinned operators whose bone matrices are
+   * rebuilt every frame, and on a high-DPI display that can drop well below
+   * 60 fps. Scaling the pixel ratio down keeps motion smooth and recovers the
+   * full ratio as soon as headroom returns, without touching the player's
+   * quality preset.
+   */
+  private retuneResolution(): void {
+    const target = 1 / 55
+    const next = this.frameAverage > target * 1.22 ? Math.max(0.6, this.dynamicScale - 0.08)
+      : this.frameAverage < target * 0.86 ? Math.min(1, this.dynamicScale + 0.05)
+        : this.dynamicScale
+    if (Math.abs(next - this.dynamicScale) < 0.001) return
+    this.dynamicScale = next
+    this.gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.preset.pixelRatio) * this.dynamicScale)
+  }
+
   render(scene: THREE.Scene, camera: THREE.PerspectiveCamera): void {
+    const stamp = performance.now()
+    if (this.lastStamp > 0) {
+      this.frameAverage += (Math.min(0.25, (stamp - this.lastStamp) / 1000) - this.frameAverage) * 0.06
+      this.sampleFrames += 1
+      if (this.sampleFrames >= 45) { this.sampleFrames = 0; this.retuneResolution() }
+    }
+    this.lastStamp = stamp
     const w = this.canvas.clientWidth || window.innerWidth
     const h = this.canvas.clientHeight || window.innerHeight
     if (Math.abs(camera.aspect - w / h) > 1e-3) {

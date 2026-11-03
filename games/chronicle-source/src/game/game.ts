@@ -21,36 +21,76 @@ const KCH_INVISIBLE_BLOCKS = new Set<number>([27])
 
 type BotAnimation = { mixer: THREE.AnimationMixer; idle: THREE.AnimationAction; move: THREE.AnimationAction; active: THREE.AnimationAction }
 type Bot = { id: number; name: string; style: number; root: THREE.Group; hitMeshes: THREE.Object3D[]; teamMarker: THREE.Mesh; health: number; nextShot: number; respawnAt: number; spawn: THREE.Vector3; phase: number; visualPhase: number; walking: boolean; kills: number; deaths: number; alive: boolean; team: 'blue' | 'red'; stormTime: number; spawnProtectedUntil: number; animation?: BotAnimation; /** Materials tinted by the crosshair highlight, 0 = none. */ highlightMaterials: THREE.MeshStandardMaterial[]; highlight: number }
+/** Stable integer hash used to place camouflage blotches and shading noise. */
+function patternHash(a: number, b: number, c: number, seed: number): number {
+  let hash = Math.imul(a, 73856093) ^ Math.imul(b, 19349663) ^ Math.imul(c, 83492791) ^ Math.imul(seed + 1, 2654435761)
+  hash = Math.imul(hash ^ (hash >>> 15), 2246822519)
+  hash = Math.imul(hash ^ (hash >>> 13), 3266489917)
+  return (hash ^ (hash >>> 16)) >>> 0
+}
+
 /**
- * The KCH operator is a single skinned mesh, so its "skin" is painted per bone
- * group instead of by UV island: torso and shoulders take the operator's cloth,
- * forearms and gloves the trim, legs the cloth darkened, boots a fixed leather.
- * Community texture packs are 64x64 skins authored for other rigs and scramble
- * on these UVs, which is why the operators looked mis-textured.
+ * The KCH operator is a single skinned mesh with no usable UVs — community packs
+ * are 64x64 skins authored for other rigs and scramble here — so the surface is
+ * painted per vertex instead. Each vertex takes its bone group's colour, then a
+ * seeded blocky camouflage, a chest rig, a waist belt, boot leather and a little
+ * per-vertex grain are baked on top. That keeps the operators reading as fabric
+ * and kit at match distance rather than one flat wash of colour.
  */
 function colorizeKchOperator(mesh: THREE.SkinnedMesh, skin: OperatorSkin, seed = 0): void {
   const joints = mesh.geometry.getAttribute('skinIndex')
   const weights = mesh.geometry.getAttribute('skinWeight')
-  if (!joints || !weights) return
+  const position = mesh.geometry.getAttribute('position')
+  if (!joints || !weights || !position) return
   const geometry = mesh.geometry.clone()
-  const trousers = new THREE.Color(skin.trim).multiplyScalar(0.58).getStyle()
-  const boots = '#1b222b'
-  const tone = ['#c9a97f', '#a87c55', '#e0c39c', '#8d5f3f'][seed % 4]!
+  const trousers = new THREE.Color(skin.trim).multiplyScalar(0.58)
+  const boots = new THREE.Color('#1b222b')
+  const tone = new THREE.Color(['#c9a97f', '#a87c55', '#e0c39c', '#8d5f3f'][seed % 4]!)
+  // A small per-operator hue shift means two bots wearing the same roster skin
+  // still read as different outfits instead of a clone line.
+  const cloth = new THREE.Color(skin.cloth).offsetHSL(((seed % 7) - 3) * 0.016, 0, 0)
+  const trim = new THREE.Color(skin.trim)
+  const accent = new THREE.Color(skin.accent)
   const boneColors = new Map<string, THREE.Color>([
-    ['head', new THREE.Color(tone)], ['body2', new THREE.Color(skin.cloth)],
-    ['leftArm1', new THREE.Color(skin.cloth)], ['rightArm1', new THREE.Color(skin.cloth)],
-    ['leftArm2', new THREE.Color(skin.trim)], ['rightArm2', new THREE.Color(skin.trim)],
-    ['leftLeg1', new THREE.Color(trousers)], ['rightLeg1', new THREE.Color(trousers)],
-    ['leftLeg2', new THREE.Color(boots)], ['rightLeg2', new THREE.Color(boots)],
+    ['head', tone], ['body2', cloth],
+    ['leftArm1', cloth], ['rightArm1', cloth],
+    ['leftArm2', trim], ['rightArm2', trim],
+    ['leftLeg1', trousers], ['rightLeg1', trousers],
+    ['leftLeg2', boots], ['rightLeg2', boots],
   ])
+  const bounds = new THREE.Box3().setFromBufferAttribute(position as THREE.BufferAttribute)
+  const spanY = Math.max(0.0001, bounds.max.y - bounds.min.y)
+  // Three camo tones per operator: the outfit's own cloth, a bleached patch and
+  // a shadow patch. Quantising to 8 cm cells turns them into fabric blotches
+  // instead of per-vertex noise.
+  const camoTones = [cloth.clone(), cloth.clone().lerp(accent, 0.42).multiplyScalar(1.16), cloth.clone().multiplyScalar(0.7)]
   const colors = new Float32Array(joints.count * 3)
+  const scratch = new THREE.Color()
   for (let vertex = 0; vertex < joints.count; vertex += 1) {
     const influence = [weights.getX(vertex), weights.getY(vertex), weights.getZ(vertex), weights.getW(vertex)]
     const index = [joints.getX(vertex), joints.getY(vertex), joints.getZ(vertex), joints.getW(vertex)]
     const dominant = index[influence.indexOf(Math.max(...influence))] ?? 0
     const boneName = mesh.skeleton.bones[dominant]?.name ?? ''
-    const color = boneColors.get(boneName) ?? new THREE.Color('#bfc6ca')
-    color.toArray(colors, vertex * 3)
+    const base = boneColors.get(boneName) ?? new THREE.Color('#bfc6ca')
+    const x = position.getX(vertex)
+    const y = position.getY(vertex)
+    const z = position.getZ(vertex)
+    const height = (y - bounds.min.y) / spanY
+    scratch.copy(base)
+    // Only the cloth groups take camouflage; hands, legs and boots keep their
+    // own tone so a bot's silhouette stays readable against its torso.
+    if (boneName === 'body2' || boneName === 'leftArm1' || boneName === 'rightArm1' || boneName === 'leftLeg1' || boneName === 'rightLeg1') {
+      const cell = camoTones[patternHash(Math.round(x / 0.08), Math.round(y / 0.09), Math.round(z / 0.08), seed) % camoTones.length]!
+      scratch.lerp(cell, boneName.startsWith('body') || boneName.startsWith('leftArm') || boneName.startsWith('rightArm') ? 0.78 : 0.55)
+    }
+    // Chest rig straps across the torso and the dark sole of the boots. Height
+    // bands were previously painted across every group, which drew stray belts
+    // over arms and legs; they are now limited to the torso and the feet.
+    if (boneName === 'body2' && height > 0.58 && height < 0.66 && Math.abs(x) < 0.17) scratch.lerp(trim, 0.72)
+    if (height < 0.05) scratch.copy(boots).multiplyScalar(0.92)
+    // Fine grain keeps large flat panels from reading as untextured plastic.
+    scratch.multiplyScalar(0.9 + (patternHash(vertex, seed, 3, 11) % 21) / 21 * 0.2)
+    scratch.toArray(colors, vertex * 3)
   }
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   if (mesh.userData.kchColoredGeometry === true) mesh.geometry.dispose()
@@ -177,6 +217,9 @@ export class Game {
   private readonly viewParts: THREE.Mesh[] = []
   private readonly weaponFinishTextures = new Map<string, THREE.CanvasTexture>()
   private readonly operatorTextures = new Map<string, THREE.CanvasTexture>()
+  private readonly handTextures = new Map<string, THREE.CanvasTexture>()
+  /** Alternates every drawn frame so distant operator mixers can step at 30 Hz. */
+  private farAnimationTick = true
   private importedViewModel: THREE.Group | null = null
   private importedArms: THREE.Group | null = null
   private lobbyPreview: THREE.Group | null = null
@@ -679,6 +722,38 @@ export class Game {
     const fitted = this.skinnedExtent(model)
     model.position.set(-fitted.centerX, -fitted.minY, -fitted.centerZ)
   }
+  /**
+   * Replaces the bind-pose bounding sphere of a skinned mesh with one measured
+   * from its posed vertices. Because the bind geometry on these rigs is a
+   * fraction of the posed size, three.js culled bots in and out of view as they
+   * walked. Disabling culling fixed the glitching but drew every operator in the
+   * arena on every frame; measuring the real sphere keeps the silhouettes stable
+   * and lets the GPU skip the bots behind the player.
+   */
+  private fitPosedCulling(root: THREE.Object3D): void {
+    root.updateMatrixWorld(true)
+    const vertex = new THREE.Vector3()
+    root.traverse(object => {
+      if (!(object instanceof THREE.SkinnedMesh)) return
+      const position = object.geometry.getAttribute('position')
+      if (!position) { object.frustumCulled = false; return }
+      const bounds = new THREE.Box3()
+      const step = Math.max(1, Math.floor(position.count / 320))
+      for (let index = 0; index < position.count; index += step) {
+        vertex.fromBufferAttribute(position, index)
+        object.applyBoneTransform(index, vertex)
+        bounds.expandByPoint(vertex)
+      }
+      if (bounds.isEmpty()) { object.frustumCulled = false; return }
+      const center = bounds.getCenter(new THREE.Vector3())
+      const radius = bounds.getSize(new THREE.Vector3()).length() / 2
+      // A SkinnedMesh carries its own boundingSphere, and three.js prefers it
+      // over the geometry's. Writing only the geometry left the bind-pose sphere
+      // in charge, which culled every operator out of the frame.
+      object.boundingSphere = new THREE.Sphere(center, radius * 1.15)
+      object.frustumCulled = true
+    })
+  }
   private buildBots(): void {
     const starts = Array.from({ length: 99 }, (_, id) => { const angle = id / 99 * Math.PI * 2; const radius = 18 + (id % 5) * 1.2; return [Math.sin(angle) * radius, Math.cos(angle) * radius] as const })
     starts.forEach(([x, z], id) => {
@@ -761,9 +836,8 @@ export class Game {
         // A skinned mesh keeps the bounding sphere of its bind pose, which on
         // these rigs is a fraction of the posed size. Frustum culling therefore
         // dropped bots in and out of view as they walked, which read as glitching.
+        this.fitPosedCulling(operator)
         operator.traverse(object => {
-          if (object instanceof THREE.SkinnedMesh) object.frustumCulled = false
-          else if (object instanceof THREE.Mesh) object.frustumCulled = false
           if (!(object instanceof THREE.Mesh)) return
           const materials = Array.isArray(object.material) ? object.material : [object.material]
           for (const material of materials) if (material instanceof THREE.MeshStandardMaterial && !operatorMaterials.includes(material)) operatorMaterials.push(material)
@@ -986,6 +1060,33 @@ export class Game {
     texture.magFilter = THREE.LinearFilter; texture.minFilter = THREE.LinearMipmapLinearFilter
     texture.anisotropy = Math.min(4, this.renderer.gl.capabilities.getMaxAnisotropy())
     this.operatorTextures.set(key, texture)
+    return texture
+  }
+  /** Knuckle seams and grain for the first-person block hand. */
+  private handTexture(tone: string): THREE.CanvasTexture {
+    const cached = this.handTextures.get(tone)
+    if (cached) return cached
+    const canvas = document.createElement('canvas')
+    canvas.width = 64; canvas.height = 64
+    const context = canvas.getContext('2d')!
+    context.imageSmoothingEnabled = false
+    context.fillStyle = tone; context.fillRect(0, 0, 64, 64)
+    // Soft skin grain. A hard repeating grid read as ladder rungs across every
+    // face of the block, which is what made the hands look like planks.
+    for (let index = 0; index < 260; index += 1) {
+      const x = (index * 37) % 64, y = (index * 53) % 64
+      context.fillStyle = index % 3 === 0 ? 'rgba(255, 236, 200, 0.09)' : 'rgba(88, 52, 30, 0.08)'
+      context.fillRect(x, y, 2, 2)
+    }
+    context.fillStyle = 'rgba(255, 240, 214, 0.1)'
+    context.fillRect(0, 0, 64, 4)
+    context.fillStyle = 'rgba(72, 42, 24, 0.12)'
+    context.fillRect(0, 58, 64, 6)
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter
+    texture.generateMipmaps = false; texture.needsUpdate = true
+    this.handTextures.set(tone, texture)
     return texture
   }
   private weaponFinishTexture(colorHex: string, pattern: string, seed: number): THREE.CanvasTexture {
@@ -1225,34 +1326,69 @@ export class Game {
       part.position.set(...pos); part.castShadow = true; this.viewModelRig.add(part); this.viewParts.push(part); return part
     }
     /**
-     * A gloved fist that actually wraps a grip: palm, four curled fingers, a
-     * thumb and a short cuff. The previous version was a bare box on the end of
-     * a long cylinder, which read as two poles resting against the gun.
+     * Blocky operator arm, following the voxel arena reference: a broad bare
+     * forearm climbing in through the bottom edge of the frame, a cuff band and
+     * a sleeve behind it, with knuckles that close over the weapon. The previous
+     * version was two slim dark boxes that read as poles leaning on the gun.
      */
-    const addHand = (origin: THREE.Vector3, forward: THREE.Vector3, color: string): THREE.Group => {
-      const hand = new THREE.Group()
-      hand.position.copy(origin)
-      hand.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forward.clone().normalize())
-      const add = (size: [number, number, number], pos: [number, number, number]) => {
-        const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), this.mat(color))
-        mesh.position.set(...pos); mesh.castShadow = true
-        hand.add(mesh); this.viewParts.push(mesh)
+    const playerSkin = OPERATOR_SKINS.find(item => item.id === this.save.data.operatorSkinId) ?? operatorSkinForLevel(this.save.data.level)
+    const handTone = ['#c8945f', '#b07f52', '#d5a878', '#96674a'][(motifCode + this.save.data.operatorSkinId.length) % 4]!
+    const sleeveTone = new THREE.Color(playerSkin.cloth).multiplyScalar(0.6).getStyle()
+    const cuffTone = new THREE.Color(playerSkin.accent).lerp(new THREE.Color('#1d242e'), 0.32).getStyle()
+    const handMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', map: this.handTexture(handTone), roughness: 0.78, metalness: 0.02 })
+    const sleeveMaterial = new THREE.MeshStandardMaterial({ color: sleeveTone, map: this.operatorFabricTexture(motifCode + 17), roughness: 0.88, metalness: 0.02 })
+    const cuffMaterial = this.mat(cuffTone)
+    const seamMaterial = this.mat(new THREE.Color(handTone).multiplyScalar(0.6).getStyle())
+    const addVoxelArm = (grip: THREE.Vector3, forward: THREE.Vector3, mirror: number, reach: number): THREE.Group => {
+      const arm = new THREE.Group()
+      // The limb runs back and down out of frame, which is what makes the arms
+      // read as belonging to the player instead of floating props. The support
+      // arm reaches further because it sits deeper in the view, so the same
+      // world offset covers less of the screen.
+      const limb = new THREE.Vector3(0.07 * mirror, -0.78, 0.62).normalize()
+      const tilt = Math.atan2(-limb.y, limb.z)
+      // `grip` is the point the fist has to cover, so the arm origin is pulled
+      // back along the limb by the fist's own offset. Placing the group at the
+      // grip put the palm a quarter metre below the weapon, which left the hands
+      // visibly hanging under the gun instead of holding it.
+      arm.position.copy(grip).sub(limb.clone().multiplyScalar(0.15 * reach))
+      arm.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forward.clone().normalize())
+      // Each limb segment is a group tilted along the arm axis. Building the
+      // fist inside one of them keeps the knuckles welded to the palm instead of
+      // drifting out along the forearm as loose cubes.
+      const segment = (distance: number) => {
+        const part = new THREE.Group()
+        part.position.copy(limb).multiplyScalar(distance * reach)
+        part.rotation.x = tilt
+        arm.add(part)
+        return part
+      }
+      const add = (parent: THREE.Object3D, size: [number, number, number], pos: [number, number, number], material: THREE.Material, curl = 0) => {
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material)
+        mesh.position.set(...pos); mesh.rotation.x = curl; mesh.castShadow = true
+        parent.add(mesh); this.viewParts.push(mesh)
         return mesh
       }
-      const palm = add([0.105, 0.09, 0.115], [0, 0, 0])
-      for (let finger = 0; finger < 4; finger += 1) add([0.022, 0.07, 0.03], [-0.036 + finger * 0.024, 0.052, -0.05])
-      add([0.03, 0.055, 0.07], [0.056, 0.028, -0.012])
-      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.058, 0.3, 8, 1), this.mat(color))
-      cuff.position.set(0.028, -0.115, 0.2); cuff.rotation.set(-0.62, 0, 0.12)
-      cuff.castShadow = true
-      hand.add(cuff); this.viewParts.push(cuff)
-      this.viewModelRig.add(hand)
-      void palm
-      return hand
+      // Oversized voxel proportions on purpose: at this field of view a realistic
+      // fist covers about six percent of the screen, which is why the reference
+      // captures read so clearly. These scale the hand to roughly a fifth of the
+      // frame width while still leaving the sights clear.
+      // One solid fist with knuckle seams. Separate protruding fingers read as
+      // loose rungs against the receiver at this scale, which is what made the
+      // earlier hands look like planks leaning on the gun.
+      const fist = segment(0.15)
+      add(fist, [0.225, 0.235, 0.27], [0, 0, 0], handMaterial)
+      for (let seam = 0; seam < 3; seam += 1) add(fist, [0.232, 0.024, 0.055], [0, 0.118, -0.075 + seam * 0.075], seamMaterial)
+      add(fist, [0.08, 0.13, 0.2], [0.108 * mirror, 0.01, -0.05], handMaterial)
+      add(fist, [0.09, 0.03, 0.21], [0.07 * mirror, 0.1, -0.05], seamMaterial)
+      add(segment(0.42), [0.225, 0.24, 0.32], [0, 0, 0], handMaterial)
+      add(segment(0.62), [0.25, 0.26, 0.15], [0, 0, 0], cuffMaterial)
+      add(segment(0.86), [0.28, 0.29, 0.62], [0, 0, 0], sleeveMaterial)
+      this.viewModelRig.add(arm)
+      return arm
     }
-    // Gloved hands are always procedural. The KCH arm rigs are authored at wildly
-    // different scales per weapon and landed as detached slabs floating beside
-    // the sights, so the deterministic sleeves are what the player sees.
+    // The hands are procedural. The KCH arm rigs are authored at wildly different
+    // scales per weapon and landed as detached slabs floating beside the sights.
     const triggerHand: [number, number, number] = importedGun
       ? this.viewGripAnchor.toArray() as [number, number, number]
       : [0.36, -0.53, -0.38]
@@ -1268,10 +1404,10 @@ export class Game {
       supportHand[1] = triggerHand[1] - 0.012
       supportHand[2] = triggerHand[2] + gunForward.z * reach
     }
-    // Sit the fists under and outside the receiver line so they wrap the grip
+    // Both fists sit just under the receiver line so the knuckles wrap the grip
     // instead of covering the weapon's body.
-    this.reloadHand = addHand(new THREE.Vector3(triggerHand[0] + 0.012, triggerHand[1] - 0.055, triggerHand[2] + 0.01), gunForward, '#2b3340')
-    addHand(new THREE.Vector3(supportHand[0] - 0.012, supportHand[1] - 0.055, supportHand[2]), gunForward, '#2b3340')
+    this.reloadHand = addVoxelArm(new THREE.Vector3(triggerHand[0] + 0.02, triggerHand[1] - 0.08, triggerHand[2] + 0.01), gunForward, 1, 1)
+    addVoxelArm(new THREE.Vector3(supportHand[0] - 0.02, supportHand[1] - 0.06, supportHand[2]), gunForward, -1, 1.5)
     this.reloadHand.userData.basePosition = this.reloadHand.position.clone()
     if (importedSource) {
       this.addImportedViewModel(importedSource, this.currentWeapon === 'knife' ? -Math.PI / 4 : Math.PI * 7 / 12, importedLength, primary, this.currentWeapon === 'knife' ? -Math.PI / 2 : 0, motif, motifCode)
@@ -2180,6 +2316,7 @@ export class Game {
     this.weaponView.scale.setScalar((0.94 + this.aimBlend * 0.04) * viewFit)
     if (this.lobbyPreview && this.mode === 'attract') { this.lobbyPreview.rotation.y = Math.sin(this.lastFrame * 0.32) * 0.13; this.lobbyAnimation?.update(dt) }
     this.lastFrame += dt
+    this.farAnimationTick = !this.farAnimationTick
     // Blend moving bots between fixed simulation ticks while drawing, then restore the exact
     // simulation transforms before the next input, collision, and hit-detection update.
     for (const bot of this.bots) {
@@ -2196,7 +2333,13 @@ export class Game {
         bot.visualPhase += dt * (0.45 + bot.id * 0.04)
         // Update skinned meshes at render cadence so their run cycle remains
         // fluid on high-refresh displays instead of stepping at simulation Hz.
-        if (bot.animation && this.mode === 'playing') bot.animation.mixer.update(dt)
+        // Every operator's bone matrices are rebuilt by three.js each frame, so
+        // distant bots step at half rate and anything past the fog line is left
+        // to the interpolation above, which the eye cannot resolve anyway.
+        if (bot.animation && this.mode === 'playing') {
+          const distance = bot.root.position.distanceToSquared(this.cameraInternal.position)
+          if (distance < 4900) bot.animation.mixer.update(distance < 676 || this.farAnimationTick ? dt : dt * 2)
+        }
         const rig = bot.root.userData.rig as { leftArm: THREE.Group; rightArm: THREE.Group; leftLeg: THREE.Group; rightLeg: THREE.Group } | undefined
         if (rig) {
           const stride = bot.walking ? Math.sin(bot.visualPhase * 8) * 0.52 : Math.sin(bot.visualPhase * 2) * 0.025

@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "publish:web": "npm run build && node ../scripts/publish-reading-tracker-web.cjs",
-    "test": "node --test tests/plan.test.js",
+    "test": "node --test tests/plan.test.js tests/extended.test.js",
     "android:build": "npm run build && node scripts/build-android.cjs"
   },
   "dependencies": {

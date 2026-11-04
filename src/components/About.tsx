@@ -75,7 +75,7 @@ export default function About() {
             ))}
           </div>
           <p className="about-note">
-            Reading Tracker has no Pro version: every feature is included for free. Other apps
+            Reading Tracker and Calorie Calculator have no Pro versions: every feature is included for free. Other apps
             list their free and Pro offerings; checkout and payment verification are not connected,
             so purchases and discounts cannot be completed on this site.
           </p>

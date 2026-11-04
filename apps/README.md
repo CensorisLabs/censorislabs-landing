@@ -7,7 +7,7 @@ The suite contains ArthaSetu and eleven independent companion apps. App source, 
 | App | App ID | What it does | Network use |
 | --- | --- | --- | --- |
 | ArthaSetu | `arthasetu` | Offline-first Indian personal finance, budgeting, tax estimates, investments and planning | Optional bank feeds are not connected; local data stays on device |
-| Calorie Calculator | `calorie-calculator` | Mifflin–St Jeor energy estimate, BMI and macro estimate | None |
+| Calorie Calculator | `calorie-calculator` | Fully free, local health tracker for meal logging, macros, activity, sleep, hydration, body trends, manual vitals, habits and personal notes | Optional Open Food Facts barcode lookup; all other records stay local |
 | PC Part Picker | `pc-part-picker` | Local component selection and basic compatibility checks | None |
 | Indian Banking Brief | `indian-banking-brief` | RBI/SEBI updates and source-linked news with two-hour foreground checks | RSS and publisher links |
 | Home Energy Estimator | `home-energy-estimator` | Appliance energy and electricity cost estimates | None |
@@ -17,7 +17,7 @@ The suite contains ArthaSetu and eleven independent companion apps. App source, 
 | Offline Arcade | `offline-arcade` | 2048, memory match and tic-tac-toe | None after install |
 | Where to Watch | `movie-guide` | Movie/show search and regional streaming-provider discovery | JustWatch search links; TMDB provider API only after CensorisLabs has a commercial license |
 | World Conflict Brief | `war-watch` | Conflict and humanitarian news headlines with publisher links | GDELT DOC 2.0, refresh every two minutes while the app is open |
-| Reading Tracker | `reading-tracker` | Private bookshelves, difficulty-based daily reading plans, calendar, timer, notes, highlights and a buddy | None for normal use; optional Open Library title lookup when requested |
+| Reading Tracker | `reading-tracker` | Private bookshelves, difficulty-based daily reading plans, calendar, timer, notes, highlights, a buddy, and on-device cover OCR with a book-match confirmation | Cover OCR runs locally; only the extracted title/ISBN is sent to Google Books or Open Library after you request a lookup |
 
 Third-party news and provider lists can be incomplete or delayed. Source links remain visible; the apps do not claim coverage of every publisher or immediate alerts while closed. Qur’an translations keep their source attribution. This repository does not mirror entire third-party libraries.
 
@@ -34,6 +34,10 @@ The public key `VITE_LICENSE_PUBLIC_KEY` verifies signed suite tokens on device.
 Every app has `npm run build`, `npm run android:build`, and `npm run windows:build`. App source is separate; the root Vite site is the Vercel deployment. For release builds:
 
 Reading Tracker provides `npm run build`, `npm run publish:web` and `npm run android:build`. Its Android build adds a native home-screen widget. The web app is copied to the site at `/reading-tracker/`.
+
+The Calorie Calculator is also fully free with no Pro tier. It keeps profiles, meal and health records on-device, and supports manual food entry, recipes, meal plans, workout logs, sleep, hydration, weight trends, user-entered vitals, local reminders, and JSON/CSV exports. Barcode lookup contacts Open Food Facts only when requested. Estimates are informational, and this build does not connect Health Connect, Apple Health, wearables, CGMs, or clinical services.
+
+Reading Tracker cover recognition uses Tesseract.js in the app. Its first OCR run needs an internet connection to fetch the OCR worker and English language data; the cover image is processed on-device and is never sent to the book catalog APIs.
 
 1. Install Node.js 22. Android signing also needs JDK 17 and the Android SDK; Windows packaging runs on a Windows GitHub Actions runner.
 2. Add `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD` to GitHub Actions secrets for signed APKs.

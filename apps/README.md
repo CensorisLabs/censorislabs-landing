@@ -1,6 +1,6 @@
 # CensorisLabs app source
 
-The suite contains ArthaSetu and ten independent companion apps. App source, common UI, price rules, coupon thresholds, and Android/Windows build scripts are in this repository.
+The suite contains ArthaSetu and eleven independent companion apps. App source, common UI, price rules, coupon thresholds, and Android/Windows build scripts are in this repository.
 
 ## Catalog
 
@@ -17,6 +17,7 @@ The suite contains ArthaSetu and ten independent companion apps. App source, com
 | Offline Arcade | `offline-arcade` | 2048, memory match and tic-tac-toe | None after install |
 | Where to Watch | `movie-guide` | Movie/show search and regional streaming-provider discovery | JustWatch search links; TMDB provider API only after CensorisLabs has a commercial license |
 | World Conflict Brief | `war-watch` | Conflict and humanitarian news headlines with publisher links | GDELT DOC 2.0, refresh every two minutes while the app is open |
+| Reading Tracker | `reading-tracker` | Private bookshelves, difficulty-based daily reading plans, calendar, timer, notes, highlights and a buddy | None for normal use; optional Open Library title lookup when requested |
 
 Third-party news and provider lists can be incomplete or delayed. Source links remain visible; the apps do not claim coverage of every publisher or immediate alerts while closed. Qur’an translations keep their source attribution. This repository does not mirror entire third-party libraries.
 
@@ -31,6 +32,8 @@ The public key `VITE_LICENSE_PUBLIC_KEY` verifies signed suite tokens on device.
 ## Builds and size limit
 
 Every app has `npm run build`, `npm run android:build`, and `npm run windows:build`. App source is separate; the root Vite site is the Vercel deployment. For release builds:
+
+Reading Tracker provides `npm run build`, `npm run publish:web` and `npm run android:build`. Its Android build adds a native home-screen widget. The web app is copied to the site at `/reading-tracker/`.
 
 1. Install Node.js 22. Android signing also needs JDK 17 and the Android SDK; Windows packaging runs on a Windows GitHub Actions runner.
 2. Add `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD` to GitHub Actions secrets for signed APKs.

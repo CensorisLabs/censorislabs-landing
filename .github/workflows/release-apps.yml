@@ -28,6 +28,7 @@ jobs:
           - offline-arcade
           - movie-guide
           - war-watch
+          - reading-tracker
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

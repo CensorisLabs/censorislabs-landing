@@ -25,12 +25,13 @@ export const PRODUCTS: Product[] = [
   { id: 'offline-arcade', name: 'Offline Arcade', kind: 'Games · Offline play', description: 'Small casual games that work without a connection after installation: 2048, memory match, and tic-tac-toe.', free: ['Three playable games', 'Local high scores', 'Touch and keyboard controls', 'No ads or sign-in'], pro: ['Extra game packs', 'Custom themes', 'Local tournaments', 'Score history'] },
   { id: 'movie-guide', name: 'Where to Watch', kind: 'Film · Streaming discovery', description: 'Search films and shows, then check reported streaming, rental, and purchase providers by country.', free: ['Title search', 'Country selector', 'Provider and JustWatch links', 'No account required'], pro: ['Saved watchlist', 'Availability alerts', 'Shared household list', 'Viewing history'] },
   { id: 'war-watch', name: 'World Conflict Brief', kind: 'World · Conflict reporting', description: 'Frequently refreshed, source-linked coverage of conflicts and humanitarian developments from GDELT-monitored online news.', free: ['World conflict headline search', 'Two-minute refresh while open', 'Topic filters', 'Direct publisher links'], pro: ['Saved regions and topics', 'Custom source groups', 'Private reading list', 'Alert preferences'] },
+  { id: 'reading-tracker', name: 'Reading Tracker', kind: 'Books · Personal reading', description: 'A private, offline-first reading companion with a day-by-day plan, reading calendar, session timer, notes, highlights, goals, and an Android home-screen widget.', free: ['Reading plans that grow with your chosen difficulty', 'Monthly calendar, session log and timer', 'Private notes, page highlights and book reviews', 'Reading buddy, streaks, goals and encrypted backups'], pro: ['Personal bookshelves with tags, ratings and filters', 'Android home-screen widget for your current read', 'CSV exports and restorable JSON backups', 'Your library stays on this device; no account or cloud sync'] },
 ]
 
 const MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 
 function ProductCard({ product }: { product: Product }) {
-  return <article className="suite-card"><div className="suite-card__top"><span className="suite-card__kind">{product.kind}</span><span className="suite-card__badge">Release builds</span></div><h3>{product.name}</h3><p>{product.description}</p><a className="suite-card__link" href={`#/apps/${product.id}`}>View app and downloads <span aria-hidden="true">↗</span></a></article>
+  return <article className="suite-card"><div className="suite-card__top"><span className="suite-card__kind">{product.kind}</span><span className="suite-card__badge">{product.id === 'reading-tracker' ? 'Web app · Android APK pending' : 'Release builds'}</span></div><h3>{product.name}</h3><p>{product.description}</p><a className="suite-card__link" href={`#/apps/${product.id}`}>View app and downloads <span aria-hidden="true">↗</span></a></article>
 }
 
 function Pricing({ discount = 0 }: { discount?: number }) {
@@ -57,26 +58,29 @@ function useRelease(appId?: string) {
 function Downloads({ appId }: { appId: string }) {
   const { release, tag, state } = useRelease(appId)
   const asset = (platform: 'windows' | 'android') => release?.find(item => item.name.toLowerCase() === `${appId}-${platform}.${platform === 'windows' ? 'exe' : 'apk'}`)
-  const windows = asset('windows'), android = asset('android')
+  const windows = appId === 'reading-tracker' ? undefined : asset('windows'), android = asset('android')
+  const matchingAssets = release?.filter(item => item.name.toLowerCase() === `${appId}-android.apk` || (appId !== 'reading-tracker' && item.name.toLowerCase() === `${appId}-windows.exe`)) || []
   const valid = (item?: ReleaseAsset) => item && item.size > 0 && item.size <= MAX_DOWNLOAD_BYTES
   const link = (item: ReleaseAsset | undefined, label: string) => valid(item)
     ? <a className="btn btn--outline" href={item!.browser_download_url} rel="noreferrer">{label} · {(item!.size / 1024 / 1024).toFixed(1)} MB</a>
     : <button className="btn btn--outline" type="button" disabled>{label}</button>
   const status = state === 'loading' ? 'Checking the latest release…'
     : state === 'ready' && (valid(windows) || valid(android)) ? `Latest release ${tag} · each listed installer is under 100 MB.`
-      : state === 'ready' && release?.length ? 'Release files exceed the 100 MB limit or do not match this app.'
+      : state === 'ready' && matchingAssets.length ? 'A matching installer exists but exceeds the 100 MB download limit.'
+        : state === 'ready' && appId === 'reading-tracker' ? 'The Android APK will appear here after its first successful signed release build.'
+          : state === 'ready' && release?.length ? 'No matching installer has been published for this app yet.'
         : state === 'error' ? 'The release service is unavailable; try again later.'
           : 'No installer has been published yet. Downloads activate after a successful release build.'
-  return <div className="suite-download-card"><div><p className="eyebrow">WINDOWS + ANDROID</p><h2>App downloads</h2><p>{status}</p></div><div className="suite-downloads">{link(windows, 'Windows (.exe)')}{link(android, 'Android (.apk)')}</div></div>
+  return <div className="suite-download-card"><div><p className="eyebrow">{appId === 'reading-tracker' ? 'ANDROID' : 'WINDOWS + ANDROID'}</p><h2>App downloads</h2><p>{status}</p></div><div className="suite-downloads">{appId !== 'reading-tracker' && link(windows, 'Windows (.exe)')}{link(android, 'Android (.apk)')}</div></div>
 }
 
-function InstallWarning() {
+function InstallWarning({ androidOnly = false }: { androidOnly?: boolean }) {
   return <aside className="suite-warning" aria-labelledby="install-warning-title">
     <p className="eyebrow">BEFORE YOU INSTALL</p>
     <h2 id="install-warning-title">Why does my device show a warning?</h2>
     <p className="suite-warning__lede">These warnings do not mean the app was flagged as harmful. They appear because CensorisLabs installers are downloaded directly from GitHub releases instead of the Microsoft Store or Google Play, and our publisher identity is new, so Windows and Android do not recognise it yet. Your device shows the same prompt for any installer it has not seen enough of.</p>
     <div className="suite-feature-columns">
-      <article className="suite-feature-card">
+      {!androidOnly && <article className="suite-feature-card">
         <p className="eyebrow">WINDOWS</p>
         <h3>“Windows protected your PC”</h3>
         <p>SmartScreen shows this for installers from publishers it has no history with. The Windows installer is not signed with a paid code-signing certificate yet, so the publisher is listed as unknown.</p>
@@ -85,7 +89,7 @@ function InstallWarning() {
           <li>Check that the file name matches the app you downloaded.</li>
           <li>Click <b>Run anyway</b>.</li>
         </ol>
-      </article>
+      </article>}
       <article className="suite-feature-card">
         <p className="eyebrow">ANDROID</p>
         <h3>Unknown apps and Play Protect</h3>
@@ -104,7 +108,18 @@ function InstallWarning() {
 export default function Apps({ appId }: { appId?: string }) {
   const selected = PRODUCTS.find(product => product.id === appId)
   const sale = getSaleOffer()
-  if (appId && selected) return <section className="section suite-page" aria-labelledby="suite-page-title"><div className="container"><a className="suite-back" href="#/apps">← All apps</a><div className="suite-detail-head"><p className="eyebrow">CENSORISLABS APP SUITE · {selected.kind}</p><span className="suite-card__badge">Windows + Android releases</span></div><h1 className="suite-page-title" id="suite-page-title">{selected.name}</h1><p className="suite-lede">{selected.description}</p><div className="suite-feature-columns"><article className="suite-feature-card"><p className="eyebrow">FREE</p><h2>Start with the essentials</h2><ul>{selected.free.map(feature => <li key={feature}>{feature}</li>)}</ul></article><article className="suite-feature-card suite-feature-card--pro"><p className="eyebrow">PRO</p><h2>More room to grow</h2><ul>{selected.pro.map(feature => <li key={feature}>{feature}</li>)}</ul></article></div><div className="suite-pricing-head"><div><p className="eyebrow">ONE SHARED PRO FORMAT</p><h2>Choose your plan</h2></div><p>Use offers unlock at 15 and 30 app actions. Checkout must validate discount eligibility.</p></div><Pricing discount={sale?.percent} />{sale && <div className="suite-offer-note"><b>Timed sale · 10% off</b><span>Event {sale.eventId}. The amount shown is a preview; checkout must validate the code.</span></div>}<div className="suite-offer-note"><b>Use more, save more</b><span>10% after 15 uses · 15% after 30 uses · first 1,000 verified customers get 30% off. Offers are not redeemable until checkout is connected.</span></div><p className="suite-checkout-note">Checkout and account-wide offer allocation are not connected yet. No payment is processed on this site.</p><Downloads appId={selected.id} /><InstallWarning /></div></section>
+  if (appId && selected) {
+    const personalApp = selected.id === 'reading-tracker'
+    return <section className="section suite-page" aria-labelledby="suite-page-title"><div className="container">
+      <a className="suite-back" href="#/apps">← All apps</a>
+      <div className="suite-detail-head"><p className="eyebrow">CENSORISLABS APP SUITE · {selected.kind}</p><span className="suite-card__badge">{personalApp ? 'Web app · Android APK' : 'Windows + Android releases'}</span></div>
+      <h1 className="suite-page-title" id="suite-page-title">{selected.name}</h1><p className="suite-lede">{selected.description}</p>
+      {personalApp && <div className="suite-download-card"><div><p className="eyebrow">OPEN IN YOUR BROWSER</p><h2>Use Reading Tracker</h2><p>Your books and notes stay in this browser on this device.</p></div><div className="suite-downloads"><a className="btn btn--outline" href="/reading-tracker/">Open Reading Tracker</a></div></div>}
+      <div className="suite-feature-columns"><article className="suite-feature-card"><p className="eyebrow">{personalApp ? 'INCLUDED' : 'FREE'}</p><h2>{personalApp ? 'Everything for your reading life' : 'Start with the essentials'}</h2><ul>{selected.free.map(feature => <li key={feature}>{feature}</li>)}</ul></article><article className="suite-feature-card suite-feature-card--pro"><p className="eyebrow">{personalApp ? 'PERSONAL RELEASE' : 'PRO'}</p><h2>{personalApp ? 'All features, no subscription' : 'More room to grow'}</h2><ul>{selected.pro.map(feature => <li key={feature}>{feature}</li>)}</ul></article></div>
+      {!personalApp && <><div className="suite-pricing-head"><div><p className="eyebrow">ONE SHARED PRO FORMAT</p><h2>Choose your plan</h2></div><p>Use offers unlock at 15 and 30 app actions. Checkout must validate discount eligibility.</p></div><Pricing discount={sale?.percent} />{sale && <div className="suite-offer-note"><b>Timed sale · 10% off</b><span>Event {sale.eventId}. The amount shown is a preview; checkout must validate the code.</span></div>}<div className="suite-offer-note"><b>Use more, save more</b><span>10% after 15 uses · 15% after 30 uses · first 1,000 verified customers get 30% off. Offers are not redeemable until checkout is connected.</span></div><p className="suite-checkout-note">Checkout and account-wide offer allocation are not connected yet. No payment is processed on this site.</p></>}
+      <Downloads appId={selected.id} /><InstallWarning androidOnly={personalApp} />
+    </div></section>
+  }
 
-  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p><h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2></div><p className="section-lede">Ten focused companions alongside ArthaSetu. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><div className="suite-pricing-head"><div><p className="eyebrow">ONE PRICE FORMAT ACROSS THE SUITE</p><h2>Four ways to go Pro</h2></div><p>Shared plans, use-based coupons, and first-1,000 offers are subject to checkout confirmation.</p></div><Pricing discount={sale?.percent} />{sale && <div className="suite-offer-note"><b>Timed sale · 10% off</b><span>Event {sale.eventId}. The displayed price is a preview until checkout is configured.</span></div>}<div className="suite-offer-note"><b>Offers across every app</b><span>15 uses unlock a 10% coupon; 30 uses unlock a 15% coupon. The first 1,000 verified accounts get 30% off.</span></div><p className="suite-checkout-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Push the source updates, then publish a version tag to build the files.</p><p className="suite-checkout-note">Windows or Android may show an “unknown publisher” warning the first time you install. It is expected for direct downloads, and each app page explains why and how to continue.</p></div></section>
+  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p><h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2></div><p className="section-lede">Eleven focused companions alongside ArthaSetu. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><div className="suite-pricing-head"><div><p className="eyebrow">ONE PRICE FORMAT ACROSS THE SUITE</p><h2>Four ways to go Pro</h2></div><p>Shared plans, use-based coupons, and first-1,000 offers are subject to checkout confirmation.</p></div><Pricing discount={sale?.percent} />{sale && <div className="suite-offer-note"><b>Timed sale · 10% off</b><span>Event {sale.eventId}. The displayed price is a preview until checkout is configured.</span></div>}<div className="suite-offer-note"><b>Offers across every app</b><span>15 uses unlock a 10% coupon; 30 uses unlock a 15% coupon. The first 1,000 verified accounts get 30% off.</span></div><p className="suite-checkout-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Push the source updates, then publish a version tag to build the files.</p><p className="suite-checkout-note">Windows or Android may show an “unknown publisher” warning the first time you install. It is expected for direct downloads, and each app page explains why and how to continue.</p></div></section>
 }

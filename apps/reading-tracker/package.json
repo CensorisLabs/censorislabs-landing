@@ -1,0 +1,23 @@
+{
+  "name": "censorislabs-reading-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "publish:web": "npm run build && node ../scripts/publish-reading-tracker-web.cjs",
+    "test": "node --test tests/plan.test.js",
+    "android:build": "npm run build && node scripts/build-android.cjs"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/share": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "vite": "^7.0.6"
+  }
+}

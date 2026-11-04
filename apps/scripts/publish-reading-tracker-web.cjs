@@ -1,0 +1,11 @@
+const fs = require('node:fs')
+const path = require('node:path')
+
+const repo = path.resolve(__dirname, '../..')
+const source = path.join(repo, 'apps', 'reading-tracker', 'dist')
+const destination = path.join(repo, 'public', 'reading-tracker')
+if (!fs.existsSync(path.join(source, 'index.html'))) throw new Error('Build the Reading Tracker before publishing its website files.')
+fs.rmSync(destination, { recursive: true, force: true })
+fs.mkdirSync(destination, { recursive: true })
+fs.cpSync(source, destination, { recursive: true })
+console.log(`Reading Tracker web app copied to ${destination}`)

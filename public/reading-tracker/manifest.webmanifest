@@ -1,0 +1,11 @@
+{
+  "name": "Reading Tracker",
+  "short_name": "Read",
+  "description": "A private, offline-first reading tracker.",
+  "start_url": "/reading-tracker/",
+  "scope": "/reading-tracker/",
+  "display": "standalone",
+  "background_color": "#111315",
+  "theme_color": "#111315",
+  "icons": [{ "src": "./book-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

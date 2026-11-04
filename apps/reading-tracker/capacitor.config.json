@@ -1,0 +1,8 @@
+{
+  "appId": "in.censorislabs.readingtracker",
+  "appName": "Reading Tracker",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

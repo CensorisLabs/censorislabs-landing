@@ -58,21 +58,24 @@ function useRelease(appId?: string) {
 
 function Downloads({ appId }: { appId: string }) {
   const { release, tag, state } = useRelease(appId)
+  const readingTracker = appId === 'reading-tracker'
+  const readingTrackerApk = 'https://github.com/CensorisLabs/censorislabs-landing/releases/latest/download/reading-tracker-android.apk'
   const asset = (platform: 'windows' | 'android') => release?.find(item => item.name.toLowerCase() === `${appId}-${platform}.${platform === 'windows' ? 'exe' : 'apk'}`)
-  const windows = appId === 'reading-tracker' ? undefined : asset('windows'), android = asset('android')
+  const windows = readingTracker ? undefined : asset('windows'), android = asset('android')
   const matchingAssets = release?.filter(item => item.name.toLowerCase() === `${appId}-android.apk` || (appId !== 'reading-tracker' && item.name.toLowerCase() === `${appId}-windows.exe`)) || []
   const valid = (item?: ReleaseAsset) => item && item.size > 0 && item.size <= MAX_DOWNLOAD_BYTES
-  const link = (item: ReleaseAsset | undefined, label: string) => valid(item)
+  const link = (item: ReleaseAsset | undefined, label: string, fallback?: string) => valid(item)
     ? <a className="btn btn--outline" href={item!.browser_download_url} rel="noreferrer">{label} · {(item!.size / 1024 / 1024).toFixed(1)} MB</a>
+    : fallback ? <a className="btn btn--outline" href={fallback} rel="noreferrer">{label}</a>
     : <button className="btn btn--outline" type="button" disabled>{label}</button>
-  const status = state === 'loading' ? 'Checking the latest release…'
+  const status = readingTracker ? valid(android) ? `Signed Android APK available · ${tag}.` : 'Signed Android APK available to download below.'
+    : state === 'loading' ? 'Checking the latest release…'
     : state === 'ready' && (valid(windows) || valid(android)) ? `Latest release ${tag} · each listed installer is under 100 MB.`
       : state === 'ready' && matchingAssets.length ? 'A matching installer exists but exceeds the 100 MB download limit.'
-        : state === 'ready' && appId === 'reading-tracker' ? 'The Android APK will appear here after its first successful signed release build.'
-          : state === 'ready' && release?.length ? 'No matching installer has been published for this app yet.'
+        : state === 'ready' && release?.length ? 'No matching installer has been published for this app yet.'
         : state === 'error' ? 'The release service is unavailable; try again later.'
           : 'No installer has been published yet. Downloads activate after a successful release build.'
-  return <div className="suite-download-card"><div><p className="eyebrow">{appId === 'reading-tracker' ? 'ANDROID' : 'WINDOWS + ANDROID'}</p><h2>App downloads</h2><p>{status}</p></div><div className="suite-downloads">{appId !== 'reading-tracker' && link(windows, 'Windows (.exe)')}{link(android, 'Android (.apk)')}</div></div>
+  return <div className="suite-download-card"><div><p className="eyebrow">{readingTracker ? 'ANDROID' : 'WINDOWS + ANDROID'}</p><h2>App downloads</h2><p>{status}</p></div><div className="suite-downloads">{!readingTracker && link(windows, 'Windows (.exe)')}{link(android, 'Android (.apk)', readingTracker ? readingTrackerApk : undefined)}</div></div>
 }
 
 function InstallWarning({ androidOnly = false }: { androidOnly?: boolean }) {

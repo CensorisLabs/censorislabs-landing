@@ -41,6 +41,7 @@ html[data-performance="low"] .hero__canvas{display:none!important}html[data-perf
 .about-app-card h3 { margin-top: 17px; font-size: 24px; }
 .about-app-card__description { min-height: 52px; margin-top: 9px; color: var(--palladium); font-size: 13px; line-height: 1.7; }
 .about-app-card__features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+.about-app-card__features--free-only { grid-template-columns: 1fr; }
 .about-app-card__features h4 { margin: 0 0 10px; color: var(--bronze); font: 10px var(--mono); letter-spacing: .11em; text-transform: uppercase; }
 .about-app-card__features ul { display: grid; gap: 7px; margin: 0; padding-left: 15px; color: var(--palladium); font-size: 11px; line-height: 1.6; }
 .about-app-card__features li::marker { color: var(--gold); }

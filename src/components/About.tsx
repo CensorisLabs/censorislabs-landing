@@ -66,18 +66,18 @@ export default function About() {
                 </div>
                 <h3>{product.name}</h3>
                 <p className="about-app-card__description">{product.description}</p>
-                <div className="about-app-card__features">
-                  <div><h4>Free features</h4><ul>{product.free.map(feature => <li key={feature}>{feature}</li>)}</ul></div>
-                  <div className="about-app-card__pro"><h4>Pro feature set</h4><ul>{product.pro.map(feature => <li key={feature}>{feature}</li>)}</ul></div>
+                <div className={`about-app-card__features${product.freeOnly ? ' about-app-card__features--free-only' : ''}`}>
+                  <div><h4>{product.freeOnly ? 'Everything is free' : 'Free features'}</h4><ul>{product.free.map(feature => <li key={feature}>{feature}</li>)}</ul></div>
+                  {!product.freeOnly && <div className="about-app-card__pro"><h4>Pro feature set</h4><ul>{product.pro.map(feature => <li key={feature}>{feature}</li>)}</ul></div>}
                 </div>
                 <a className="about-app-card__link" href={`#/apps/${product.id}`}>View app details <span aria-hidden="true">↗</span></a>
               </article>
             ))}
           </div>
           <p className="about-note">
-            Feature lists describe each app’s current free and Pro offering. Pro checkout and
-            payment verification are not connected yet, so purchases and discounts cannot be
-            completed on this site.
+            Reading Tracker has no Pro version: every feature is included for free. Other apps
+            list their free and Pro offerings; checkout and payment verification are not connected,
+            so purchases and discounts cannot be completed on this site.
           </p>
         </section>
 

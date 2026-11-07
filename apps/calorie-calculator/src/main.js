@@ -24,6 +24,19 @@ import {
 import { createGpsFilter, gpsErrorMessage, gpsQuality, routePath } from './gps.js'
 import { createStepDetector, defaultStrideM, stepSourceInfo, strideFromCalibration, distanceForSteps } from './steps.js'
 import {
+  activityMix, backupAge, bedtimeAverage, bestStreak, bestWeekday, bmiFrom, bpAverage, calorieDensity,
+  checkinBreakdown, checkinCompletion, customFoodUsage, dateRange, drinkEnergy, emptyCollections, entrySourceMix,
+  entryStats, favoriteCoverage, foodVariety, glucoseRange, habitStats, habitStreak, invalidRecords, journalSummary,
+  kmLastDays, largestMeal, leanMass, macroSplit, measurementChange, mediaCoverage, metMinutes, moodAverages,
+  muscleBalance, nutrientDensity, orphanRecords, photoBytes, planGap, plannedDays, profileCounts, proteinBySlot, recipeStats,
+  recordCounts, repeatedFoods, restDays, routeBytes, sessionMinutes, shortNights, sleepQualityAverage,
+  sleepRegularity, sleepSummary, slotEnergyShare, stageShare, stepGoalHitRate, stepSourceMix, stepSummary,
+  strengthVolume, symptomDays, templateUsage, topContributors, unusedHabits, vitalAverage, vitalCoverage,
+  vitalExtreme, wakeAverage, walkModeMix, walkPaceTrend, walkStats, waterGoalRate, weighInCadence, weightRange,
+  weightRate, weekendSleepShift, macroBalanceTarget, sugarShareOfCalories, biggestNutrientGap,
+  waistHipRatio, waistToHeight,
+} from './extras.js'
+import {
   bodyFatChange, bpCategory, cadencePerMinute, caloriePacing, compareToPrevious, dayCompleteness,
   daySummaryText, daysSinceLast, fastingSummary, glucoseStats, labSeries, latestLabName, loggingHeatmap,
   macroRemaining, medicationAdherence, rankFoods, sleepConsistency, stepGoalStreak, storageUsage,
@@ -52,7 +65,7 @@ const root = mountApp({
   description: 'Meals, movement, sleep and health notes in one private tracker. Estimates are clearly labeled, and your entries stay on this device.',
   content: `<div class="tracker" id="tracker-app">
     <div class="tracker-top"><div class="tracker-brand"><span class="tracker-brand__mark" aria-hidden="true">A</span><span><b>AbsoluteCal</b><small>HEALTH · STEPS · MEALS</small></span></div><label class="tracker-profile">PROFILE <select id="profile-select" aria-label="Active profile"></select><button class="cc-button" type="button" data-action="profile-new">Add</button></label><label class="tracker-date">DAY <input id="day-select" type="date" aria-label="Selected day"></label><span class="cc-offline-label">LOCAL DATA · NO ACCOUNT</span></div>
-    <nav class="tracker-nav" aria-label="Health tracker sections"><button type="button" data-tab="today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg><span>Home</span></button><button type="button" data-tab="food"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg><span>Diary</span></button><button type="button" data-tab="activity"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.5" r="2"/><path d="M10 21l2-6-2-3 1-5 3 3h3"/><path d="M7.5 20 9 16"/></svg><span>Walk</span></button><button type="button" data-tab="health"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.6-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.4 12 20 12 20Z"/></svg><span>Health</span></button><button type="button" data-tab="trends"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6M12 19V6M17 19v-9"/></svg><span>Progress</span></button><button type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>More</span></button></nav>
+    <nav class="tracker-nav" aria-label="Health tracker sections"><button type="button" data-tab="today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg><span>Home</span></button><button type="button" data-tab="food"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg><span>Diary</span></button><button type="button" data-tab="activity"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.5" r="2"/><path d="M10 21l2-6-2-3 1-5 3 3h3"/><path d="M7.5 20 9 16"/></svg><span>Walk</span></button><button type="button" data-tab="health"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.6-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.4 12 20 12 20Z"/></svg><span>Health</span></button><button type="button" data-tab="trends"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6M12 19V6M17 19v-9"/></svg><span>Progress</span></button><button type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>More</span></button><button type="button" data-tab="tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/><circle cx="18" cy="12" r="2"/><circle cx="19" cy="18" r="2"/></svg><span>Tools</span></button></nav>
     <section class="tracker-view" id="tracker-view" aria-live="polite"></section><div id="walk-checkin-host"></div><div id="tracker-toast" aria-live="polite"></div>
   </div>`,
 })
@@ -89,7 +102,7 @@ function render() {
   const day = $('#day-select', root); if (day) day.value = selectedDate
   $$('.tracker-nav [data-tab]', root).forEach(button => { button.classList.toggle('active', button.dataset.tab === tab); button.setAttribute('aria-current', button.dataset.tab === tab ? 'page' : 'false') })
   const view = $('#tracker-view', root)
-  const pages = { today: renderHome, food: renderDiary, activity: renderActivity, health: renderHealth, trends: renderProgress, more: renderMore }
+  const pages = { today: renderHome, food: renderDiary, activity: renderActivity, health: renderHealth, trends: renderProgress, more: renderMore, tools: toolsPage }
   const extra = tab === 'activity' ? extraActivity() : tab === 'health' ? extraHealth() : tab === 'more' ? settingsCard() + toolsCard() + featureIndexCard() : ''
   if (view) view.innerHTML = (tab === 'activity' ? walkCardHtml() : '') + (pages[tab] || renderHome)() + extra
   const checkinHost = $('#walk-checkin-host', root)
@@ -547,6 +560,184 @@ function renderProgress() {
     <article class="cc-card cc-card--third"><h3>This week vs last week</h3>${changes.some(row => row.delta !== null) ? changes.map(row => `<div class="cc-row"><span>${esc(row.label)}</span><strong>${row.delta === null ? '—' : `${row.delta > 0 ? '+' : ''}${nfmt(row.delta)}${row.unit ? ` ${row.unit}` : ''}`}</strong></div>`).join('') + `<p class="cc-small">Averages of the last 7 days against the 7 before. Days without entries are left out of both.</p>` : '<p class="cc-small">Log a couple of weeks of data to compare one week with the next.</p>'}</article>
     <article class="cc-card cc-card--wide"><h3>Export your health record</h3><p>Export a local JSON backup, a CSV of meal entries, or print this summary to save as PDF from your browser.</p><div class="cc-actions"><button type="button" data-action="export-json">Download JSON backup</button><button type="button" data-action="export-meals">Download meal CSV</button><button type="button" data-action="export-daily">Download daily CSV</button><button type="button" data-action="print-report">Print / save PDF</button></div></article>
   </div>`
+}
+// A single place for the numbers the tracker already knows but never showed:
+// nutrition density, adherence, storage, vitals ranges and copy shortcuts.
+// Every row states what it measures so nothing reads like a diagnosis.
+function toolsSections(s, p, t) {
+  const dashes = '—'
+  const row = (label, value) => ({ label, value: value === null || value === undefined || value === '' ? dashes : String(value) })
+  const pct = value => (value === null || value === undefined ? dashes : `${value}%`)
+  const list = (rows, empty = dashes) => (rows && rows.length ? rows.map(item => {
+    if (typeof item === 'string') return item
+    const name = item.name || item.label || item.slot || item.day || item.muscle || 'Item'
+    const value = item.count ?? item.kcal ?? item.value ?? item.average ?? item.percent
+    return value === undefined || value === null ? name : `${name} (${value})`
+  }).join(', ') : empty)
+  // The nutrition rows describe today specifically, so they read today's meals
+  // rather than every entry in the history.
+  const meals = dayMeals(s)
+  const totals = dayTotal(s)
+  const split = macroSplit(totals)
+  const targetSplit = macroBalanceTarget(t)
+  const body = weightEntries(s).slice(-1)[0]
+  const latestMeasure = s.measurements.slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(-1)[0]
+  const walk = walkStats(s.walks)
+  const media = mediaCoverage(s.walks)
+  const checks = checkinCompletion(s.walks)
+  const steps = stepSummary(weeklySeries(s, selectedDate, p, 30))
+  const stepSeries = weeklySeries(s, selectedDate, p, 30)
+  const sleep = sleepSummary(s.sleeps, p.sleepGoalHours)
+  const range = dateRange(state)
+  const profiles = profileCounts(state)
+  const records = recordCounts(state)
+  const usage = storageUsage(state)
+  const glucose = glucoseRange(s.glucose)
+  const bp = bpAverage(s.vitals)
+  const walkMix = walkModeMix(s.walks)
+  const drink = drinkEnergy(meals)
+  const fat = leanMass(Number(body?.kg) || Number(p.weightKg), Number(body?.bodyFat))
+  const measureChange = measurementChange(s.measurements)
+  return [
+    { title: 'Nutrition density', rows: [
+      row('Calories from protein / carbs / fat', split ? `${split.protein}% / ${split.carbs}% / ${split.fat}%` : dashes),
+      row('Your target split', targetSplit ? `${targetSplit.protein}% / ${targetSplit.carbs}% / ${targetSplit.fat}%` : dashes),
+      row('Sugar as a share of calories', sugarShareOfCalories(totals) === null ? dashes : `${sugarShareOfCalories(totals)}%`),
+      row('Protein per 1,000 kcal', nutrientDensity(totals, 'protein') === null ? dashes : `${nutrientDensity(totals, 'protein')} g`),
+      row('Fiber per 1,000 kcal', nutrientDensity(totals, 'fiber') === null ? dashes : `${nutrientDensity(totals, 'fiber')} g`),
+      row('Sodium per 1,000 kcal', nutrientDensity(totals, 'sodium') === null ? dashes : `${nutrientDensity(totals, 'sodium')} mg`),
+      row('Largest meal today', largestMeal(meals) ? `${largestMeal(meals).name} · ${nfmt(largestMeal(meals).kcal)} kcal` : dashes),
+      row('Average entry size', entryStats(meals) ? `${nfmt(entryStats(meals).average)} kcal` : dashes),
+      row('Median entry size', entryStats(meals) ? `${nfmt(entryStats(meals).median)} kcal` : dashes),
+      row('Foods logged twice today', list(repeatedFoods(meals))),
+      row('How today’s entries were added', entrySourceMix(meals).slice(0, 3).map(item => `${item.source} ${item.percent}%`).join(', ') || dashes),
+      row('Protein by meal', proteinBySlot(meals, t?.protein).map(item => `${item.slot} ${item.protein} g`).join(', ') || dashes),
+      row('Different foods today', foodVariety(meals).distinct ? `${foodVariety(meals).distinct} of ${foodVariety(meals).entries} entries` : dashes),
+      row('Calories from drinks', drink.count ? `${nfmt(drink.kcal)} kcal · ${drink.count} item${drink.count === 1 ? '' : 's'}` : dashes),
+      row('Calorie density per 100 g', calorieDensity(totals, meals.reduce((grams, meal) => grams + (Number(meal.grams) || 0), 0)) === null ? dashes : `${calorieDensity(totals, meals.reduce((grams, meal) => grams + (Number(meal.grams) || 0), 0))} kcal`),
+      row('Recipes saved', recipeStats(s.recipes).count ? `${recipeStats(s.recipes).count} · about ${nfmt(recipeStats(s.recipes).averageKcal)} kcal each` : dashes),
+      row('Custom foods used', customFoodUsage(s.customFoods, meals).custom ? `${customFoodUsage(s.customFoods, meals).used} of ${customFoodUsage(s.customFoods, meals).custom}` : dashes),
+      row('Favorites still in the food list', favoriteCoverage(state.favorites, allFoods()).saved ? `${favoriteCoverage(state.favorites, allFoods()).available} of ${favoriteCoverage(state.favorites, allFoods()).saved}` : dashes),
+      row('Planned vs eaten today', planGap(s.mealPlans.filter(item => item.date === selectedDate), totals.kcal) ? `${nfmt(planGap(s.mealPlans.filter(item => item.date === selectedDate), totals.kcal).difference)} kcal against the plan` : dashes),
+      row('Macro furthest behind target', biggestNutrientGap(totals, t) ? `${biggestNutrientGap(totals, t).key} · ${biggestNutrientGap(totals, t).missing} g short` : dashes),
+      row('Biggest calorie source today', list(topContributors(meals, 'kcal', 1))),
+      row('Biggest sugar source today', list(topContributors(meals, 'su', 1))),
+      row('Biggest sodium source today', list(topContributors(meals, 'na', 1))),
+      row('Biggest protein source today', list(topContributors(meals, 'p', 1))),
+      row('Energy share by meal', slotEnergyShare(meals).map(item => `${item.slot} ${item.percent}%`).join(', ') || dashes),
+    ] },
+    { title: 'Movement numbers', rows: [
+      row('Session count', walk ? nfmt(walk.sessions) : dashes),
+      row('Walk minutes logged', walk ? nfmt(walk.minutes) : dashes),
+      row('Distance walked', walk ? formatDistance(walk.distanceKm, unitsPref()) : dashes),
+      row('Average session distance', walk ? formatDistance(walk.averageKm, unitsPref()) : dashes),
+      row('Longest session', walk ? `${walk.longest.date} · ${nfmt(walk.longest.minutes)} min` : dashes),
+      row('Pace trend', walkPaceTrend(s.walks) ? (walkPaceTrend(s.walks).faster >= 0 ? `${walkPaceTrend(s.walks).faster} min/km faster than your first` : `${Math.abs(walkPaceTrend(s.walks).faster)} min/km slower than your first`) : dashes),
+      row('Walks vs runs', `${nfmt(walkMix.walks)} / ${nfmt(walkMix.runs)} · ${walkMix.runPercent ?? 0}% runs`),
+      row('Average steps on logged days', steps ? nfmt(steps.average) : dashes),
+      row('Best step day', steps ? `${nfmt(steps.best)} steps` : dashes),
+      row('Lowest step day', steps ? `${nfmt(steps.low)} steps` : dashes),
+      row('Step-goal hit rate', stepGoalHitRate(stepSeries, p.stepGoal) ? `${stepGoalHitRate(stepSeries, p.stepGoal).hits} of ${stepGoalHitRate(stepSeries, p.stepGoal).days} days` : dashes),
+      row('Days with no movement', restDays(stepSeries) ? `${restDays(stepSeries).rest} of ${restDays(stepSeries).days}` : dashes),
+      row('Device vs hand-logged steps', stepSourceMix(dayActivity(s, selectedDate, p), dayActivity(s, selectedDate, p).manualSteps, 0) ? `${nfmt(dayActivity(s, selectedDate, p).deviceSteps || 0)} device · ${nfmt(dayActivity(s, selectedDate, p).manualSteps)} manual` : dashes),
+      row('Distance in the last 30 days', kmLastDays(s.walks, 30, selectedDate) === null ? dashes : formatDistance(kmLastDays(s.walks, 30, selectedDate), unitsPref())),
+      row('Most logged activity', list(activityMix(s.activities, 1))),
+      row('Strength volume', strengthVolume(s.activities) ? `${nfmt(strengthVolume(s.activities).sets)} sets · ${nfmt(strengthVolume(s.activities).volumeKg)} kg volume` : dashes),
+      row('Muscle groups logged', list(muscleBalance(s.activities))),
+      row('MET-minutes logged', metMinutes(s.activities) === null ? dashes : nfmt(metMinutes(s.activities))),
+      row('Average session length', sessionMinutes(s.activities) ? `${sessionMinutes(s.activities).average} min` : dashes),
+      row('Check-in completion', checks ? `${checks.answered} of ${checks.sessions} sessions` : dashes),
+    ] },
+    { title: 'Walk check-in details', rows: [
+      row('Who you walked with', list(checkinBreakdown(s.walks, 'with', 3))),
+      row('How it felt', list(checkinBreakdown(s.walks, 'feel', 3))),
+      row('Where you walked', list(checkinBreakdown(s.walks, 'place', 3))),
+      row('Weather you recorded', list(checkinBreakdown(s.walks, 'weather', 3))),
+      row('Sessions with a photo', media.sessions ? `${media.photos} of ${media.sessions}` : dashes),
+      row('Sessions with a route map', media.sessions ? `${media.routes} of ${media.sessions}` : dashes),
+    ] },
+    { title: 'Sleep shape', rows: [
+      row('Nights logged', sleep ? nfmt(sleep.nights) : dashes),
+      row('Average sleep', sleep ? `${sleep.average} h` : dashes),
+      row('Nights that met your goal', sleep ? `${sleep.goalHits} of ${sleep.nights}` : dashes),
+      row('Shortest night', sleep ? `${sleep.shortest} h` : dashes),
+      row('Average bedtime', bedtimeAverage(s.sleeps)?.clock || dashes),
+      row('Average wake time', wakeAverage(s.sleeps)?.clock || dashes),
+      row('Average sleep quality', sleepQualityAverage(s.sleeps) === null ? dashes : `${sleepQualityAverage(s.sleeps)} / 5`),
+      row('Deep + REM share', stageShare(s.sleeps) ? `${stageShare(s.sleeps).deepPercent}% deep · ${stageShare(s.sleeps).remPercent}% REM` : dashes),
+      row('Weekend vs weekday sleep', weekendSleepShift(s.sleeps) ? `${weekendSleepShift(s.sleeps).shift > 0 ? '+' : ''}${weekendSleepShift(s.sleeps).shift} h at weekends` : dashes),
+      row('Nights more than an hour short', shortNights(s.sleeps, p.sleepGoalHours) ? `${shortNights(s.sleeps, p.sleepGoalHours).short} of ${shortNights(s.sleeps, p.sleepGoalHours).nights}` : dashes),
+      row('Bedtime regularity', sleepRegularity(s.sleeps) ? `± ${sleepRegularity(s.sleeps).deviationMin} min` : dashes),
+    ] },
+    { title: 'Body numbers', rows: [
+      row('Weight rate per week', weightRate(s.weights) ? `${weightRate(s.weights).perWeek > 0 ? '+' : ''}${weightRate(s.weights).perWeek} kg` : dashes),
+      row('Weight range in your log', weightRange(s.weights) ? `${formatWeight(weightRange(s.weights).low, unitsPref())} – ${formatWeight(weightRange(s.weights).high, unitsPref())}` : dashes),
+      row('BMI from latest weight', bmiFrom(Number(body?.kg) || Number(p.weightKg), p.heightCm) === null ? dashes : String(bmiFrom(Number(body?.kg) || Number(p.weightKg), p.heightCm))),
+      row('Waist-to-height', waistToHeight(latestMeasure, p.heightCm) ? String(waistToHeight(latestMeasure, p.heightCm).ratio) : dashes),
+      row('Waist-to-hip', waistHipRatio(latestMeasure) === null ? dashes : String(waistHipRatio(latestMeasure))),
+      row('Lean mass estimate', fat ? `${fat.leanMass} kg lean · ${fat.fatMass} kg fat` : dashes),
+      row('Weigh-in cadence', weighInCadence(s.weights) ? `every ${weighInCadence(s.weights).averageGapDays} days` : dashes),
+      row('Measurement change', measureChange ? `Waist ${measureChange.waist ?? '—'} · Chest ${measureChange.chest ?? '—'} · Hips ${measureChange.hips ?? '—'} cm` : dashes),
+    ] },
+    { title: 'Consistency', rows: [
+      row('Habit completion · 30 days', habitStats(s.habits, s.habitLogs, selectedDate, 30) ? `${habitStats(s.habits, s.habitLogs, selectedDate, 30).percent}%` : dashes),
+      row('Longest current habit streak', s.habits.length ? s.habits.map(habit => habitStreak(habit.id, s.habitLogs, selectedDate)?.current || 0).sort((a, b) => b - a)[0] + ' days' : dashes),
+      row('Habits never checked', list(unusedHabits(s.habits, s.habitLogs))),
+      row('Average energy', moodAverages(s.moods) ? `${moodAverages(s.moods).energy} / 5` : dashes),
+      row('Average stress', moodAverages(s.moods)?.stress ? `${moodAverages(s.moods).stress} / 5` : dashes),
+      row('Symptom entries · 30 days', symptomDays(s.symptoms, 30, selectedDate).entries ? nfmt(symptomDays(s.symptoms, 30, selectedDate).entries) : dashes),
+      row('Days with a symptom', symptomDays(s.symptoms, 30, selectedDate).days ? nfmt(symptomDays(s.symptoms, 30, selectedDate).days) : dashes),
+      row('Average symptom severity', symptomDays(s.symptoms, 30, selectedDate).averageSeverity ? `${symptomDays(s.symptoms, 30, selectedDate).averageSeverity} / 5` : dashes),
+      row('Water goal hit rate · 7 days', waterGoalRate(s.water, p.waterGoalMl, 7, selectedDate) ? `${waterGoalRate(s.water, p.waterGoalMl, 7, selectedDate).hit} of 7 days` : dashes),
+      row('Best logging streak', bestStreak([...s.meals.map(item => item.date), ...s.activities.map(item => item.date), ...s.sleeps.map(item => item.date), ...s.water.map(item => item.date)]) ? `${bestStreak([...s.meals.map(item => item.date), ...s.activities.map(item => item.date), ...s.sleeps.map(item => item.date), ...s.water.map(item => item.date)]).best} days` : dashes),
+      row('Best step weekday', bestWeekday(stepSeries, 'steps') ? `${bestWeekday(stepSeries, 'steps').day} · ${nfmt(bestWeekday(stepSeries, 'steps').average)} steps` : dashes),
+      row('Best calorie weekday', bestWeekday(stepSeries, 'calories') ? `${bestWeekday(stepSeries, 'calories').day} · ${nfmt(bestWeekday(stepSeries, 'calories').average)} kcal` : dashes),
+    ] },
+    { title: 'Vitals ranges', rows: [
+      row('Resting heart rate average', vitalAverage(s.vitals, 'rhr') === null ? dashes : `${vitalAverage(s.vitals, 'rhr')} bpm`),
+      row('HRV average', vitalAverage(s.vitals, 'hrv') === null ? dashes : `${vitalAverage(s.vitals, 'hrv')} ms`),
+      row('Lowest SpO₂', vitalExtreme(s.vitals, 'spo2', 'min') === null ? dashes : `${vitalExtreme(s.vitals, 'spo2', 'min')}%`),
+      row('Highest temperature', vitalExtreme(s.vitals, 'temp', 'max') === null ? dashes : `${vitalExtreme(s.vitals, 'temp', 'max')} °C`),
+      row('Blood-pressure average', bp ? `${bp.systolic} / ${bp.diastolic} mmHg` : dashes),
+      row('Glucose lowest', glucose ? `${glucose.low} mmol/L` : dashes),
+      row('Glucose highest', glucose ? `${glucose.high} mmol/L` : dashes),
+      row('Glucose average', glucose ? `${glucose.average} mmol/L` : dashes),
+      row('Days with a vitals entry · last 7', vitalCoverage(7, s, selectedDate) ? `${vitalCoverage(7, s, selectedDate).days} of 7` : dashes),
+    ] },
+    { title: 'Data health', rows: [
+      row('Largest collection', records[0] ? `${COLLECTION_LABELS[records[0].key] || records[0].key} · ${nfmt(records[0].count)}` : dashes),
+      row('Total records stored', nfmt(records.reduce((total, item) => total + item.count, 0))),
+      row('Date range covered', range ? `${range.first} → ${range.last} · ${range.days} days` : dashes),
+      row('Records with a missing profile', orphanRecords(state) ? nfmt(orphanRecords(state)) : 'none'),
+      row('Implausible records', invalidRecords(state).length ? invalidRecords(state).map(item => `${item.label} (${item.count})`).join(', ') : 'none'),
+      row('Collections still empty', emptyCollections(state).length ? emptyCollections(state).map(key => COLLECTION_LABELS[key] || key).slice(0, 4).join(', ') : 'none'),
+      row('Photo storage', `${nfmt(photoBytes(state))} KB`),
+      row('Route storage', `${routeBytes(state).points} points · ${routeBytes(state).kb} KB`),
+      row('Backup age', backupAge(state.settings.lastBackupAt) ? `${backupAge(state.settings.lastBackupAt).days} days` : 'no backup yet'),
+      row('Records per profile', profiles.map(item => `${item.name} ${nfmt(item.records)}`).join(' · ') || dashes),
+      row('Planned days', plannedDays(s.mealPlans).plans ? `${plannedDays(s.mealPlans).plans} plan${plannedDays(s.mealPlans).plans === 1 ? '' : 's'} over ${plannedDays(s.mealPlans).days} day${plannedDays(s.mealPlans).days === 1 ? '' : 's'}` : dashes),
+      row('Template library', templateUsage(s.templates) ? `${templateUsage(s.templates).templates} template${templateUsage(s.templates).templates === 1 ? '' : 's'} · ${templateUsage(s.templates).averageItems} item${templateUsage(s.templates).averageItems === 1 ? '' : 's'} each` : dashes),
+      row('Journal words', journalSummary(s.journal) ? `${journalSummary(s.journal).words} words in ${journalSummary(s.journal).entries} entr${journalSummary(s.journal).entries === 1 ? 'y' : 'ies'}` : dashes),
+      row('Local storage used', `${usage.kb} KB · ${usage.collections.length} collections`),
+    ] },
+    { title: 'Copy straight from these numbers', rows: [
+      row('Export every stat as CSV', 'button:tools-csv'),
+      row('Copy the tools summary', 'button:copy-tools'),
+      row('Copy yesterday’s breakfast', 'button:copy-slot:Breakfast'),
+      row('Copy yesterday’s lunch', 'button:copy-slot:Lunch'),
+      row('Copy yesterday’s dinner', 'button:copy-slot:Dinner'),
+      row('Copy yesterday’s snacks', 'button:copy-slot:Snack'),
+    ] },
+  ]
+}
+function toolsPage() {
+  const s = scoped(), p = profile(), t = targets()
+  const sections = toolsSections(s, p, t)
+  const cell = value => value.startsWith('button:tools-csv') ? '<button type="button" data-action="tools-csv">Download CSV</button>'
+    : value.startsWith('button:copy-tools') ? '<button type="button" data-action="copy-tools">Copy summary</button>'
+      : value.startsWith('button:copy-slot:') ? `<button type="button" data-action="copy-slot" data-slot="${esc(value.split(':')[2])}">Copy</button>`
+        : esc(value)
+  return `${heading('Tools', 'Every number the tracker can derive from what you logged. Nothing leaves this device.')}<div class="tracker-grid">${sections.map(section => `<article class="cc-card cc-card--wide tools-section"><h3>${esc(section.title)}</h3>${section.rows.map(item => `<div class="cc-row tools-row"><span>${esc(item.label)}</span><strong>${cell(item.value)}</strong></div>`).join('')}</article>`).join('')}</div>`
 }
 function renderMore() {
   const s=scoped(),p=profile(),habits=s.habits||[],logs=s.habitLogs.filter(item=>item.date===selectedDate),supp=s.supplements||[],medLogs=s.medicineLogs.filter(item=>item.date===selectedDate)
@@ -1131,6 +1322,29 @@ async function handleAction(action,button) {
     return
   }
   if(action==='close-copy'){const host=$('#walk-checkin-host',root);if(host)host.innerHTML='';return}
+  if(action==='tools-csv'){
+    const sections=toolsSections(scoped(),profile(),targets())
+    const rows=[['section','measure','value'],...sections.flatMap(section=>section.rows.filter(item=>!String(item.value).startsWith('button:')).map(item=>[section.title,item.label,item.value]))]
+    const csv=rows.map(cells=>cells.map(cell=>`"${String(cell??'').replaceAll('"','""')}"`).join(',')).join('\r\n')
+    download(`absolute-cal-tools-${todayISO()}.csv`,csv,'text/csv;charset=utf-8')
+    toast('Tools CSV downloaded.');return
+  }
+  if(action==='copy-tools'){
+    const sections=toolsSections(scoped(),profile(),targets())
+    const text=sections.map(section=>`${section.title}\n${section.rows.filter(item=>!String(item.value).startsWith('button:')).map(item=>`  ${item.label}: ${item.value}`).join('\n')}`).join('\n\n')
+    try{
+      if(!navigator.clipboard?.writeText)throw new Error('no clipboard')
+      await navigator.clipboard.writeText(text);toast('Tools summary copied to the clipboard.')
+    }catch{showCopyFallback(text)}
+    return
+  }
+  if(action==='copy-slot'){
+    const slot=button.dataset.slot||'Snack'
+    const items=copyableMeals(scoped().meals,previousDay(selectedDate),selectedDate).filter(item=>normalizeSlot(item.slot||'Snack')===slot)
+    if(!items.length)return toast(`No ${slot.toLowerCase()} was logged yesterday.`)
+    for(const item of items)state.meals.push({...item,id:uid(),profileId:profile().id,source:'Copied slot'})
+    persist(`${slot} copied from yesterday · ${items.length} item${items.length===1?'':'s'}.`);render();return
+  }
   if(action==='steps-adjust'){
     const requested=Number(button.dataset.delta)||0
     if(!requested)return
@@ -1270,7 +1484,7 @@ window.addEventListener('keydown',event=>{
   if(!target||target.matches?.('input,select,textarea,[contenteditable="true"]')||event.metaKey||event.ctrlKey||event.altKey)return
   // Never hijack keys while the check-in dialog is waiting for an answer.
   if(pendingCheckin||document.querySelector('#walk-checkin-form'))return
-  const tabs={'1':'today','2':'food','3':'activity','4':'health','5':'trends','6':'more'}
+  const tabs={'1':'today','2':'food','3':'activity','4':'health','5':'trends','6':'more','7':'tools'}
   if(tabs[event.key]){setTab(tabs[event.key]);return}
   if(event.key==='/'){event.preventDefault();if(tab!=='food')setTab('food');const field=$('#food-search',root);if(field){field.focus();field.select?.()}}
   if((event.key==='w'||event.key==='W')&&!activeWalk){event.preventDefault();startWalkSession()}

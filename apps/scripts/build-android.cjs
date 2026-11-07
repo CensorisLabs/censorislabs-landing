@@ -35,9 +35,44 @@ if (existsSync(manifestPath)) {
   }
 }
 
+// The Health Connect plugin writes its notification strings into strings.xml
+// itself, sometimes several elements on one line and without XML/Android
+// escaping. aapt2 rejects that ("Invalid unicode escape sequence in string"),
+// so rewrite the file deterministically with one escaped element per line.
+const stringsPath = path.join(appRoot, 'android', 'app', 'src', 'main', 'res', 'values', 'strings.xml')
+if (existsSync(stringsPath)) {
+  const escapeValue = value => String(value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"')
+  const entries = []
+  const pattern = /<string\s+name="([^"]+)"\s*(?:\/>|>([\s\S]*?)<\/string>)/g
+  let match
+  const original = readFileSync(stringsPath, 'utf8')
+  while ((match = pattern.exec(original))) entries.push([match[1], match[2]])
+  const overrides = {}
+  if (path.basename(appRoot) === 'calorie-calculator') {
+    const healthConfig = JSON.parse(readFileSync(path.join(appRoot, 'healthfitness.config.json'), 'utf8'))
+    if (healthConfig.backgroundNotificationTitle) overrides.background_notification_title = healthConfig.backgroundNotificationTitle
+    if (healthConfig.backgroundNotificationDescription) overrides.background_notification_description = healthConfig.backgroundNotificationDescription
+    if (healthConfig.privacyPolicyUrl) overrides.privacy_policy_url = healthConfig.privacyPolicyUrl
+  }
+  const merged = new Map(entries)
+  for (const [name, value] of Object.entries(overrides)) merged.set(name, value)
+  const body = [...merged].map(([name, value]) => value === undefined
+    ? `    <string name="${name}" />`
+    : `    <string name="${name}">${escapeValue(value)}</string>`).join('\n')
+  writeFileSync(stringsPath, `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n${body}\n</resources>\n`)
+  console.log(`Normalised Android string resources (${merged.size} entries).`)
+}
+
 const androidRoot = path.join(appRoot, 'android')
 const signedRelease = existsSync(path.join(androidRoot, 'app', 'release-keystore.p12')) && existsSync(path.join(androidRoot, 'keystore.properties'))
 const task = signedRelease ? 'assembleRelease' : 'assembleDebug'
+if (process.env.CAPACITOR_SKIP_GRADLE === '1') {
+  console.log('Skipping Gradle because CAPACITOR_SKIP_GRADLE=1.')
+  process.exit(0)
+}
+
 const gradle = path.join(androidRoot, process.platform === 'win32' ? 'gradlew.bat' : 'gradlew')
 if (process.platform === 'win32') {
   // cmd.exe must receive the wrapper path as one quoted command when the app

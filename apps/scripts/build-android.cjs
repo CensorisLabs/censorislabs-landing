@@ -68,6 +68,20 @@ if (existsSync(stringsPath)) {
 const androidRoot = path.join(appRoot, 'android')
 const signedRelease = existsSync(path.join(androidRoot, 'app', 'release-keystore.p12')) && existsSync(path.join(androidRoot, 'keystore.properties'))
 const task = signedRelease ? 'assembleRelease' : 'assembleDebug'
+// The Health Connect library ships a minSdk of 26, while the Capacitor template
+// still scaffolds 24, so the manifest merger rejects the release build. Raise it
+// only when the project asks for something lower. Android 8.0 is the floor for
+// every app built from this script.
+const variablesPath = path.join(androidRoot, 'variables.gradle')
+if (existsSync(variablesPath)) {
+  const variables = readFileSync(variablesPath, 'utf8')
+  const updated = variables.replace(/minSdkVersion\s*=\s*(\d+)/, (line, version) => Number(version) < 26 ? 'minSdkVersion = 26' : line)
+  if (updated !== variables) {
+    writeFileSync(variablesPath, updated)
+    console.log('Raised minSdkVersion to 26 for the Health Connect library.')
+  }
+}
+
 if (process.env.CAPACITOR_SKIP_GRADLE === '1') {
   console.log('Skipping Gradle because CAPACITOR_SKIP_GRADLE=1.')
   process.exit(0)

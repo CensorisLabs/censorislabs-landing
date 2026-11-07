@@ -18,26 +18,80 @@ export function createProfile(name = 'Me') {
   return {
     id: uid(), name, age: '', equation: 'female', heightCm: '', weightKg: '', activity: 1.2,
     goal: 'maintain', sleepGoalHours: 8, waterGoalMl: 2000, stepGoal: 8000, calorieOverride: '',
+    goalWeightKg: '', waistCm: '', chestCm: '', hipsCm: '', proteinPerKg: 1.4,
   }
+}
+
+export const WALK_MET = { gentle: 2.8, steady: 3.5, brisk: 4.3 }
+
+export function walkCalories(minutes, weightKg, pace = 'steady') {
+  const met = WALK_MET[pace] || WALK_MET.steady
+  return Math.round(Math.max(0, Number(minutes) || 0) * met * 3.5 * Math.max(0, Number(weightKg) || 0) / 200)
+}
+
+export function stepsToDistanceKm(steps) {
+  return Math.round(Math.max(0, Number(steps) || 0) * 0.00076 * 1000) / 1000
+}
+
+export function distanceToSteps(km) {
+  return Math.round(Math.max(0, Number(km) || 0) / 0.00076)
+}
+
+export function bmiCategory(bmi) {
+  const value = Number(bmi)
+  if (!value || value <= 0) return null
+  if (value < 18.5) return { label: 'Underweight', tone: 'warn' }
+  if (value < 25) return { label: 'Healthy range', tone: 'good' }
+  if (value < 30) return { label: 'Above range', tone: 'warn' }
+  return { label: 'High range', tone: 'alert' }
+}
+
+export function loggingStreak(dates = [], today = todayISO(), max = 400) {
+  const set = new Set(dates.filter(Boolean))
+  let streak = 0
+  const cursor = new Date(`${today}T12:00:00`)
+  for (let index = 0; index < max; index += 1) {
+    const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`
+    if (set.has(key)) streak += 1
+    else if (index > 0) break
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return streak
+}
+
+export function daysAgoISO(days = 0, from = todayISO()) {
+  const date = new Date(`${from}T12:00:00`)
+  date.setDate(date.getDate() - days)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 export function createInitialState() {
   const profile = createProfile()
   return {
-    version: 3, activeProfileId: profile.id, profiles: [profile],
+    version: 4, activeProfileId: profile.id, profiles: [profile],
     meals: [], activities: [], weights: [], sleeps: [], water: [], vitals: [], moods: [],
     habits: [], habitLogs: [], recipes: [], mealPlans: [], supplements: [], medicineLogs: [],
-    cycleLogs: [], symptoms: [], labResults: [], glucose: [], fastingSessions: [], customMetrics: [], customFoods: [], journal: [],
+    cycleLogs: [], symptoms: [], labResults: [], glucose: [], fastingSessions: [], customMetrics: [], customFoods: [], journal: [], healthImports: [],
+    favorites: [], templates: [], measurements: [], walks: [],
     emergency: { bloodType: '', allergies: '', medications: '', emergencyContact: '', notes: '' },
     dashboard: ['calories', 'macros', 'activity', 'sleep', 'hydration', 'recovery'],
-    settings: { units: 'metric', reminderTime: '', reduceMotion: false, localOnly: true, dashboard: ['calories', 'macros', 'activity', 'sleep', 'hydration', 'recovery'] },
+    settings: {
+      units: 'metric', reminderTime: '', reduceMotion: false, localOnly: true,
+      dashboard: ['calories', 'macros', 'activity', 'sleep', 'hydration', 'recovery'],
+      theme: 'light', fontScale: 'large', calorieAdjust: true, walkPace: 'steady',
+      walkMode: 'walk', stepSensitivity: 1, backgroundSteps: false,
+      backgroundStepsSyncAt: '', saveRoutes: true, weeklyWalkGoal: 150,
+      waterPresets: [250, 500, 750], fiberGoal: 30, sugarGoal: 50, sodiumGoal: 2300,
+      proteinPerKg: 1.4, tips: true,
+    },
   }
 }
 
 const COLLECTIONS = [
   'profiles', 'meals', 'activities', 'weights', 'sleeps', 'water', 'vitals', 'moods', 'habits',
   'habitLogs', 'recipes', 'mealPlans', 'supplements', 'medicineLogs', 'cycleLogs', 'symptoms',
-  'labResults', 'glucose', 'fastingSessions', 'customMetrics', 'customFoods', 'journal',
+  'labResults', 'glucose', 'fastingSessions', 'customMetrics', 'customFoods', 'journal', 'healthImports',
+  'favorites', 'templates', 'measurements', 'walks',
 ]
 
 export function normalizeState(input) {
@@ -50,6 +104,13 @@ export function normalizeState(input) {
   if (!value.profiles.some(profile => profile.id === value.activeProfileId)) value.activeProfileId = value.profiles[0].id
   value.emergency = { ...base.emergency, ...(input.emergency || {}) }
   value.settings = { ...base.settings, ...(input.settings || {}) }
+  // Older saves may predate a field that the UI now reads directly; repair the
+  // shapes here so no render can crash on missing nested data.
+  value.templates = value.templates.map(template => ({ ...template, items: Array.isArray(template?.items) ? template.items : [] }))
+  value.walks = value.walks.map(walk => ({ ...walk, checkin: walk?.checkin || null }))
+  value.customFoods = value.customFoods.map(food => ({ ...food, serv: Array.isArray(food?.serv) && food.serv.length ? food.serv : [['100 g', 100]] }))
+  value.profiles = value.profiles.map(profile => ({ ...profile, stepGoal: Number(profile.stepGoal) > 0 ? profile.stepGoal : 8000, waterGoalMl: Number(profile.waterGoalMl) > 0 ? profile.waterGoalMl : 2000 }))
+  if (!Array.isArray(value.settings.waterPresets) || !value.settings.waterPresets.length) value.settings.waterPresets = [250, 500, 750]
   value.dashboard = Array.isArray(input.dashboard) ? input.dashboard : base.dashboard
   return value
 }
@@ -65,7 +126,7 @@ export function loadState(storage = globalThis.localStorage) {
 
 export function saveState(state, storage = globalThis.localStorage) {
   try {
-    storage?.setItem(STORAGE_KEY, JSON.stringify({ ...state, version: 3 }))
+    storage?.setItem(STORAGE_KEY, JSON.stringify({ ...state, version: 4 }))
     return true
   } catch {
     return false
@@ -84,7 +145,7 @@ export function calculateTargets(profile) {
   const delta = profile.goal === 'lose' ? -250 : profile.goal === 'gain' ? 200 : 0
   const naturalTarget = Math.max(bmr, maintenance + delta)
   const calorieTarget = Number(profile.calorieOverride) > 0 ? Math.max(bmr, clamp(profile.calorieOverride, 900, 10000)) : naturalTarget
-  const protein = Math.round(weight * 1.4)
+  const protein = Math.round(weight * clamp(profile.proteinPerKg || 1.4, 0.8, 3))
   const fat = Math.round(Math.max(weight * 0.6, calorieTarget * 0.25 / 9))
   const carbs = Math.max(0, Math.round((calorieTarget - protein * 4 - fat * 9) / 4))
   return {
@@ -125,13 +186,34 @@ export function estimateStepCalories(steps, weightKg) {
   return Math.round(Math.max(0, Number(steps) || 0) * Math.max(0, Number(weightKg) || 0) * 0.00045)
 }
 
+// Auto step sync should not hammer Health Connect every time the app regains
+// focus; five minutes is enough to pick up a walk without re-reading constantly.
+export const STEP_SYNC_MIN_MINUTES = 5
+export function stepSyncDue(lastSyncAt, now = Date.now(), minMinutes = STEP_SYNC_MIN_MINUTES) {
+  const minutes = Math.max(1, Number(minMinutes) || STEP_SYNC_MIN_MINUTES)
+  const last = Date.parse(lastSyncAt) || 0
+  if (!last) return true
+  // A clock change can put the last sync in the future; treat that as due so
+  // steps are never stuck showing an old total.
+  if (last > now) return true
+  return now - last >= minutes * 60000
+}
+
 export function dayActivity(state, date = todayISO(), profile = activeProfile(state)) {
   const workouts = state.activities.filter(item => item.date === date)
   const exerciseCalories = workouts.reduce((sum, item) => sum + (item.stepsOnly ? 0 : (Number(item.calories) || estimateActivityCalories(item, profile.weightKg))), 0)
-  const steps = workouts.reduce((sum, item) => sum + (Number(item.steps) || 0), 0)
+  const manualSteps = workouts.filter(item => item.source !== 'Health Connect').reduce((sum, item) => sum + (Number(item.steps) || 0), 0)
+  const imported = (state.healthImports || []).find(item => item.date === date && (!item.profileId || item.profileId === profile.id))
+  const importedSteps = imported?.steps
+  const deviceSteps = importedSteps === null || importedSteps === undefined || importedSteps === '' || !Number.isFinite(Number(importedSteps)) ? null : Math.max(0, Number(importedSteps))
+  // A device total of 0 says nothing useful, so fall back to what was logged.
+  const stepTotal = deviceSteps ? deviceSteps : manualSteps
+  // A device that reports 0 for the day (or a phone without a step sensor) must
+  // not hide steps the user logged by hand, so both totals use the same value.
+  const steps = stepTotal
   return {
-    workouts, steps, exerciseCalories,
-    neatCalories: estimateStepCalories(steps, profile.weightKg),
+    workouts, steps: stepTotal, manualSteps, deviceSteps, deviceCalories: Number(imported?.caloriesBurned) || 0, exerciseCalories,
+    neatCalories: estimateStepCalories(stepTotal, profile.weightKg),
     trainingLoad: workouts.reduce((sum, item) => sum + (Math.max(0, Number(item.met) || 1) * Math.max(0, Number(item.minutes) || 0)), 0),
   }
 }

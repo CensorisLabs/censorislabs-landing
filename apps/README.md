@@ -7,7 +7,7 @@ The suite contains ArthaSetu and eleven independent companion apps. App source, 
 | App | App ID | What it does | Network use |
 | --- | --- | --- | --- |
 | ArthaSetu | `arthasetu` | Offline-first Indian personal finance, budgeting, tax estimates, investments and planning | Optional bank feeds are not connected; local data stays on device |
-| Calorie Calculator | `calorie-calculator` | Fully free, local health tracker for meal logging, macros, activity, sleep, hydration, body trends, manual vitals, habits and personal notes | Optional Open Food Facts barcode lookup; all other records stay local |
+| AbsoluteCal | `calorie-calculator` | Fully free, local health tracker for meal logging, activity, sleep, hydration, body trends, manual vitals and Health Connect import | Optional Open Food Facts lookup and Android Health Connect read access; data stays on-device |
 | PC Part Picker | `pc-part-picker` | Local component selection and basic compatibility checks | None |
 | Indian Banking Brief | `indian-banking-brief` | RBI/SEBI updates and source-linked news with two-hour foreground checks | RSS and publisher links |
 | Home Energy Estimator | `home-energy-estimator` | Appliance energy and electricity cost estimates | None |
@@ -35,7 +35,7 @@ Every app has `npm run build`, `npm run android:build`, and `npm run windows:bui
 
 Reading Tracker provides `npm run build`, `npm run publish:web` and `npm run android:build`. Its Android build adds a native home-screen widget. The web app is copied to the site at `/reading-tracker/`.
 
-The Calorie Calculator is also fully free with no Pro tier. It keeps profiles, meal and health records on-device, and supports manual food entry, recipes, meal plans, workout logs, sleep, hydration, weight trends, user-entered vitals, local reminders, and JSON/CSV exports. Barcode lookup contacts Open Food Facts only when requested. Estimates are informational, and this build does not connect Health Connect, Apple Health, wearables, CGMs, or clinical services.
+AbsoluteCal (release asset slug `calorie-calculator`) is fully free with no Pro tier. It keeps profiles, meal and health records on-device, and supports manual food entry, recipes, meal plans, workout logs, sleep, hydration, weight trends, user-entered vitals, Android Health Connect read-only imports, Android local reminders, on-device lab-report OCR suggestions, and JSON/CSV exports. Barcode lookup contacts Open Food Facts only when requested. Estimates and OCR are informational and must be checked. Apple Health, Garmin, Strava, Oura, CGMs, ECG/EDA sensors, remote AI food recognition, and clinical services are not connected in this build.
 
 Reading Tracker cover recognition uses Tesseract.js in the app. Its first OCR run needs an internet connection to fetch the OCR worker and English language data; the cover image is processed on-device and is never sent to the book catalog APIs.
 

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "STEPS": "Read",
+    "DISTANCE": "Read",
+    "CALORIES_BURNED": "Read",
+    "HEART_RATE": "Read",
+    "SLEEP": "Read",
+    "BLOOD_PRESSURE": "Read",
+    "BLOOD_GLUCOSE": "Read",
+    "OXYGEN_SATURATION": "Read",
+    "BODY_TEMPERATURE": "Read",
+    "WEIGHT": "Read",
+    "BODY_FAT_PERCENTAGE": "Read"
+  },
+  "disableBackgroundJobs": false,
+  "disableReadHealthDataHistory": true,
+  "privacyPolicyUrl": "https://censorislabs.online/health-privacy.html",
+  "backgroundNotificationTitle": "AbsoluteCal",
+  "backgroundNotificationDescription": "Reading today's step total from Health Connect."
+}

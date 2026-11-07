@@ -73,3 +73,28 @@ body{background:var(--cc-bg);color:var(--cc-text)}
 @media(max-width:760px){.cc-card,.cc-card--third,.cc-card--quarter{grid-column:span 12}.tracker-top{align-items:stretch}.tracker-profile,.tracker-date{justify-content:space-between}.food-results{grid-template-columns:1fr}.cc-fields.three{grid-template-columns:repeat(2,minmax(0,1fr))}.tracker-nav button{padding:12px 14px;font-size:13px}.app-shell .hero{padding-top:25px}}
 @media(max-width:420px){.main-content{padding-left:14px;padding-right:14px}.cc-fields,.cc-fields.three{grid-template-columns:1fr}.cc-macros{gap:6px}.cc-macro{padding:8px}.cc-card{padding:14px}}
 @media print{.app-nav,.appearance-panel,.tracker-nav,.tracker-top,.cc-actions,.app-foot{display:none!important}.app-shell{max-width:none}.cc-card{break-inside:avoid;border:1px solid #aaa;background:#fff;color:#000}.cc-card p,.cc-row,.cc-row strong,.cc-list-item,.cc-list-item b{color:#111}}
+
+/* Getting started guide + friendlier empty states */
+.cc-onboard{border-color:#4b5238;background:linear-gradient(150deg,#d6ae680a,transparent 60%),var(--cc-panel)}
+.cc-onboard__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.cc-onboard__head .eyebrow{margin:0 0 6px}
+.cc-onboard__close{width:32px;height:32px;flex:none;border:1px solid var(--cc-line);border-radius:8px;background:transparent;color:var(--cc-muted);font-size:17px;line-height:1;cursor:pointer}
+.cc-onboard__close:hover{border-color:var(--cc-gold);color:var(--cc-gold)}
+.cc-onboard__steps{list-style:none;display:grid;gap:8px;margin:0;padding:0}
+.cc-onboard__step{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--cc-line);border-radius:9px;background:#11120f}
+.cc-onboard__step>span{display:grid;place-items:center;width:26px;height:26px;flex:none;border:1px solid #5a5f4c;border-radius:50%;color:var(--cc-gold);font:600 12px system-ui}
+.cc-onboard__step>div{flex:1;min-width:0}
+.cc-onboard__step b{display:block;font-size:13px;color:var(--cc-text)}
+.cc-onboard__step small{display:block;margin-top:3px;color:var(--cc-muted);font-size:11px;line-height:1.45}
+.cc-onboard__step.is-done{border-color:#41523f;background:#8eb99c0a}
+.cc-onboard__step.is-done>span{border-color:var(--cc-green);color:var(--cc-green)}
+.cc-onboard__step button{flex:none;white-space:nowrap}
+.cc-onboard__done{color:var(--cc-green);font:600 11px system-ui;font-style:normal}
+.cc-empty p{margin:0}
+.cc-empty .cc-actions{justify-content:center;margin-top:11px}
+@media(max-width:620px){.cc-onboard__step{flex-wrap:wrap}.cc-onboard__step button,.cc-onboard__done{width:100%}}
+/* Keyboard focus and comfortable scrolling navigation */
+.tracker-nav{position:sticky;top:0;z-index:5;background:var(--cc-bg)}
+.cc-actions button:focus-visible,.cc-button:focus-visible,.tracker-nav button:focus-visible,.cc-onboard__close:focus-visible,.food-result button:focus-visible,.cc-list-item button:focus-visible{outline:2px solid var(--cc-gold);outline-offset:2px}
+.cc-camera-video:focus-visible{outline:2px solid var(--cc-gold)}
+@media print{.cc-onboard{display:none!important}}

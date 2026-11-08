@@ -190,6 +190,9 @@
 .atlas-timeline-actions > span { color: #82918f; font: 500 7px/1 ui-monospace, monospace; letter-spacing: .15em; }
 .atlas-timeline-actions button { border: 0; background: none; color: #9caaa5; font-size: 9px; cursor: pointer; }
 .atlas-range-wrap { position: relative; margin: 7px 0 0; padding: 0 1px; }
+.atlas-year-controls { display: flex; justify-content: center; gap: 5px; margin: 6px 0 1px; }
+.atlas-year-controls button { min-width: 36px; padding: 4px 6px; border: 1px solid rgba(111,70,139,.18); border-radius: 5px; background: rgba(168,85,247,.06); color: #70408f; font: 8px ui-monospace, monospace; cursor: pointer; }
+.atlas-year-controls button:hover, .atlas-year-controls button:focus-visible { border-color: rgba(143,73,189,.5); background: rgba(168,85,247,.15); }
 .atlas-ticks { display: flex; justify-content: space-between; margin-bottom: -2px; color: #798984; font: 7px/1 ui-monospace, monospace; }
 .atlas-range-wrap input[type="range"] { position: relative; z-index: 2; display: block; width: 100%; height: 11px; margin: 0; appearance: none; background: transparent; cursor: ew-resize; }
 .atlas-range-wrap input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(90deg, #a855f7 var(--range-progress), rgba(192, 132, 252, .2) var(--range-progress)); }

@@ -516,6 +516,8 @@ export default function Atlas() {
   const [leftCollapsed, setLeftCollapsed] = useState(true)
   const [rightCollapsed, setRightCollapsed] = useState(true)
   const [warResultLimit, setWarResultLimit] = useState(5)
+  const [warSourceFilter, setWarSourceFilter] = useState<'All' | 'HCED' | 'UCDP'>('All')
+  const [conflictFilter, setConflictFilter] = useState('All')
   const [lowMotion, setLowMotion] = useState(() => document.documentElement.dataset.performance === 'low' || window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [expanded, setExpanded] = useState(false)
   const page = useRef<HTMLElement>(null)
@@ -581,23 +583,26 @@ export default function Atlas() {
     setFocus(nearest)
   }, [year])
 
-  useEffect(() => setWarResultLimit(5), [layer, mapYear, query])
+  useEffect(() => { setWarResultLimit(5); setConflictFilter('All') }, [layer, mapYear, query])
 
   const shown = EVENTS.filter(event => (layer === 'All' || (layer !== 'Wars' && event.category === layer)) && `${event.title} ${event.place} ${event.detail}`.toLowerCase().includes(query.trim().toLowerCase()))
     .sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year)).slice(0, 5)
   const [periodStart, periodEnd] = centuryWindowForStep(centuryStepForYear(mapYear))
   const activeWars = useMemo(() => warData ? warData.features.filter(feature => warActiveInWindow(feature.properties, periodStart, periodEnd)) : EMPTY_WARS, [periodEnd, periodStart, warData])
+  const conflictOptions = useMemo(() => [...new Set(activeWars.map(feature => feature.properties.war || feature.properties.title))].sort((a, b) => a.localeCompare(b)), [activeWars])
   const matchingWars = useMemo(() => {
     const search = query.trim().toLowerCase()
     return activeWars.filter(feature => {
       const war = feature.properties
-      return !search || `${war.title} ${war.war} ${war.place} ${war.country} ${war.sideA} ${war.sideB} ${war.winner} ${war.loser}`.toLowerCase().includes(search)
+      const sourceMatch = warSourceFilter === 'All' || (warSourceFilter === 'UCDP' ? war.source.startsWith('UCDP') : war.source.startsWith('Historical Conflict'))
+      const conflictMatch = conflictFilter === 'All' || (war.war || war.title) === conflictFilter
+      return sourceMatch && conflictMatch && (!search || `${war.title} ${war.war} ${war.place} ${war.country} ${war.sideA} ${war.sideB} ${war.winner} ${war.loser} ${(war.participants ?? []).join(' ')}`.toLowerCase().includes(search))
     }).sort((a, b) => {
       const countA = warStatsInWindow(a.properties, periodStart, periodEnd).reduce((sum, [, events]) => sum + events, 0) || 1
       const countB = warStatsInWindow(b.properties, periodStart, periodEnd).reduce((sum, [, events]) => sum + events, 0) || 1
       return countB - countA || a.properties.title.localeCompare(b.properties.title)
     })
-  }, [activeWars, periodEnd, periodStart, query])
+  }, [activeWars, conflictFilter, periodEnd, periodStart, query, warSourceFilter])
   const warsShown = matchingWars.slice(0, warResultLimit)
   const selectedCountry = useMemo(() => selectedPoint && mapData ? mapData.features.find(feature => featureContainsPoint(feature, selectedPoint)) ?? null : null, [mapData, selectedPoint])
   const activeHistory = useMemo(() => territories && historyData ? historyData.features.filter(feature => feature.properties.from <= mapYear && feature.properties.to >= mapYear).sort((a, b) => b.properties.area - a.properties.area) : EMPTY_HISTORY, [historyData, mapYear, territories])
@@ -650,6 +655,7 @@ export default function Atlas() {
         <label className="atlas-search"><span aria-hidden="true">⌕</span><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={layer === 'Wars' ? 'Search a war, side or place' : 'Search a place or story'} aria-label="Search atlas events" /><kbd>Ctrl K</kbd></label>
         <div className="atlas-filter-label">EXPLORE BY LENS</div>
         <div className="atlas-filters">{(['All', 'Civilizations', 'Routes', 'Ideas', 'People', 'Wars'] as const).map(item => <button className={layer === item ? 'active' : ''} key={item} onClick={() => setLayer(item)}>{item === 'All' ? '✦' : item === 'Routes' ? '⌁' : item === 'Ideas' ? '◉' : item === 'People' ? '♙' : item === 'Wars' ? '⚔' : '⬡'}<span>{item === 'Wars' ? 'Wars + battles' : item}</span></button>)}</div>
+        {layer === 'Wars' && <div className="atlas-war-filters"><label>DATA SOURCE<select aria-label="Filter wars by source" value={warSourceFilter} onChange={event => setWarSourceFilter(event.target.value as 'All' | 'HCED' | 'UCDP')}><option value="All">All sources</option><option value="HCED">Historical battles</option><option value="UCDP">UCDP wars</option></select></label><label>CONFLICT<select aria-label="Filter by conflict" value={conflictFilter} onChange={event => setConflictFilter(event.target.value)}><option value="All">All conflicts</option>{conflictOptions.map(name => <option key={name} value={name}>{name}</option>)}</select></label></div>}
         <div className="atlas-results-label"><span>{layer === 'Wars' ? 'WARS IN THIS CENTURY' : 'NEAR THIS MOMENT'}</span><span>{layer === 'Wars' ? `${matchingWars.length.toLocaleString()} LOCATIONS` : `${shown.length.toString().padStart(2, '0')} STORIES`}</span></div>
         <div className="atlas-story-list">{layer === 'Wars' ? warsShown.length ? warsShown.map(feature => {
           const war = feature.properties

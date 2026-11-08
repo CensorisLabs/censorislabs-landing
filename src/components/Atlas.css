@@ -367,6 +367,9 @@
 .atlas-source-legend { display: grid; gap: 5px; margin: 7px 0; }
 .atlas-source-legend > span { display: flex; align-items: center; gap: 6px; }
 .atlas-source-legend small { margin: 1px 0 0 13px; color: #87778f; font-size: 7px; line-height: 1.45; }
+.atlas-war-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 2px 0 9px; }
+.atlas-war-filters label { display: grid; gap: 4px; color: #776582; font: 500 7px/1 ui-monospace, monospace; letter-spacing: .12em; }
+.atlas-war-filters select { width: 100%; min-width: 0; padding: 6px; border: 1px solid rgba(111, 70, 139, .2); border-radius: 5px; background: rgba(255,255,255,.9); color: #473450; font: 8px Inter, sans-serif; }
 .layer-dot--battle { background: #ef8a42; box-shadow: 0 0 8px rgba(239, 138, 66, .38); }
 .atlas-source-links { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 7px; }
 .atlas-source-links a { color: #8147ac; text-decoration: none; }

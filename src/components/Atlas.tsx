@@ -24,6 +24,9 @@ type WarFeature = { type: 'Feature'; properties: WarProperties; geometry: { type
 type AtlasWarData = { type: 'FeatureCollection'; features: WarFeature[] }
 type MapPoint = { lat: number; lon: number }
 type WarRegion = { lat: number; lon: number; count: number; source: string; name: string; representative: WarFeature }
+type DatedRuler = { id: string; name: string; role: string; from: number; to: number; polity: string }
+type WikidataClaim = { rank?: string; references?: unknown[]; mainsnak?: { datavalue?: { value?: { id?: string } } }; qualifiers?: Record<string, Array<{ datavalue?: { value?: { time?: string; precision?: number } } }>> }
+type WikidataEntity = { labels?: { en?: { value?: string } }; claims?: Record<string, WikidataClaim[]> }
 const EMPTY_COUNTRIES: AtlasFeature<CountryProperties>[] = []
 const EMPTY_HISTORY: AtlasFeature<HistoryProperties>[] = []
 const EMPTY_WARS: WarFeature[] = []
@@ -486,6 +489,13 @@ function shiftYear(year: number, amount: number) {
   const next = THREE.MathUtils.clamp(astronomicalYear + amount, -2999, 2022)
   return next <= 0 ? next - 1 : next
 }
+function wikidataYear(value?: { time?: string; precision?: number }) {
+  if (!value?.time || (value.precision ?? 0) < 9) return undefined
+  const match = value.time.match(/^([+-])(\d{1,})-/)
+  if (!match) return undefined
+  const astronomical = Number(match[2]) * (match[1] === '-' ? -1 : 1)
+  return astronomical <= 0 ? astronomical - 1 : astronomical
+}
 
 async function loadCompressedAtlasData<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(path, { signal, cache: 'no-cache' })
@@ -518,6 +528,8 @@ export default function Atlas() {
   const [warsError, setWarsError] = useState('')
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null)
   const [selectedWar, setSelectedWar] = useState<WarFeature | null>(null)
+  const [rulers, setRulers] = useState<DatedRuler[]>([])
+  const [rulersStatus, setRulersStatus] = useState('')
   const [leftCollapsed, setLeftCollapsed] = useState(true)
   const [rightCollapsed, setRightCollapsed] = useState(true)
   const [warResultLimit, setWarResultLimit] = useState(5)
@@ -527,6 +539,7 @@ export default function Atlas() {
   const [expanded, setExpanded] = useState(false)
   const page = useRef<HTMLElement>(null)
   const searchInput = useRef<HTMLInputElement>(null)
+  const rulerCache = useRef(new Map<string, DatedRuler[]>())
 
   useEffect(() => {
     const controller = new AbortController()
@@ -613,6 +626,74 @@ export default function Atlas() {
   const activeHistory = useMemo(() => territories && historyData ? historyData.features.filter(feature => feature.properties.from <= mapYear && feature.properties.to >= mapYear).sort((a, b) => b.properties.area - a.properties.area) : EMPTY_HISTORY, [historyData, mapYear, territories])
   const authorities = useMemo(() => selectedPoint && historyData ? findAuthorities(historyData.features, selectedPoint, mapYear) : [], [historyData, mapYear, selectedPoint])
   useEffect(() => {
+    const candidates = authorities.filter(feature => /^Q\d+$/.test(feature.properties.wikidata))
+    if (!selectedPoint) {
+      setRulers([])
+      setRulersStatus('')
+      return
+    }
+    if (!candidates.length) {
+      setRulers([])
+      setRulersStatus(authorities.length ? 'The mapped polity has no Wikidata identifier for ruler lookup.' : 'No historical polity is mapped here for this year, so the atlas cannot attribute a ruler.')
+      return
+    }
+    const controller = new AbortController()
+    const cacheKey = `${mapYear}:${candidates.map(item => item.properties.wikidata).join('|')}`
+    const cached = rulerCache.current.get(cacheKey)
+    if (cached) {
+      setRulers(cached)
+      setRulersStatus(cached.length ? 'Cached dated, referenced Wikidata claims. Coverage is incomplete; compare linked records with specialist sources.' : 'No sourced ruler record with dated tenure matches this place and year.')
+      return
+    }
+    setRulers([])
+    setRulersStatus('Checking dated ruler records…')
+    const api = async (params: URLSearchParams) => {
+      const response = await fetch(`https://www.wikidata.org/w/api.php?${params}&origin=*`, { signal: controller.signal })
+      if (!response.ok) throw new Error(`Wikidata request failed (${response.status})`)
+      return response.json() as Promise<{ entities?: Record<string, WikidataEntity> }>
+    }
+    void (async () => {
+      try {
+        const polityParams = new URLSearchParams({ action: 'wbgetentities', ids: candidates.map(item => item.properties.wikidata).join('|'), props: 'claims', format: 'json' })
+        const polityResponse = await api(polityParams)
+        const matches: Array<{ id: string; role: string; from: number; to: number; polity: string }> = []
+        for (const authority of candidates) {
+          const entity = polityResponse.entities?.[authority.properties.wikidata]
+          for (const [property, role] of [['P35', 'Head of state'], ['P6', 'Head of government']] as const) {
+            for (const claim of entity?.claims?.[property] ?? []) {
+              const rulerId = claim.mainsnak?.datavalue?.value?.id
+              const from = wikidataYear(claim.qualifiers?.P580?.[0]?.datavalue?.value)
+              const to = wikidataYear(claim.qualifiers?.P582?.[0]?.datavalue?.value)
+              if (claim.rank === 'deprecated' || !claim.references?.length || !rulerId || from === undefined || to === undefined || mapYear < from || mapYear > to) continue
+              matches.push({ id: rulerId, role, from, to, polity: authority.properties.name })
+            }
+          }
+        }
+        if (controller.signal.aborted) return
+        const uniqueIds = [...new Set(matches.map(item => item.id))]
+        if (!uniqueIds.length) {
+          rulerCache.current.set(cacheKey, [])
+          setRulers([])
+          setRulersStatus('No sourced ruler record with dated tenure matches this place and year.')
+          return
+        }
+        const peopleParams = new URLSearchParams({ action: 'wbgetentities', ids: uniqueIds.slice(0, 50).join('|'), props: 'labels', languages: 'en', format: 'json' })
+        const peopleResponse = await api(peopleParams)
+        if (controller.signal.aborted) return
+        const rulerResults = matches.slice(0, 20).flatMap(item => {
+          const name = peopleResponse.entities?.[item.id]?.labels?.en?.value
+          return name ? [{ ...item, name }] : []
+        })
+        rulerCache.current.set(cacheKey, rulerResults)
+        setRulers(rulerResults)
+        setRulersStatus('Dated, referenced Wikidata claims only. Coverage is incomplete; multiple roles or co-rulers may be listed.')
+      } catch (error) {
+        if (!controller.signal.aborted) setRulersStatus(error instanceof Error ? `${error.message}. Ruler lookup is temporarily unavailable.` : 'Ruler lookup is temporarily unavailable.')
+      }
+    })()
+    return () => controller.abort()
+  }, [authorities, mapYear, selectedPoint])
+  useEffect(() => {
     if (selectedWar && !warActiveInWindow(selectedWar.properties, periodStart, periodEnd)) {
       setSelectedWar(null)
       setSelectedPoint(null)
@@ -698,7 +779,8 @@ export default function Atlas() {
           <div className="atlas-authorities-label">WHO HELD THIS LAND?</div>
           <div className="atlas-authority-list">{authorityMarkup}</div>
           <div className="atlas-authorities-label">RULERS RECORDED FOR {formatYear(year).toUpperCase()}</div>
-          <p className="atlas-data-note">The atlas’s historical border source identifies polities, not a complete ruler-by-year register. It does not provide a verified individual ruler for every place and date, so names are shown only when a ruler source is available. Use the polity references above to verify local succession.</p>
+          {rulers.length > 0 && <div className="atlas-authority-list">{rulers.map((ruler, index) => <article className="atlas-authority" key={`${ruler.id}-${ruler.role}-${ruler.polity}-${index}`}><strong>{ruler.name}</strong><small>{ruler.role} · {ruler.polity}</small><small>Recorded tenure: {formatYear(ruler.from)} — {formatYear(ruler.to)}</small><a href={`https://www.wikidata.org/wiki/${encodeURIComponent(ruler.id)}`} target="_blank" rel="noreferrer">View sourced Wikidata record ↗</a></article>)}</div>}
+          <p className="atlas-data-note">{rulersStatus || 'The border source identifies polities, not rulers. Only dated and referenced leader claims are listed; missing names are a source-coverage gap, not a claim that no ruler existed.'} Wikidata records can be incomplete or disputed; compare the linked record with specialist sources.</p>
         </div> : <div className="atlas-detail"><div className="atlas-detail-tag"><span>{focus.category.toUpperCase()}</span><span>◦  STORY</span></div><h2>{focus.title}</h2><p className="atlas-place">⌖ &nbsp;{focus.place}</p><p className="atlas-detail-copy">{focus.detail}</p><button className="atlas-follow" onClick={() => setYear(focus.year)}>Explore this moment <span>↗</span></button></div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place markers</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label></div>
         <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL TO ZOOM · TAP A PLACE</span></div>

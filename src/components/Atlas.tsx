@@ -25,6 +25,7 @@ type AtlasWarData = { type: 'FeatureCollection'; features: WarFeature[] }
 type MapPoint = { lat: number; lon: number }
 type WarRegion = { lat: number; lon: number; count: number; source: string; name: string; representative: WarFeature }
 type DatedRuler = { id: string; name: string; role: string; from: number; to: number; polity: string }
+type GlobeLabel = { name: string; lat: number; lon: number; href: string; area: number }
 type WikidataClaim = { rank?: string; references?: unknown[]; mainsnak?: { datavalue?: { value?: { id?: string } } }; qualifiers?: Record<string, Array<{ datavalue?: { value?: { time?: string; precision?: number } } }>> }
 type WikidataEntity = { labels?: { en?: { value?: string } }; claims?: Record<string, WikidataClaim[]> }
 const EMPTY_COUNTRIES: AtlasFeature<CountryProperties>[] = []
@@ -93,6 +94,40 @@ const EVENTS: AtlasEvent[] = [
 
 function polygonsOf(geometry: GeoGeometry): GeoPolygon[] {
   return geometry.type === 'Polygon' ? [geometry.coordinates as GeoPolygon] : geometry.coordinates as GeoPolygon[]
+}
+
+function labelPoint(feature: AtlasFeature<CountryProperties | HistoryProperties>): MapPoint {
+  const rings = polygonsOf(feature.geometry).map(polygon => unwrapRing(polygon[0] ?? [])).filter(ring => ring.length > 2)
+  const largest = rings.sort((a, b) => Math.abs(ringArea(b)) - Math.abs(ringArea(a)))[0]
+  if (!largest) return { lat: 0, lon: 0 }
+  const area = ringArea(largest)
+  if (Math.abs(area) < 1e-8) return { lat: largest.reduce((sum, [, lat]) => sum + lat, 0) / largest.length, lon: largest.reduce((sum, [lon]) => sum + lon, 0) / largest.length }
+  let x = 0, y = 0
+  for (let i = 0, j = largest.length - 1; i < largest.length; j = i++) {
+    const cross = largest[j][0] * largest[i][1] - largest[i][0] * largest[j][1]
+    x += (largest[j][0] + largest[i][0]) * cross
+    y += (largest[j][1] + largest[i][1]) * cross
+  }
+  return { lat: y / (6 * area), lon: ((x / (6 * area) + 540) % 360) - 180 }
+}
+function ringArea(ring: GeoRing) {
+  let area = 0
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) area += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1]
+  return area / 2
+}
+function spacedLabels(candidates: GlobeLabel[], maxLabels: number, separationDegrees: number) {
+  const result: GlobeLabel[] = []
+  for (const label of candidates.sort((a, b) => b.area - a.area)) {
+    const nearby = result.some(other => {
+      const meanLatitude = (label.lat + other.lat) * Math.PI / 360
+      const longitudeDelta = ((label.lon - other.lon + 540) % 360) - 180
+      const dx = longitudeDelta * Math.cos(meanLatitude)
+      return Math.hypot(dx, label.lat - other.lat) < separationDegrees
+    })
+    if (!nearby) result.push(label)
+    if (result.length >= maxLabels) break
+  }
+  return result
 }
 
 function polityColor(name: string, alpha: number, lightness = 49) {
@@ -277,6 +312,14 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
     return mesh
   }, [selectedWarId, selectedWarKey, warMarkers])
   const warRegions = useMemo(() => groupWarRegions(warMarkers), [warMarkers])
+  const globeLabels = useMemo(() => {
+    const source: GlobeLabel[] = year >= 2022
+      ? countries.map(feature => ({ ...labelPoint(feature), name: feature.properties.name, area: largestFeatureArea(feature), href: `https://en.wikipedia.org/wiki/${encodeURIComponent(feature.properties.name.replaceAll(' ', '_'))}` }))
+      : historical.filter(feature => feature.properties.name && !feature.properties.name.startsWith('(')).map(feature => ({ ...labelPoint(feature), name: feature.properties.name, area: feature.properties.area, href: feature.properties.wiki ? `https://en.wikipedia.org/wiki/${encodeURIComponent(feature.properties.wiki.replaceAll(' ', '_'))}` : feature.properties.wikidata ? `https://www.wikidata.org/wiki/${encodeURIComponent(feature.properties.wikidata)}` : '' })).filter(label => label.href)
+    const largestByName = new Map<string, GlobeLabel>()
+    source.forEach(label => { const current = largestByName.get(label.name); if (!current || label.area > current.area) largestByName.set(label.name, label) })
+    return spacedLabels([...largestByName.values()], year >= 2022 ? 48 : 34, year >= 2022 ? 11 : 20)
+  }, [countries, historical, year])
   const warRegionMesh = useMemo(() => {
     const geometry = new THREE.CircleGeometry(1, 24)
     const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
@@ -451,6 +494,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
         const feature = typeof event.instanceId === 'number' ? warMarkers[event.instanceId] : undefined
         if (feature) onSelectWar(feature)
       }} />
+      {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} />)}
       {routes && routeObjects.map((line, index) => <primitive object={line} key={`route-${index}`} />)}
       {labels && events.filter(event => event.year <= year).map(event => <mesh key={event.id} position={latLon(event.lat, event.lon, 1.625)}>
         <sphereGeometry args={[event.id === 'present' ? 0.026 : 0.018, 12, 10]} />
@@ -481,6 +525,34 @@ function Stars() {
   }, [])
   useEffect(() => () => geometry.dispose(), [geometry])
   return <points geometry={geometry}><pointsMaterial color="#d9c3ff" size={0.016} transparent opacity={0.67} sizeAttenuation depthWrite={false} /></points>
+}
+
+function largestFeatureArea(feature: AtlasFeature<CountryProperties>) {
+  return Math.max(0, ...polygonsOf(feature.geometry).map(polygon => Math.abs(ringArea(unwrapRing(polygon[0] ?? [])))))
+}
+
+function GlobeTextLabel({ label }: { label: GlobeLabel }) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 512
+    canvas.height = 64
+    const context = canvas.getContext('2d')!
+    context.font = '600 28px Inter, Arial, sans-serif'
+    context.textAlign = 'center'
+    context.textBaseline = 'middle'
+    context.lineWidth = 6
+    context.strokeStyle = 'rgba(255,255,255,.92)'
+    context.strokeText(label.name, 256, 32, 496)
+    context.fillStyle = '#382746'
+    context.fillText(label.name, 256, 32, 496)
+    const map = new THREE.CanvasTexture(canvas)
+    map.colorSpace = THREE.SRGBColorSpace
+    return map
+  }, [label.name])
+  const material = useMemo(() => new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: true, depthWrite: false, toneMapped: false }), [texture])
+  useEffect(() => () => { texture.dispose(); material.dispose() }, [material, texture])
+  const width = Math.min(0.68, Math.max(0.16, label.name.length * 0.015))
+  return <sprite position={latLon(label.lat, label.lon, 1.635)} scale={[width, 0.065, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
 }
 
 function formatYear(year: number) { return year < 0 ? `${Math.abs(year).toLocaleString()} BCE` : year === 0 ? '1 BCE / 1 CE' : `${year.toLocaleString()} CE` }

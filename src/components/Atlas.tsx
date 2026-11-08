@@ -291,7 +291,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   const drag = useRef<{ id: number; x: number; y: number; startX: number; startY: number; lastTime: number; moved: boolean } | null>(null)
   const rotationVelocity = useRef({ x: 0, y: 0 })
   const suppressClickUntil = useRef(0)
-  const distance = useRef(5.85)
+  const distance = useRef(5.4)
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#d29aff', transparent: true, opacity: 0.75 }), [])
   // Keep the grouped war footprints during playback, but suspend tens of
   // thousands of individual clickable dots until the viewer pauses.
@@ -804,7 +804,7 @@ export default function Atlas() {
 
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
-    <Canvas className="atlas-canvas" dpr={[1, 1.6]} camera={{ position: [0, 0, 5.85], fov: 39 }} gl={{ alpha: true, antialias: true }}>
+    <Canvas className="atlas-canvas" dpr={[1, 1.6]} camera={{ position: [0, 0, 5.4], fov: 39 }} gl={{ alpha: true, antialias: true }}>
       <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
     </Canvas>
 

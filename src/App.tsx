@@ -15,9 +15,11 @@ import { LegalDialog, LegalSection, type LegalDocId } from './components/Legal'
 import { initReveals, initScrollDrift, initTilt } from './lib/effects'
 
 const Hero = lazy(() => import('./components/Hero'))
+const Atlas = lazy(() => import('./components/Atlas'))
 
 const TITLES: Record<string, string> = {
   '#/game': 'Chronicle Frontier',
+  '#/atlas': 'World Atlas',
   '#/about': 'About me',
   '#/apps': 'Apps',
   '#/reviews': 'Reviews & comments',
@@ -61,6 +63,7 @@ export default function App() {
   }, [route])
 
   const isGamePage = route === '#/game'
+  const isAtlasPage = route === '#/atlas'
   const isAboutPage = route === '#/about'
   const isReviewsPage = route === '#/reviews'
   const isRequestPage = route === '#/request'
@@ -73,11 +76,11 @@ export default function App() {
         Skip to content
       </a>
 
-      {!isGamePage && <Cursor />}
-      {!isGamePage && <Nav />}
+      {!isGamePage && !isAtlasPage && <Cursor />}
+      {!isGamePage && !isAtlasPage && <Nav />}
 
       <main id="main">
-        {isGamePage ? <GamePage /> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isAppPage ? <Apps appId={appId} /> : <>
+        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isAppPage ? <Apps appId={appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>
@@ -89,11 +92,11 @@ export default function App() {
         </>}
       </main>
 
-      {!isGamePage && <Footer onOpenLegal={setLegalDoc} />}
+      {!isGamePage && !isAtlasPage && <Footer onOpenLegal={setLegalDoc} />}
 
-      {!isGamePage && <LegalDialog doc={legalDoc} onClose={() => setLegalDoc(null)} />}
-      {!isGamePage && <div className="page-frame" aria-hidden="true" />}
-      {!isGamePage && <div className="grain" aria-hidden="true" />}
+      {!isGamePage && !isAtlasPage && <LegalDialog doc={legalDoc} onClose={() => setLegalDoc(null)} />}
+      {!isGamePage && !isAtlasPage && <div className="page-frame" aria-hidden="true" />}
+      {!isGamePage && !isAtlasPage && <div className="grain" aria-hidden="true" />}
     </>
   )
 }

@@ -23,6 +23,7 @@ type WarProperties = {
 type WarFeature = { type: 'Feature'; properties: WarProperties; geometry: { type: 'Point'; coordinates: [number, number] } }
 type AtlasWarData = { type: 'FeatureCollection'; features: WarFeature[] }
 type MapPoint = { lat: number; lon: number }
+type WarRegion = { lat: number; lon: number; count: number; representative: WarFeature }
 const EMPTY_COUNTRIES: AtlasFeature<CountryProperties>[] = []
 const EMPTY_HISTORY: AtlasFeature<HistoryProperties>[] = []
 const EMPTY_WARS: WarFeature[] = []
@@ -42,6 +43,23 @@ function warActiveInWindow(war: WarProperties, from: number, to: number) {
 function warStatsInWindow(war: WarProperties, from: number, to: number) {
   if (war.activity) return war.activity.filter(([year]) => year >= from && year <= to)
   return [] as WarActivity[]
+}
+function groupWarRegions(features: WarFeature[]): WarRegion[] {
+  const regions = new Map<string, WarRegion>()
+  for (const feature of features) {
+    const war = feature.properties
+    // The grouped footprints make dense event catalogues readable without
+    // suggesting that these sources provide exact battlefield boundaries.
+    const latitude = Math.round(war.lat / 3) * 3
+    const longitude = Math.round(war.lon / 3) * 3
+    const key = `${war.source}:${war.war || war.title}:${latitude}:${longitude}`
+    const current = regions.get(key)
+    if (current) {
+      current.count += war.eventCount ?? 1
+      if ((war.eventCount ?? 1) > (current.representative.properties.eventCount ?? 1)) current.representative = feature
+    } else regions.set(key, { lat: latitude, lon: longitude, count: war.eventCount ?? 1, representative: feature })
+  }
+  return [...regions.values()]
 }
 function formatWarPeriod(war: WarProperties, from: number, to: number) {
   const years = warStatsInWindow(war, from, to).map(([year]) => year)
@@ -221,7 +239,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
   const { gl, camera } = useThree()
   const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year), [countries, historical, selectedAuthorities, selectedCountry, year])
   const spin = useRef({ x: 0.12, y: -2.1 })
-  const drag = useRef<{ id: number; x: number; y: number } | null>(null)
+  const drag = useRef<{ id: number; x: number; y: number; startX: number; startY: number; moved: boolean } | null>(null)
+  const suppressClickUntil = useRef(0)
   const distance = useRef(5.85)
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#d29aff', transparent: true, opacity: 0.75 }), [])
   const warMarkerMesh = useMemo(() => {
@@ -247,6 +266,29 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
     mesh.computeBoundingSphere()
     return mesh
   }, [selectedWarId, warMarkers])
+  const warRegions = useMemo(() => groupWarRegions(warMarkers), [warMarkers])
+  const warRegionMesh = useMemo(() => {
+    const geometry = new THREE.CircleGeometry(1, 24)
+    const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.24, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
+    const mesh = new THREE.InstancedMesh(geometry, material, warRegions.length)
+    const marker = new THREE.Object3D()
+    const color = new THREE.Color()
+    warRegions.forEach((region, index) => {
+      const normal = latLon(region.lat, region.lon, 1).normalize()
+      const size = Math.min(0.19, 0.045 + Math.log2(region.count + 1) * 0.014)
+      marker.position.copy(normal.clone().multiplyScalar(1.608))
+      marker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal)
+      marker.scale.set(size, size * 0.78, 1)
+      marker.updateMatrix()
+      mesh.setMatrixAt(index, marker.matrix)
+      color.set(region.representative.properties.source.startsWith('UCDP') ? '#dc4b76' : '#ef8a42')
+      mesh.setColorAt(index, color)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+    mesh.computeBoundingSphere()
+    return mesh
+  }, [warRegions])
 
   useEffect(() => () => texture.dispose(), [texture])
   useEffect(() => () => {
@@ -254,24 +296,33 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
     const material = warMarkerMesh.material
     if (Array.isArray(material)) material.forEach(item => item.dispose()); else material.dispose()
   }, [warMarkerMesh])
+  useEffect(() => () => {
+    warRegionMesh.geometry.dispose()
+    const material = warRegionMesh.material
+    if (Array.isArray(material)) material.forEach(item => item.dispose()); else material.dispose()
+  }, [warRegionMesh])
   useEffect(() => {
     const canvas = gl.domElement
     const onDown = (event: PointerEvent) => {
       if (event.button !== 0) return
-      drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY }
+      drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false }
       canvas.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => {
       if (!drag.current || drag.current.id !== event.pointerId) return
       const dx = event.clientX - drag.current.x
       const dy = event.clientY - drag.current.y
+      if (Math.hypot(event.clientX - drag.current.startX, event.clientY - drag.current.startY) > 6) drag.current.moved = true
       spin.current.y += dx * 0.006
       spin.current.x = THREE.MathUtils.clamp(spin.current.x + dy * 0.005, -1.0, 1.0)
       drag.current.x = event.clientX
       drag.current.y = event.clientY
     }
     const onUp = (event: PointerEvent) => {
-      if (drag.current?.id === event.pointerId) drag.current = null
+      if (drag.current?.id === event.pointerId) {
+        if (drag.current.moved) suppressClickUntil.current = performance.now() + 350
+        drag.current = null
+      }
     }
     const onWheel = (event: WheelEvent) => {
       distance.current = THREE.MathUtils.clamp(distance.current + event.deltaY * 0.003, 3.35, 7.8)
@@ -338,6 +389,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
     <mesh scale={1.075}><sphereGeometry args={[1.65, 48, 48]} /><meshBasicMaterial color="#a855f7" transparent opacity={0.09} side={THREE.BackSide} /></mesh>
     <group ref={world}>
       <mesh onClick={event => {
+        if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
         if (!world.current) return
         const localPoint = world.current.worldToLocal(event.point.clone()).normalize()
         const lat = Math.asin(THREE.MathUtils.clamp(localPoint.y, -1, 1)) * 180 / Math.PI
@@ -355,7 +407,14 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
         <sphereGeometry args={[0.028, 16, 12]} />
         <meshBasicMaterial color="#ff5c8a" />
       </mesh>}
+      <primitive object={warRegionMesh} onClick={event => {
+        if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
+        event.stopPropagation()
+        const region = typeof event.instanceId === 'number' ? warRegions[event.instanceId] : undefined
+        if (region) onSelectWar(region.representative)
+      }} />
       <primitive object={warMarkerMesh} onClick={event => {
+        if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
         event.stopPropagation()
         const feature = typeof event.instanceId === 'number' ? warMarkers[event.instanceId] : undefined
         if (feature) onSelectWar(feature)
@@ -569,7 +628,7 @@ export default function Atlas() {
         }) : <p className="atlas-no-results">{query ? 'No documented war locations match this search in this century.' : mapYear < -1468 ? 'The sourced battle catalogue begins in 1468 BCE. No earlier markers are available here.' : 'No matching war or battle records in this century. That is a source coverage gap, not proof that no wars occurred.'}</p> : shown.length ? shown.map(event => <button className={`atlas-story${focus.id === event.id ? ' selected' : ''}`} key={event.id} onClick={() => { setFocus(event); setSelectedWar(null); setSelectedPoint(null); setLeftCollapsed(true); setRightCollapsed(false); setYear(yearAtCenturyStep(centuryStepForYear(event.year))) }}><span className="atlas-story-date">{formatYear(event.year)}</span><b>{event.title}</b><small><i />{event.place}</small></button>) : <p className="atlas-no-results">No stories match this search. Try another place or lens.</p>}</div>
         {layer === 'Wars' && matchingWars.length > warResultLimit && <button className="atlas-load-more" onClick={() => setWarResultLimit(count => count + 10)}>Show 10 more war locations <span>{matchingWars.length - warResultLimit} left</span></button>}
         <div className="atlas-source-note"><i>✳</i><span>Natural Earth (public domain); Seshat Cliopatria polities (CC BY 4.0); Historical Conflict Event Dataset (CC0); UCDP GED (CC BY 4.0). Historical battle records through 1988; UCDP state-war events for 1989–2022, limited to conflict-years coded as war (1,000+ battle deaths). Coverage is incomplete; blank periods do not mean no wars.
-          <div className="atlas-source-legend"><span><i className="layer-dot layer-dot--battle" /> Historical battles</span><span><i className="layer-dot layer-dot--war" /> UCDP war events</span></div>
+          <div className="atlas-source-legend"><span><i className="layer-dot layer-dot--battle" /> Historical battle zones</span><span><i className="layer-dot layer-dot--war" /> UCDP conflict zones</span><small>Soft footprints group nearby recorded events; edges are approximate.</small></div>
           <div className="atlas-source-links"><a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6ZFC0V" target="_blank" rel="noreferrer">Harvard dataset ↗</a><a href="https://doi.org/10.1177/00220027221119085" target="_blank" rel="noreferrer">HCED research paper ↗</a><a href="https://ucdp.uu.se/downloads/ged/ged261.pdf" target="_blank" rel="noreferrer">UCDP GED codebook ↗</a><a href="https://ucdp.uu.se/downloads/ucdpprio/ucdp-prio-acd-261.pdf" target="_blank" rel="noreferrer">UCDP/PRIO conflict codebook ↗</a></div>
         </span></div>
       </>}
@@ -601,7 +660,7 @@ export default function Atlas() {
           <p className="atlas-data-note">Historical coverage is uneven and borders are approximate. Blank land means no polity is mapped here; it is not proof that nobody lived here. The source does not consistently name individual rulers.</p>
         </div> : <div className="atlas-detail"><div className="atlas-detail-tag"><span>{focus.category.toUpperCase()}</span><span>◦  STORY</span></div><h2>{focus.title}</h2><p className="atlas-place">⌖ &nbsp;{focus.place}</p><p className="atlas-detail-copy">{focus.detail}</p><button className="atlas-follow" onClick={() => setYear(focus.year)}>Explore this moment <span>↗</span></button></div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place markers</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label></div>
-        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL TO ZOOM · CLICK A PLACE</span></div>
+        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL TO ZOOM · TAP A PLACE</span></div>
       </>}
     </aside>
 

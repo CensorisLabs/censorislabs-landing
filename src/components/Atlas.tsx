@@ -181,8 +181,10 @@ function drawFeature(ctx: CanvasRenderingContext2D, feature: AtlasFeature<unknow
 
 function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historical: AtlasFeature<HistoryProperties>[], selectedCountry: string | undefined, selectedAuthorities: AtlasFeature<HistoryProperties>[], year: number) {
   const canvas = document.createElement('canvas')
-  canvas.width = 4096
-  canvas.height = 2048
+  // The globe is displayed at roughly 600–900 CSS pixels. A 2K texture stays
+  // crisp at that size while cutting each timeline redraw and GPU upload by 4×.
+  canvas.width = 2048
+  canvas.height = 1024
   const ctx = canvas.getContext('2d')!
   const ocean = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
   ocean.addColorStop(0, '#fbf8fd')
@@ -262,12 +264,13 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, routes, labels, lowMotion, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, onSelectLocation, onSelectWar }: {
+function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, onSelectLocation, onSelectWar }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
   routes: boolean
   labels: boolean
   lowMotion: boolean
+  isPlaying: boolean
   countries: AtlasFeature<CountryProperties>[]
   historical: AtlasFeature<HistoryProperties>[]
   selectedCountry?: string
@@ -290,13 +293,16 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
   const suppressClickUntil = useRef(0)
   const distance = useRef(5.85)
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#d29aff', transparent: true, opacity: 0.75 }), [])
+  // Keep the grouped war footprints during playback, but suspend tens of
+  // thousands of individual clickable dots until the viewer pauses.
+  const visibleWarMarkers = isPlaying ? EMPTY_WARS : warMarkers
   const warMarkerMesh = useMemo(() => {
     const geometry = new THREE.SphereGeometry(1, 8, 6)
     const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.86, toneMapped: false })
-    const mesh = new THREE.InstancedMesh(geometry, material, warMarkers.length)
+    const mesh = new THREE.InstancedMesh(geometry, material, visibleWarMarkers.length)
     const marker = new THREE.Object3D()
     const color = new THREE.Color()
-    warMarkers.forEach((feature, index) => {
+    visibleWarMarkers.forEach((feature, index) => {
       const war = feature.properties
       marker.position.copy(latLon(war.lat, war.lon, 1.624))
       const isUcdp = war.source.startsWith('UCDP')
@@ -312,7 +318,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     return mesh
-  }, [selectedWarId, selectedWarKey, warMarkers])
+  }, [selectedWarId, selectedWarKey, visibleWarMarkers])
   const warRegions = useMemo(() => groupWarRegions(warMarkers), [warMarkers])
   const globeLabels = useMemo(() => {
     const source: GlobeLabel[] = year >= 2022
@@ -492,12 +498,12 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
         const region = typeof event.instanceId === 'number' ? warRegions[event.instanceId] : undefined
         if (region) onSelectWar(region.representative)
       }} />
-      <primitive object={warMarkerMesh} onClick={event => {
+      {!isPlaying && <primitive object={warMarkerMesh} onClick={event => {
         if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
         event.stopPropagation()
         const feature = typeof event.instanceId === 'number' ? warMarkers[event.instanceId] : undefined
         if (feature) onSelectWar(feature)
-      }} />
+      }} />}
       {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} />)}
       {routes && routeObjects.map((line, index) => <primitive object={line} key={`route-${index}`} />)}
       {labels && events.filter(event => event.year <= year).map(event => <mesh key={event.id} position={latLon(event.lat, event.lon, 1.625)}>
@@ -799,7 +805,7 @@ export default function Atlas() {
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
     <Canvas className="atlas-canvas" dpr={[1, 1.6]} camera={{ position: [0, 0, 5.85], fov: 39 }} gl={{ alpha: true, antialias: true }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
     </Canvas>
 
     <header className="atlas-topbar">

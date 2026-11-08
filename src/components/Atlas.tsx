@@ -23,7 +23,7 @@ type WarProperties = {
 type WarFeature = { type: 'Feature'; properties: WarProperties; geometry: { type: 'Point'; coordinates: [number, number] } }
 type AtlasWarData = { type: 'FeatureCollection'; features: WarFeature[] }
 type MapPoint = { lat: number; lon: number }
-type WarRegion = { lat: number; lon: number; count: number; representative: WarFeature }
+type WarRegion = { lat: number; lon: number; count: number; source: string; name: string; representative: WarFeature }
 const EMPTY_COUNTRIES: AtlasFeature<CountryProperties>[] = []
 const EMPTY_HISTORY: AtlasFeature<HistoryProperties>[] = []
 const EMPTY_WARS: WarFeature[] = []
@@ -50,14 +50,17 @@ function groupWarRegions(features: WarFeature[]): WarRegion[] {
     const war = feature.properties
     // The grouped footprints make dense event catalogues readable without
     // suggesting that these sources provide exact battlefield boundaries.
-    const latitude = Math.round(war.lat / 3) * 3
-    const longitude = Math.round(war.lon / 3) * 3
-    const key = `${war.source}:${war.war || war.title}:${latitude}:${longitude}`
+    const latitude = Math.round(war.lat / 2) * 2
+    const longitude = Math.round(war.lon / 2) * 2
+    const name = war.war || war.title
+    const key = `${war.source}:${name}:${latitude}:${longitude}`
     const current = regions.get(key)
     if (current) {
-      current.count += war.eventCount ?? 1
+      // Event totals measure intensity at a source location, not how much land
+      // the conflict covered. Count mapped places for footprint size instead.
+      current.count += 1
       if ((war.eventCount ?? 1) > (current.representative.properties.eventCount ?? 1)) current.representative = feature
-    } else regions.set(key, { lat: latitude, lon: longitude, count: war.eventCount ?? 1, representative: feature })
+    } else regions.set(key, { lat: latitude, lon: longitude, count: 1, source: war.source, name, representative: feature })
   }
   return [...regions.values()]
 }
@@ -144,9 +147,9 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
   canvas.height = 2048
   const ctx = canvas.getContext('2d')!
   const ocean = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-  ocean.addColorStop(0, '#f0e9f5')
-  ocean.addColorStop(0.5, '#e8e0ef')
-  ocean.addColorStop(1, '#f5eef7')
+  ocean.addColorStop(0, '#fbf8fd')
+  ocean.addColorStop(0.5, '#f4eff8')
+  ocean.addColorStop(1, '#fffafe')
   ctx.fillStyle = ocean
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
@@ -171,7 +174,9 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
     ctx.stroke()
   }
 
-  countries.forEach(feature => drawFeature(ctx, feature, '#e5e1e8', 'transparent', 0, canvas.width, canvas.height))
+  // Keep present-day land outlines subtle and global; stronger land/ocean
+  // contrast makes coasts readable without leaking current borders into past eras.
+  countries.forEach(feature => drawFeature(ctx, feature, '#d7c9e1', 'transparent', 0, canvas.width, canvas.height))
   historical.forEach(feature => drawFeature(ctx, feature, polityColor(feature.properties.name, .86, 55), polityColor(feature.properties.name, .92, 36), 1.2, canvas.width, canvas.height))
   if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(107, 77, 123, .68)', .8, canvas.width, canvas.height))
   selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(255, 92, 138, .25)', 'rgba(206, 47, 108, .98)', 3, canvas.width, canvas.height))
@@ -219,7 +224,7 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, routes, labels, lowMotion, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, year, onSelectLocation, onSelectWar }: {
+function Globe({ events, warMarkers, routes, labels, lowMotion, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, onSelectLocation, onSelectWar }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
   routes: boolean
@@ -231,6 +236,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
   selectedAuthorities: AtlasFeature<HistoryProperties>[]
   selectedPoint?: MapPoint
   selectedWarId?: string
+  selectedWarKey?: string
   year: number
   onSelectLocation: (point: MapPoint) => void
   onSelectWar: (war: WarFeature) => void
@@ -239,7 +245,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
   const { gl, camera } = useThree()
   const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year), [countries, historical, selectedAuthorities, selectedCountry, year])
   const spin = useRef({ x: 0.12, y: -2.1 })
-  const drag = useRef<{ id: number; x: number; y: number; startX: number; startY: number; moved: boolean } | null>(null)
+  const drag = useRef<{ id: number; x: number; y: number; startX: number; startY: number; lastTime: number; moved: boolean } | null>(null)
+  const rotationVelocity = useRef({ x: 0, y: 0 })
   const suppressClickUntil = useRef(0)
   const distance = useRef(5.85)
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#d29aff', transparent: true, opacity: 0.75 }), [])
@@ -254,41 +261,42 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
       marker.position.copy(latLon(war.lat, war.lon, 1.624))
       const isUcdp = war.source.startsWith('UCDP')
       const magnitude = Math.min(isUcdp ? 0.003 : 0.005, Math.log10((war.eventCount ?? 1) + 1) * (isUcdp ? 0.0009 : 0.0014))
-      const radius = (isUcdp ? 0.0065 : 0.014) + magnitude
+      const radius = ((isUcdp ? 0.0065 : 0.014) + magnitude) * (war.id === selectedWarId || `${war.source}:${war.war || war.title}` === selectedWarKey ? 1.6 : 1)
       marker.scale.setScalar(radius)
       marker.updateMatrix()
       mesh.setMatrixAt(index, marker.matrix)
-      const markerColor = war.id === selectedWarId ? '#7c36a2' : war.source.startsWith('UCDP') ? '#dc4b76' : '#ef8a42'
+      const markerColor = war.id === selectedWarId ? '#6d248c' : `${war.source}:${war.war || war.title}` === selectedWarKey ? '#a83b86' : war.source.startsWith('UCDP') ? '#dc4b76' : '#ef8a42'
       mesh.setColorAt(index, color.set(markerColor))
     })
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     return mesh
-  }, [selectedWarId, warMarkers])
+  }, [selectedWarId, selectedWarKey, warMarkers])
   const warRegions = useMemo(() => groupWarRegions(warMarkers), [warMarkers])
   const warRegionMesh = useMemo(() => {
     const geometry = new THREE.CircleGeometry(1, 24)
-    const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.24, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
+    const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
     const mesh = new THREE.InstancedMesh(geometry, material, warRegions.length)
     const marker = new THREE.Object3D()
     const color = new THREE.Color()
     warRegions.forEach((region, index) => {
       const normal = latLon(region.lat, region.lon, 1).normalize()
-      const size = Math.min(0.19, 0.045 + Math.log2(region.count + 1) * 0.014)
+      const selected = `${region.source}:${region.name}` === selectedWarKey
+      const size = Math.min(0.075, 0.028 + Math.log2(region.count + 1) * 0.006) * (selected ? 1.25 : 1)
       marker.position.copy(normal.clone().multiplyScalar(1.608))
       marker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal)
       marker.scale.set(size, size * 0.78, 1)
       marker.updateMatrix()
       mesh.setMatrixAt(index, marker.matrix)
-      color.set(region.representative.properties.source.startsWith('UCDP') ? '#dc4b76' : '#ef8a42')
+      color.set(selected ? '#a83b86' : region.source.startsWith('UCDP') ? '#dc4b76' : '#ef8a42')
       mesh.setColorAt(index, color)
     })
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     return mesh
-  }, [warRegions])
+  }, [selectedWarKey, warRegions])
 
   useEffect(() => () => texture.dispose(), [texture])
   useEffect(() => () => {
@@ -304,8 +312,10 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
   useEffect(() => {
     const canvas = gl.domElement
     const onDown = (event: PointerEvent) => {
-      if (event.button !== 0) return
-      drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false }
+      if (event.button !== 0 || drag.current) return
+      suppressClickUntil.current = 0
+      rotationVelocity.current = { x: 0, y: 0 }
+      drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, lastTime: event.timeStamp, moved: false }
       canvas.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => {
@@ -313,10 +323,14 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
       const dx = event.clientX - drag.current.x
       const dy = event.clientY - drag.current.y
       if (Math.hypot(event.clientX - drag.current.startX, event.clientY - drag.current.startY) > 6) drag.current.moved = true
+      const elapsed = Math.max(8, event.timeStamp - drag.current.lastTime)
+      rotationVelocity.current.y = THREE.MathUtils.clamp(dx * 0.006 * 1000 / elapsed, -3, 3)
+      rotationVelocity.current.x = THREE.MathUtils.clamp(dy * 0.005 * 1000 / elapsed, -2.5, 2.5)
       spin.current.y += dx * 0.006
       spin.current.x = THREE.MathUtils.clamp(spin.current.x + dy * 0.005, -1.0, 1.0)
       drag.current.x = event.clientX
       drag.current.y = event.clientY
+      drag.current.lastTime = event.timeStamp
     }
     const onUp = (event: PointerEvent) => {
       if (drag.current?.id === event.pointerId) {
@@ -343,6 +357,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
 
   useEffect(() => {
     if (!selectedPoint) return
+    rotationVelocity.current = { x: 0, y: 0 }
     const point = latLon(selectedPoint.lat, selectedPoint.lon, 1)
     const targetY = Math.atan2(-point.x, point.z)
     const zAfterY = -point.x * Math.sin(targetY) + point.z * Math.cos(targetY)
@@ -374,7 +389,21 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
 
   useFrame((_, delta) => {
     if (world.current) {
-      if (!lowMotion && !drag.current) spin.current.y += delta * 0.035
+      if (!drag.current) {
+        const momentum = Math.hypot(rotationVelocity.current.x, rotationVelocity.current.y)
+        if (!lowMotion && momentum > 0.02) {
+          spin.current.x = THREE.MathUtils.clamp(spin.current.x + rotationVelocity.current.x * delta, -1.0, 1.0)
+          spin.current.y += rotationVelocity.current.y * delta
+          const friction = Math.exp(-4.2 * delta)
+          rotationVelocity.current.x *= friction
+          rotationVelocity.current.y *= friction
+        } else {
+          rotationVelocity.current = { x: 0, y: 0 }
+          // Hold a selected location in view; idle auto-spin resumes after
+          // the selection is cleared so users can inspect it without drift.
+          if (!lowMotion && !selectedPoint) spin.current.y += delta * 0.035
+        }
+      }
       world.current.rotation.x = THREE.MathUtils.damp(world.current.rotation.x, spin.current.x, 6, delta)
       world.current.rotation.y = THREE.MathUtils.damp(world.current.rotation.y, spin.current.y, 6, delta)
     }
@@ -603,7 +632,7 @@ export default function Atlas() {
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
     <Canvas className="atlas-canvas" dpr={[1, 1.6]} camera={{ position: [0, 0, 5.85], fov: 39 }} gl={{ alpha: true, antialias: true }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} year={mapYear} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
     </Canvas>
 
     <header className="atlas-topbar">

@@ -282,7 +282,9 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
   const world = useRef<THREE.Group>(null)
   const { gl, camera } = useThree()
   const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year), [countries, historical, selectedAuthorities, selectedCountry, year])
-  const spin = useRef({ x: 0.12, y: -2.1 })
+  // Start on Europe, Africa and western Asia, where the historical coverage is
+  // densest, instead of hiding most recorded polities around the far side.
+  const spin = useRef({ x: 0.12, y: -Math.PI / 2 })
   const drag = useRef<{ id: number; x: number; y: number; startX: number; startY: number; lastTime: number; moved: boolean } | null>(null)
   const rotationVelocity = useRef({ x: 0, y: 0 })
   const suppressClickUntil = useRef(0)
@@ -318,7 +320,9 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, countries, histo
       : historical.filter(feature => feature.properties.name && !feature.properties.name.startsWith('(')).map(feature => ({ ...labelPoint(feature), name: feature.properties.name, area: feature.properties.area, href: feature.properties.wiki ? `https://en.wikipedia.org/wiki/${encodeURIComponent(feature.properties.wiki.replaceAll(' ', '_'))}` : feature.properties.wikidata ? `https://www.wikidata.org/wiki/${encodeURIComponent(feature.properties.wikidata)}` : '' })).filter(label => label.href)
     const largestByName = new Map<string, GlobeLabel>()
     source.forEach(label => { const current = largestByName.get(label.name); if (!current || label.area > current.area) largestByName.set(label.name, label) })
-    return spacedLabels([...largestByName.values()], year >= 2022 ? 48 : 34, year >= 2022 ? 11 : 20)
+    // Broad spacing hid almost every label at normal zoom. Keep a generous
+    // label set for each snapshot and let the map zoom/layers do the declutter.
+    return spacedLabels([...largestByName.values()], year >= 2022 ? 170 : 110, year >= 2022 ? 7 : 7)
   }, [countries, historical, year])
   const warRegionMesh = useMemo(() => {
     const geometry = new THREE.CircleGeometry(1, 24)
@@ -537,13 +541,13 @@ function GlobeTextLabel({ label }: { label: GlobeLabel }) {
     canvas.width = 512
     canvas.height = 64
     const context = canvas.getContext('2d')!
-    context.font = '600 28px Inter, Arial, sans-serif'
+    context.font = '700 36px Inter, Arial, sans-serif'
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.lineWidth = 6
-    context.strokeStyle = 'rgba(255,255,255,.92)'
+    context.lineWidth = 8
+    context.strokeStyle = 'rgba(255,255,255,.98)'
     context.strokeText(label.name, 256, 32, 496)
-    context.fillStyle = '#382746'
+    context.fillStyle = '#241532'
     context.fillText(label.name, 256, 32, 496)
     const map = new THREE.CanvasTexture(canvas)
     map.colorSpace = THREE.SRGBColorSpace
@@ -551,8 +555,8 @@ function GlobeTextLabel({ label }: { label: GlobeLabel }) {
   }, [label.name])
   const material = useMemo(() => new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: true, depthWrite: false, toneMapped: false }), [texture])
   useEffect(() => () => { texture.dispose(); material.dispose() }, [material, texture])
-  const width = Math.min(0.68, Math.max(0.16, label.name.length * 0.015))
-  return <sprite position={latLon(label.lat, label.lon, 1.635)} scale={[width, 0.065, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
+  const width = Math.min(0.82, Math.max(0.2, label.name.length * 0.018))
+  return <sprite position={latLon(label.lat, label.lon, 1.635)} scale={[width, 0.08, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
 }
 
 function formatYear(year: number) { return year < 0 ? `${Math.abs(year).toLocaleString()} BC` : year === 0 ? '1 BC / 1 AD' : `${year.toLocaleString()} AD` }

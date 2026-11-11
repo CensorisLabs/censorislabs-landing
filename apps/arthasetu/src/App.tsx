@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AdvancedPage, DebtPage, TaxCompare } from './features/advanced/Advanced.tsx'
 import { SecurityPage } from './features/security/Security.tsx'
 import { HealthPage, type Account, type Mandate } from './features/health/Health.tsx'
@@ -40,12 +40,6 @@ export default function App() {
   const visible = tx.filter(t => `${t.merchant} ${t.category} ${t.account}`.toLowerCase().includes(query.toLowerCase()))
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2600) }
   const update = (next: Tx[]) => setTx(next)
-    const target = event.target
-    if (!(target instanceof Element)) return
-    const button = target.closest('button')
-    if (!button || button.closest('.use-offer, .modal-backdrop') || button.classList.contains('pro-locked')) return
-    setOfferUses(count => { const next = count + 1; localStorage.setItem('censorislabs-usage-arthasetu', String(next)); return next })
-  }
   const nav = [{ id: 'Overview' as Page, label: 'Overview', icon: 'grid' }, { id: 'Transactions' as Page, label: 'Transactions', icon: 'tx' }, { id: 'Budgets' as Page, label: 'Budgets', icon: 'budget' }, { id: 'Investments' as Page, label: 'Investments', icon: 'invest' }, { id: 'Financial health' as Page, label: 'Financial health', icon: 'health' }, { id: 'Analytics & FIRE' as Page, label: 'Analytics & FIRE', icon: 'analytics' }, { id: 'Debt planner' as Page, label: 'Debt planner', icon: 'debt' }, { id: 'Tax planner' as Page, label: 'Tax planner', icon: 'tax' }, { id: 'Security' as Page, label: 'Security', icon: 'security' }]
 
   useEffect(() => {

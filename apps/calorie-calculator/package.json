@@ -3,30 +3,33 @@
   "version": "2.5.0",
   "private": true,
   "type": "module",
-  "description": "kcal — a private, offline calorie, food, macro and habit tracker from CensorisLabs.",
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview",
+    "test": "node --test tests/*.test.js",
     "android:add": "cap add android",
     "android:sync": "cap sync android",
     "android:build": "npm run build && node ../scripts/build-android.cjs",
-    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false"
+    "windows:build": "npm run build && electron-builder --win portable --config.win.signAndEditExecutable=false --publish never"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/core": "^7.4.3"
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/health-fitness": "^1.0.2",
+    "@capacitor/local-notifications": "^8.3.1",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3",
-    "electron": "^37.10.3",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "electron": "^37.2.6",
     "electron-builder": "^26.0.12",
+    "typescript": "^5.8.3",
     "vite": "^7.0.6"
   },
   "build": {
     "appId": "in.censorislabs.calorie",
-    "productName": "kcal Calorie Tracker",
+    "productName": "AbsoluteCal",
     "directories": {
       "output": "release"
     },

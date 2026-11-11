@@ -1,13 +1,12 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
 import { APP_VERSION } from './version.js'
-import { showPaywall } from '../../shared/paywall.js'
 
 mountApp({
   appId: 'offline-arcade', eyebrow: 'PLAY ANYWHERE · OFFLINE', title: 'A little fun, no signal needed.',
   version: APP_VERSION,
   description: 'Quick games that run entirely on this device. No account, ads, downloads, or connection required after install.',
-  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">THE ARCADE</p><h2 id="game-title">2048</h2></div><button class="btn btn--quiet" id="pro">More game packs · Pro</button></div><div class="game-tabs"><button class="btn" data-game="2048">2048</button><button class="btn btn--outline" data-game="memory">Memory match</button><button class="btn btn--outline" data-game="ttt">Tic-tac-toe</button></div><div class="actions"><span class="pill">Score <b id="score">0</b></span><span class="pill">Best <b id="best">0</b></span><button class="btn btn--quiet" id="restart">New game</button></div><p class="status" id="game-status" aria-live="polite">Use arrow keys, swipe, or the direction buttons.</p><div id="board" class="game-board game-board--2048" tabindex="0" aria-label="Game board"></div><div id="direction-controls" class="actions" style="justify-content:center"><button class="btn btn--quiet" data-direction="up">↑</button><button class="btn btn--quiet" data-direction="left">←</button><button class="btn btn--quiet" data-direction="down">↓</button><button class="btn btn--quiet" data-direction="right">→</button></div><p class="source-credit">All game state and best scores are stored locally in this browser profile.</p></section>`
+  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">THE ARCADE</p><h2 id="game-title">2048</h2></div></div><div class="game-tabs"><button class="btn" data-game="2048">2048</button><button class="btn btn--outline" data-game="memory">Memory match</button><button class="btn btn--outline" data-game="ttt">Tic-tac-toe</button></div><div class="actions"><span class="pill">Score <b id="score">0</b></span><span class="pill">Best <b id="best">0</b></span><button class="btn btn--quiet" id="restart">New game</button></div><p class="status" id="game-status" aria-live="polite">Use arrow keys, swipe, or the direction buttons.</p><div id="board" class="game-board game-board--2048" tabindex="0" aria-label="Game board"></div><div id="direction-controls" class="actions" style="justify-content:center"><button class="btn btn--quiet" data-direction="up">↑</button><button class="btn btn--quiet" data-direction="left">←</button><button class="btn btn--quiet" data-direction="down">↓</button><button class="btn btn--quiet" data-direction="right">→</button></div><p class="source-credit">All game state and best scores are stored locally in this browser profile.</p></section>`
 })
 
 const $ = (id) => document.getElementById(id)
@@ -44,5 +43,4 @@ document.querySelectorAll('[data-direction]').forEach(button => button.addEventL
 window.addEventListener('keydown', event => { const directions = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }; if (directions[event.key] && game === '2048') { event.preventDefault(); slide(directions[event.key]); window.dispatchEvent(new CustomEvent('censorislabs:record-use')) } })
 $('board').addEventListener('touchstart', event => { const touch = event.changedTouches[0]; startTouch = [touch.clientX, touch.clientY] }, { passive: true })
 $('board').addEventListener('touchend', event => { if (!startTouch || game !== '2048') return; const touch = event.changedTouches[0]; const dx = touch.clientX - startTouch[0], dy = touch.clientY - startTouch[1]; if (Math.max(Math.abs(dx), Math.abs(dy)) > 28) { slide(Math.abs(dx) > Math.abs(dy) ? dx > 0 ? 'right' : 'left' : dy > 0 ? 'down' : 'up'); window.dispatchEvent(new CustomEvent('censorislabs:record-use')) }; startTouch = null }, { passive: true })
-$('pro').addEventListener('click', () => showPaywall('additional game packs'))
 start('2048')

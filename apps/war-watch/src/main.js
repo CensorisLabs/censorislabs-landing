@@ -1,13 +1,12 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
 import { APP_VERSION } from './version.js'
-import { showPaywall } from '../../shared/paywall.js'
 
 mountApp({
   appId: 'war-watch', eyebrow: 'WORLD NEWS · CONFLICT MONITOR', title: 'The world, with sources attached.',
   version: APP_VERSION,
   description: 'A global conflict-news brief from monitored online reporting. Headlines update every two minutes while this app is open, with links to the original publishers.',
-  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">LIVE MONITOR</p><h2>Conflict and security headlines</h2></div><span class="live-badge">AUTO-REFRESH · 2 MIN</span></div><div class="actions"><button class="btn" id="refresh">Refresh now</button><select id="topic" class="feed-input" style="max-width:260px"><option value="conflicts">Armed conflicts and ceasefires</option><option value="humanitarian">Conflict and humanitarian response</option><option value="regional">Wars, attacks and military operations</option></select><button class="btn btn--quiet" id="pro">Follow regions · Pro</button></div><p class="status" id="status" aria-live="polite">Waiting for the first refresh.</p><div id="results" class="news-list" aria-live="polite"><div class="empty">Connecting to global news indexes…</div></div><p class="source-credit">Search index: GDELT DOC 2.0. GDELT monitors online sources worldwide, but no news index includes every outlet or guarantees immediate publication. Headlines and reporting belong to their publishers; check multiple sources for developing events.</p></section>`
+  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">LIVE MONITOR</p><h2>Conflict and security headlines</h2></div><span class="live-badge">AUTO-REFRESH · 2 MIN</span></div><div class="actions"><button class="btn" id="refresh">Refresh now</button><select id="topic" class="feed-input" style="max-width:260px"><option value="conflicts">Armed conflicts and ceasefires</option><option value="humanitarian">Conflict and humanitarian response</option><option value="regional">Wars, attacks and military operations</option></select></div><p class="status" id="status" aria-live="polite">Waiting for the first refresh.</p><div id="results" class="news-list" aria-live="polite"><div class="empty">Connecting to global news indexes…</div></div><p class="source-credit">Search index: GDELT DOC 2.0. GDELT monitors online sources worldwide, but no news index includes every outlet or guarantees immediate publication. Headlines and reporting belong to their publishers; check multiple sources for developing events.</p></section>`
 })
 
 const $ = (id) => document.getElementById(id)
@@ -60,6 +59,5 @@ async function refresh() {
 function schedule() { if (timer) clearInterval(timer); timer = setInterval(() => { if (!document.hidden) void refresh() }, 120_000) }
 $('refresh').addEventListener('click', refresh)
 $('topic').addEventListener('change', () => { lastKeys = new Set(); void refresh() })
-$('pro').addEventListener('click', () => showPaywall('region alerts and saved monitors'))
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void refresh() })
 schedule(); void refresh()

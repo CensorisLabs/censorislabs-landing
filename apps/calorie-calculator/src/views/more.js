@@ -43,7 +43,6 @@ import {
   openStepSettings,
 } from '../lib/dialogs-app.js'
 import { exportBackup, exportCsv, daySummaryText, profileBackupSummary } from '../lib/export.js'
-import { showPaywall } from '../shared/paywall.js'
 import { APP_VERSION } from '../shared/version.js'
 import { renderInsights } from './insights.js'
 import { renderTools } from './tools.js'
@@ -118,7 +117,7 @@ function profileTab(profile, stats) {
       <div class="kc-profile-list">${state.profiles.map(item => `<div class="kc-profile-row ${item.id === profile.id ? 'is-active' : ''}"><span class="kc-profile-avatar">${esc(item.emoji || '🌿')}</span><div><b>${esc(item.name)}</b><small>${formatWeight(item.weightKg, state.settings.units)} · ${fmt(targetsFor(item).kcal)} kcal target</small></div><div class="kc-profile-actions">${item.id === profile.id ? '<span class="kc-pill kc-pill--good">Active</span>' : `<button type="button" class="kc-btn kc-btn--soft kc-btn--xs" data-action="more:switch" data-id="${esc(item.id)}">Switch</button>`}<button type="button" class="kc-icon-btn" data-action="more:edit-other" data-id="${esc(item.id)}" aria-label="Edit ${esc(item.name)}">${icon('edit')}</button></div></div>`).join('')}</div>
       <div class="kc-inline-actions">${demo ? `<button type="button" class="kc-btn kc-btn--ghost kc-btn--sm" data-action="more:switch-demo">${icon('sparkles')} Open demo diary</button>` : `<button type="button" class="kc-btn kc-btn--ghost kc-btn--sm" data-action="more:demo">${icon('sparkles')} Create a demo profile</button>`}<button type="button" class="kc-btn kc-btn--ghost kc-btn--sm" data-action="more:profiles">${icon('users')} Manage profiles</button></div>
     </section>
-    <section class="kc-card kc-pro-card"><div class="kc-pro-card__mark">C</div><div><p class="kc-eyebrow">CENSORISLABS PRO</p><h3>Keep building the habit</h3><p>kcal is complete offline. If it earns a place in your day, CensorisLabs Pro supports continued maintenance across the app suite. Checkout is not connected in this build, and no payment is taken here.</p></div><button type="button" class="kc-btn kc-btn--outline" data-action="more:pro">Explore Pro</button></section>
+    
   </div>`
 }
 
@@ -337,4 +336,3 @@ on('more:install', async () => {
   window.__kcalInstallPrompt = null
   toast(choice.outcome === 'accepted' ? 'kcal installed' : 'Install dismissed')
 })
-on('more:pro', () => showPaywall('keeping kcal maintained'))

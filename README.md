@@ -41,15 +41,10 @@ Keep the keystore and passwords backed up privately. Losing the keystore prevent
 
 The release workflow publishes files only after every app succeeds and all 22 platform builds pass the size check. An oversized artifact fails the release before it is published.
 
-## Monetization readiness
+## A free suite
 
-All apps share the ₹69 monthly, ₹299 yearly, ₹499 early-bird lifetime, and ₹999 standard lifetime plans. The apps count use locally and preview the 10% coupon at 15 actions and the 15% coupon at 30. A shared weekly schedule selects a random eight-hour 10% sale window. The first-1,000-user 30% offer and every coupon are presented as pending checkout verification.
+Every app in the suite is free. There are no subscriptions, upgrades, trials, accounts, coupons, or payments anywhere in the apps or on this site. All features are included for everyone, and each app keeps its data on the device.
 
-Checkout, customer identity, first-1,000 allocation, recurring billing, refunds, and server-side license issuance are **not connected**. The buttons therefore do not take payment or grant Pro access. Add a payment provider and a private license-issuing service before selling subscriptions or making discount claims redeemable. The app-side public-key verification is already shared; do not put the private signing key in this repository or in a client app.
-
-The movie finder uses TMDB and JustWatch provider data only when configured. Because this app is part of a commercial suite, obtain TMDB's commercial license before enabling provider API mode. Set `VITE_TMDB_COMMERCIAL_LICENSE=true` only after licensing; keep keys and commercial terms in the appropriate secrets/configuration. Until then, the app offers direct JustWatch title searches.
-
-The global conflict brief checks GDELT every two minutes while open. It cannot provide instant push alerts when closed. The social app supports Mastodon-compatible public timelines and posts; it is not an X client.
 
 ## Structure
 

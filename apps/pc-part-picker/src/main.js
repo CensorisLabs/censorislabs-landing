@@ -1,7 +1,6 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
 import { APP_VERSION } from './version.js'
-import { showPaywall } from '../../shared/paywall.js'
 
 const parts = {
   cpu: [
@@ -47,7 +46,7 @@ mountApp({
   eyebrow: 'PC HARDWARE · COMPATIBILITY',
   title: 'Plan a build with confidence.',
   description: 'Choose parts, enter prices from your preferred shops, and catch common socket, memory, clearance, and power mismatches before you buy.',
-  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">YOUR BUILD</p><h2>Choose components</h2><div id="part-list"></div><div class="actions"><button class="btn" id="save-build">Save this build</button><button class="btn btn--quiet" id="reset">Clear build</button></div><p class="status" id="save-status" aria-live="polite"></p></section><aside class="result-card"><span class="metric-label">ESTIMATED BUILD TOTAL</span><div class="metric" id="total">₹0</div><div class="metric-list"><div class="metric-row"><span>Estimated component draw</span><strong id="draw">—</strong></div><div class="metric-row"><span>Suggested PSU headroom</span><strong id="headroom">—</strong></div></div><p class="notice" id="compatibility" aria-live="polite">Choose components to check the selected combination.</p></aside></div><section class="panel" style="margin-top:18px"><p class="eyebrow">CENSORISLABS PRO</p><h2>Keep more than one build.</h2><p>Compare saved configurations, track your own shop prices, and export a clean parts list for your next upgrade.</p><div class="feature-lock"><span><b>Build library & price comparison</b><small>Multiple local builds · no account required</small></span><button class="btn btn--outline" id="pro">Explore Pro</button></div><p class="muted-copy" style="margin:14px 0 0">Compatibility checks cover the fields shown here. Check exact board BIOS support, cooler fit, power connectors, and vendor specifications before purchase.</p></section>`,
+  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">YOUR BUILD</p><h2>Choose components</h2><div id="part-list"></div><div class="actions"><button class="btn" id="save-build">Save this build</button><button class="btn btn--quiet" id="reset">Clear build</button></div><p class="status" id="save-status" aria-live="polite"></p></section><aside class="result-card"><span class="metric-label">ESTIMATED BUILD TOTAL</span><div class="metric" id="total">₹0</div><div class="metric-list"><div class="metric-row"><span>Estimated component draw</span><strong id="draw">—</strong></div><div class="metric-row"><span>Suggested PSU headroom</span><strong id="headroom">—</strong></div></div><p class="notice" id="compatibility" aria-live="polite">Choose components to check the selected combination.</p></aside></div><section class="panel" style="margin-top:18px"><p class="eyebrow">CENSORISLABS PRO</p><h2>Keep more than one build.</h2><p>Compare saved configurations, track your own shop prices, and export a clean parts list for your next upgrade.</p><div class="feature-lock"><span><b>Build library & price comparison</b><small>Multiple local builds · no account required</small></span></div><p class="muted-copy" style="margin:14px 0 0">Compatibility checks cover the fields shown here. Check exact board BIOS support, cooler fit, power connectors, and vendor specifications before purchase.</p></section>`,
 })
 
 const $ = (id) => document.getElementById(id)
@@ -90,4 +89,3 @@ function update() {
 renderList(); update()
 $('save-build').addEventListener('click', () => { $('save-status').textContent = 'Build saved locally on this device.' })
 $('reset').addEventListener('click', () => { localStorage.removeItem('censoris-pc-build'); location.reload() })
-$('pro').addEventListener('click', () => showPaywall('build library and price comparison'))

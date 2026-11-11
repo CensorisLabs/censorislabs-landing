@@ -1,16 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { decryptJson, encryptJson, type FinanceData } from '../../domain/vault.ts'
-import { ProGate } from '../license/Paywall.tsx'
-import type { PlanId } from '../license/useLicense.tsx'
 
-export function SecurityPage({ vaultData, notify, onSetPin, onDisablePin, onLock, onRestore, onCheckout }: {
+export function SecurityPage({ vaultData, notify, onSetPin, onDisablePin, onLock, onRestore }: {
   vaultData: FinanceData
   notify: (message: string) => void
   onSetPin: (currentPin: string, nextPin: string) => Promise<boolean>
   onDisablePin: (currentPin: string) => Promise<boolean>
   onLock: () => void
   onRestore: (data: FinanceData) => void
-  onCheckout: (plan: PlanId) => void
 }) {
   const [pinEnabled, setPinEnabled] = useState(Boolean(localStorage.getItem('arthasetu-pin')))
   const [currentPin, setCurrentPin] = useState('')
@@ -56,7 +53,7 @@ export function SecurityPage({ vaultData, notify, onSetPin, onDisablePin, onLock
     <section className="budget-banner"><div><div className="eyebrow">LOCAL VAULT SECURITY</div><h2>{pinEnabled ? 'Your vault is protected.' : 'Add a lock to your vault.'}</h2><p>Finance data is encrypted with AES-256-GCM at rest while app lock is enabled. The PIN stays on this device.</p></div><button className="secondary" onClick={onLock} disabled={!pinEnabled}>Lock now</button></section>
     <div className="security-grid">
       <form className="tax-form" onSubmit={savePin}><div className="eyebrow">APP LOCK · PIN FALLBACK</div><h3>{pinEnabled ? 'Change your PIN' : 'Set a PIN'}</h3>{pinEnabled && <label>Current PIN<input type="password" inputMode="numeric" maxLength={8} value={currentPin} onChange={event => setCurrentPin(event.target.value.replace(/\D/g, ''))} autoComplete="current-password" /></label>}<label>New 6–8 digit PIN<input type="password" inputMode="numeric" minLength={6} maxLength={8} value={pin} onChange={event => setPin(event.target.value.replace(/\D/g, ''))} autoComplete="new-password" /></label><label>Confirm PIN<input type="password" inputMode="numeric" minLength={6} maxLength={8} value={confirm} onChange={event => setConfirm(event.target.value.replace(/\D/g, ''))} autoComplete="new-password" /></label><div className="modal-actions"><button className="add-button">{pinEnabled ? 'Update PIN' : 'Enable app lock'}</button>{pinEnabled && <button type="button" className="secondary" onClick={disablePin}>Disable lock</button>}</div>{error && <p className="error" role="status">{error}</p>}<small className="security-help">New PINs require 6–8 digits; older 4 digit PINs still unlock and can be upgraded here. The vault uses salted PBKDF2 and AES-GCM. Native biometric key protection requires an installed platform authenticator.</small></form>
-      <ProGate feature="encrypted_vault" onCheckout={onCheckout}><div className="tax-form"><div className="eyebrow">AES-GCM BACKUPS · PRO</div><h3>Password-protected transfer</h3><label>Backup password<input type="password" value={secret} onChange={event => setSecret(event.target.value)} placeholder="At least 8 characters" autoComplete="new-password" /></label><div className="modal-actions"><button className="add-button" onClick={makeBackup}>Export encrypted backup</button><label className="secondary file-picker">Restore<input type="file" accept="application/json" hidden onChange={event => { const file = event.target.files?.[0]; if (file) void readBackup(file); event.currentTarget.value = '' }} /></label></div>{backupStatus && <p className="security-help" role="status">{backupStatus}</p>}</div></ProGate>
+      <><div className="tax-form"><div className="eyebrow">AES-GCM BACKUPS</div><h3>Password-protected transfer</h3><label>Backup password<input type="password" value={secret} onChange={event => setSecret(event.target.value)} placeholder="At least 8 characters" autoComplete="new-password" /></label><div className="modal-actions"><button className="add-button" onClick={makeBackup}>Export encrypted backup</button><label className="secondary file-picker">Restore<input type="file" accept="application/json" hidden onChange={event => { const file = event.target.files?.[0]; if (file) void readBackup(file); event.currentTarget.value = '' }} /></label></div>{backupStatus && <p className="security-help" role="status">{backupStatus}</p>}</div></>
     </div>
   </div>
 }

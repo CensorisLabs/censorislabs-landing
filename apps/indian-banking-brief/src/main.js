@@ -1,7 +1,6 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
 import { APP_VERSION } from './version.js'
-import { showPaywall } from '../../shared/paywall.js'
 
 const twoHours = 2 * 60 * 60 * 1000
 const defaultSources = [
@@ -32,7 +31,7 @@ mountApp({
   eyebrow: 'INDIA · BANKING BRIEF',
   title: 'The banking signal, gathered.',
   description: 'Official Reserve Bank of India and SEBI updates, gathered locally and refreshed every two hours while the app is open. Headlines link to their original sources.',
-  content: `<div class="content-grid"><section class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><p class="eyebrow">LATEST UPDATES</p><h2>Source-linked headlines</h2></div><button class="btn btn--outline" id="refresh">↻ Refresh now</button></div><p class="muted-copy" id="refresh-state" aria-live="polite">Loading local feed cache…</p><div class="news-list" id="headlines"></div></section><aside class="result-card"><p class="eyebrow">CONNECTED SOURCES</p><h2>Primary feeds</h2><div id="source-list"></div><div class="feature-lock"><span><b>Add publisher feeds & topic alerts</b><small>Custom RSS sources · private watch filters</small></span><button class="btn btn--outline" id="pro-sources">Pro</button></div><p class="notice">Automatic checks run every two hours while this app is open, and resume when it is reopened. The last headlines remain available offline. A complete “all sources” feed does not exist, so you can add feeds you are entitled to use with Pro.</p></aside></div><section class="panel" style="margin-top:18px"><p class="eyebrow">MORE NEWSROOMS</p><h2>Open a publisher directly</h2><p class="muted-copy">These links open each newsroom’s latest banking coverage. The app does not republish publisher RSS content.</p><div id="newsroom-links"></div></section>`,
+  content: `<div class="content-grid"><section class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><p class="eyebrow">LATEST UPDATES</p><h2>Source-linked headlines</h2></div><button class="btn btn--outline" id="refresh">↻ Refresh now</button></div><p class="muted-copy" id="refresh-state" aria-live="polite">Loading local feed cache…</p><div class="news-list" id="headlines"></div></section><aside class="result-card"><p class="eyebrow">CONNECTED SOURCES</p><h2>Primary feeds</h2><div id="source-list"></div><div class="feature-lock"><span><b>Add publisher feeds & topic alerts</b><small>Custom RSS sources · private watch filters</small></span></div><p class="notice">Automatic checks run every two hours while this app is open, and resume when it is reopened. The last headlines remain available offline. A complete “all sources” feed does not exist, so you can add feeds you are entitled to use with Pro.</p></aside></div><section class="panel" style="margin-top:18px"><p class="eyebrow">MORE NEWSROOMS</p><h2>Open a publisher directly</h2><p class="muted-copy">These links open each newsroom’s latest banking coverage. The app does not republish publisher RSS content.</p><div id="newsroom-links"></div></section>`,
 })
 
 const $ = (id) => document.getElementById(id)
@@ -102,7 +101,6 @@ async function refresh() {
 renderSources(); renderHeadlines()
 $('newsroom-links').innerHTML = newsroomLinks.map(([label, url]) => `<div class="source-row"><span>${escapeHtml(label)}</span><a class="btn btn--quiet" href="${url}" target="_blank" rel="noreferrer noopener">Open ↗</a></div>`).join('')
 $('refresh').addEventListener('click', () => { void refresh() })
-$('pro-sources').addEventListener('click', () => showPaywall('publisher feeds and topic alerts'))
 const cacheIsFresh = Boolean(lastRefresh) && Date.now() - lastRefresh < twoHours
 if (cacheIsFresh) {
   $('refresh-state').textContent = articles.length

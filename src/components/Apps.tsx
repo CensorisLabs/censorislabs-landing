@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import { discountedPrice, PRO_PLANS } from '../../apps/shared/pricing.js'
-import { getSaleOffer } from '../../apps/shared/offers.js'
 
 type Product = {
   id: string
@@ -29,16 +27,12 @@ export const PRODUCTS: Product[] = [
   { id: 'reading-tracker', name: 'Reading Tracker', kind: 'Books · Personal reading', description: 'A private, offline-first reading companion with a day-by-day plan, reading calendar, session timer, notes, highlights, goals, and an Android home-screen widget. Every feature is free, with no Pro version or subscription.', free: ['Personal bookshelves with tags, ratings and filters', 'Cover-photo text recognition and book-match confirmation', 'Reading plans, monthly calendar, session log and timer', 'Private notes, page highlights and book reviews', 'Reading buddy, streaks and reading goals', 'Android home-screen widget for your current read', 'CSV exports plus encrypted, restorable backups', 'Your library stays on this device; no account or cloud sync'], pro: [], freeOnly: true },
 ]
 
+
 const MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 
 function ProductCard({ product }: { product: Product }) {
-  return <article className="suite-card"><div className="suite-card__top"><span className="suite-card__kind">{product.kind}</span><span className="suite-card__badge">{product.freeOnly ? 'Free forever · no Pro tier' : 'Release builds'}</span></div><h3>{product.name}</h3><p>{product.description}</p><a className="suite-card__link" href={`#/apps/${product.id}`}>View app and downloads <span aria-hidden="true">↗</span></a></article>
+  return <article className="suite-card"><div className="suite-card__top"><span className="suite-card__kind">{product.kind}</span><span className="suite-card__badge">Free · every feature included</span></div><h3>{product.name}</h3><p>{product.description}</p><a className="suite-card__link" href={`#/apps/${product.id}`}>View app and downloads <span aria-hidden="true">↗</span></a></article>
 }
-
-function Pricing({ discount = 0 }: { discount?: number }) {
-  return <div className="suite-pricing" aria-label="Shared CensorisLabs Pro pricing">{PRO_PLANS.map(plan => <article className="suite-plan" key={plan.id}><h4>{plan.name}</h4><strong>{discount ? <>{discountedPrice(plan.price, discount)} <del>{plan.price}</del></> : plan.price}</strong><span>{discount ? '10% timed sale · checkout confirmation required' : plan.note}</span></article>)}</div>
-}
-
 function useRelease(appId?: string) {
   const [release, setRelease] = useState<ReleaseAsset[] | null>(null)
   const [tag, setTag] = useState('')
@@ -116,22 +110,20 @@ function InstallWarning({ androidOnly = false }: { androidOnly?: boolean }) {
 
 export default function Apps({ appId }: { appId?: string }) {
   const selected = PRODUCTS.find(product => product.id === appId)
-  const sale = getSaleOffer()
   if (appId && selected) {
     const readingTracker = selected.id === 'reading-tracker'
+    const features = [...selected.free, ...selected.pro]
     return <section className="section suite-page" aria-labelledby="suite-page-title"><div className="container">
       <a className="suite-back" href="#/apps">← All apps</a>
-      <div className="suite-detail-head"><p className="eyebrow">CENSORISLABS APP SUITE · {selected.kind}</p><span className="suite-card__badge">{readingTracker ? 'Web app · Android APK' : selected.freeOnly ? 'Free forever · no Pro tier' : 'Windows + Android releases'}</span></div>
+      <div className="suite-detail-head"><p className="eyebrow">CENSORISLABS APP SUITE · {selected.kind}</p><span className="suite-card__badge">Free · every feature included</span></div>
       <h1 className="suite-page-title" id="suite-page-title">{selected.name}</h1><p className="suite-lede">{selected.description}</p>
-      <div className={`suite-feature-columns${selected.freeOnly ? ' suite-feature-columns--free-only' : ''}`}>
-        <article className="suite-feature-card"><p className="eyebrow">{selected.freeOnly ? 'FREE FOREVER' : 'FREE'}</p><h2>{selected.freeOnly ? `Every ${selected.name} feature is included` : 'Start with the essentials'}</h2><ul>{selected.free.map(feature => <li key={feature}>{feature}</li>)}</ul>{selected.freeOnly && <p className="suite-checkout-note">No Pro version, upgrade, account, or subscription. Nothing in {selected.name} is locked.</p>}</article>
-        {!selected.freeOnly && <article className="suite-feature-card suite-feature-card--pro"><p className="eyebrow">PRO</p><h2>More room to grow</h2><ul>{selected.pro.map(feature => <li key={feature}>{feature}</li>)}</ul></article>}
+      <div className="suite-feature-columns suite-feature-columns--free-only">
+        <article className="suite-feature-card"><p className="eyebrow">EVERYTHING IS INCLUDED</p><h2>No subscription, no account, no lockouts</h2><ul>{features.map(feature => <li key={feature}>{feature}</li>)}</ul><p className="suite-checkout-note">Every feature in {selected.name} is free forever. There is no Pro tier, upgrade, trial, or payment anywhere in the app.</p></article>
       </div>
-      {!selected.freeOnly && <><div className="suite-pricing-head"><div><p className="eyebrow">ONE SHARED PRO FORMAT</p><h2>Choose your plan</h2></div><p>Use offers unlock at 15 and 30 app actions. Checkout must validate discount eligibility.</p></div><Pricing discount={sale?.percent} />{sale && <div className="suite-offer-note"><b>Timed sale · 10% off</b><span>Event {sale.eventId}. The amount shown is a preview; checkout must validate the code.</span></div>}<div className="suite-offer-note"><b>Use more, save more</b><span>10% after 15 uses · 15% after 30 uses · first 1,000 verified customers get 30% off. Offers are not redeemable until checkout is connected.</span></div><p className="suite-checkout-note">Checkout and account-wide offer allocation are not connected yet. No payment is processed on this site.</p></>}
       {readingTracker && <div className="suite-download-card"><div><p className="eyebrow">OPEN IN YOUR BROWSER</p><h2>Use Reading Tracker</h2><p>Your books and notes stay in this browser on this device.</p></div><div className="suite-downloads"><a className="btn btn--outline" href="/reading-tracker/">Open Reading Tracker</a></div></div>}
       <Downloads appId={selected.id} /><InstallWarning androidOnly={readingTracker} />
     </div></section>
   }
 
-  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p><h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2></div><p className="section-lede">Eleven focused companions alongside ArthaSetu. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><div className="suite-pricing-head"><div><p className="eyebrow">PRO PLANS FOR ELIGIBLE APPS</p><h2>Four ways to go Pro</h2></div><p>These plans apply only to apps with a Pro tier. Reading Tracker and AbsoluteCal are permanently free and excluded.</p></div><Pricing discount={sale?.percent} />{sale && <div className="suite-offer-note"><b>Timed sale · 10% off</b><span>Event {sale.eventId}. The displayed price is a preview until checkout is configured.</span></div>}<div className="suite-offer-note"><b>Offers on eligible Pro apps</b><span>15 uses unlock a 10% coupon; 30 uses unlock a 15% coupon. The first 1,000 verified customers get 30% off. Reading Tracker and AbsoluteCal are excluded from paid plans and offers.</span></div><p className="suite-checkout-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Push the source updates, then publish a version tag to build the files.</p><p className="suite-checkout-note">Windows or Android may show an “unknown publisher” warning the first time you install. It is expected for direct downloads, and each app page explains why and how to continue.</p></div></section>
+  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p><h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2></div><p className="suite-lede">Every app is free, with every feature included. No subscriptions, upgrades, accounts, or trials. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><p className="suite-checkout-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Windows or Android may show an “unknown publisher” warning the first time you install; each app page explains why and how to continue.</p></div></section>
 }

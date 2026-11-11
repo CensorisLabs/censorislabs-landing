@@ -1,5 +1,6 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
+import { APP_VERSION } from './version.js'
 import { showPaywall } from '../../shared/paywall.js'
 
 const parts = {
@@ -24,12 +25,25 @@ const parts = {
   storage: [{ name: 'NVMe SSD · 1 TB' }, { name: 'NVMe SSD · 2 TB' }, { name: 'SATA SSD · 1 TB' }, { name: 'Hard drive · 2 TB' }],
 }
 const categories = [['cpu','Processor'],['board','Motherboard'],['memory','Memory'],['gpu','Graphics'],['psu','Power supply'],['case','Case'],['storage','Storage']]
-const saved = JSON.parse(localStorage.getItem('censoris-pc-build') || 'null')
-const state = Object.fromEntries(categories.map(([key]) => [key, saved?.[key] ?? 0]))
-const priceState = Object.fromEntries(categories.map(([key]) => [key, saved?.prices?.[key] ?? '']))
+// A corrupt or foreign value in local storage must never blank the app, and a
+// stale part index must not point outside the catalog.
+const readSavedBuild = () => {
+  try {
+    const value = JSON.parse(localStorage.getItem('censoris-pc-build') || 'null')
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+  } catch {
+    localStorage.removeItem('censoris-pc-build')
+    return {}
+  }
+}
+const saved = readSavedBuild()
+const savedIndex = (key) => { const index = Number(saved[key]); return Number.isInteger(index) && index >= 0 && index < parts[key].length ? index : -1 }
+const state = Object.fromEntries(categories.map(([key]) => [key, savedIndex(key)]))
+const priceState = Object.fromEntries(categories.map(([key]) => [key, typeof saved.prices?.[key] === 'string' || typeof saved.prices?.[key] === 'number' ? saved.prices[key] : '']))
 
 mountApp({
   appId: 'pc-part-picker',
+  version: APP_VERSION,
   eyebrow: 'PC HARDWARE · COMPATIBILITY',
   title: 'Plan a build with confidence.',
   description: 'Choose parts, enter prices from your preferred shops, and catch common socket, memory, clearance, and power mismatches before you buy.',
@@ -49,7 +63,12 @@ function renderList() {
   document.querySelector('.part-select[data-key="storage"]').innerHTML = `<option value="-1">Select storage</option><option>NVMe SSD · 1 TB</option><option>NVMe SSD · 2 TB</option><option>SATA SSD · 1 TB</option><option>Hard drive · 2 TB</option>`
   document.querySelectorAll('.part-select').forEach(select => select.addEventListener('change', event => { const key = event.currentTarget.dataset.key; state[key] = key === 'storage' ? event.currentTarget.selectedIndex - 1 : Number(event.currentTarget.value); update() }))
   document.querySelectorAll('.part-price').forEach(input => input.addEventListener('input', event => { priceState[event.currentTarget.dataset.key] = event.currentTarget.value; update() }))
-  if (saved?.storageText) document.querySelector('[data-key="storage"]').selectedIndex = [...document.querySelector('[data-key="storage"]').options].findIndex(option => option.text === saved.storageText)
+  const storageSelect = document.querySelector('[data-key="storage"]')
+  const storageIndex = saved?.storageText ? [...storageSelect.options].findIndex(option => option.text === saved.storageText) : -1
+  if (storageIndex > 0) {
+    storageSelect.selectedIndex = storageIndex
+    state.storage = storageIndex - 1
+  }
 }
 function update() {
   const total = Object.values(priceState).reduce((sum, price) => sum + (Number(price) || 0), 0)

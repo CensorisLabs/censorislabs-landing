@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="kcal">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b2418"/>
+      <stop offset="1" stop-color="#0e1110"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d8f7a4"/>
+      <stop offset="1" stop-color="#8fce4e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#2a322b" stroke-width="22"/>
+  <path d="M256 88a168 168 0 0 1 145 84" fill="none" stroke="url(#leaf)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M330 150c-62 6-105 46-105 102 0 18 5 34 14 47 24-44 57-75 105-92-33 26-57 60-64 104 42-6 68-36 68-86 0-19-2-38-3-56-1-12 0-19-15-19z" fill="url(#leaf)"/>
+  <text x="256" y="392" text-anchor="middle" font-family="Inter, Segoe UI, sans-serif" font-size="92" font-weight="700" letter-spacing="-6" fill="#f1f5ea">kcal</text>
+</svg>

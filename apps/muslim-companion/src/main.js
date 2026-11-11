@@ -1,6 +1,7 @@
 import '../../shared/base.css'
 import './muslim.css'
 import { mountApp } from '../../shared/shell.js'
+import { APP_VERSION } from './version.js'
 import { showPaywall } from '../../shared/paywall.js'
 import { getLicenseStatus } from '../../shared/license.js'
 
@@ -25,6 +26,7 @@ let currentQibla = null
 
 mountApp({
   appId: 'nur-companion',
+  version: APP_VERSION,
   eyebrow: 'MUSLIM COMPANION · NUR',
   title: 'A quieter space for daily practice.',
   description: 'Read, remember, and find your direction. Your bookmarks, dhikr count, and chosen location stay on this device.',

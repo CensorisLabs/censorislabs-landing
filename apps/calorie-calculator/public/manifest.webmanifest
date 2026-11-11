@@ -1,0 +1,21 @@
+{
+  "name": "kcal — Calorie & Food Tracker",
+  "short_name": "kcal",
+  "description": "A private, offline daily calorie, food, macro and habit tracker from CensorisLabs.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#0e1110",
+  "theme_color": "#0e1110",
+  "categories": ["health", "food", "lifestyle"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

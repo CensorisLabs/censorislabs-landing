@@ -18,7 +18,15 @@ export function showPaywall(feature = 'Pro features', onActivated = () => {}) {
   const saleMessage = sale ? `<div class="early-bird"><b>Limited sale · 10% off · ${escapeHtml(sale.eventId)}</b><small>Sale price is subject to confirmation by checkout.</small></div>` : ''
   backdrop.innerHTML = `<section class="paywall" role="dialog" aria-modal="true" aria-labelledby="pro-title"><button class="paywall-close" aria-label="Close">×</button><p class="eyebrow">CENSORISLABS PRO</p><h2 id="pro-title">Make more room for ${escapeHtml(feature.toLowerCase())}.</h2><p class="muted-copy">One Pro format across the CensorisLabs app suite.</p><div class="early-bird"><b>First 1,000 users · 30% off across the suite</b><small>Checkout must verify the account number and apply the offer. It is not active until payment is connected.</small></div><div class="early-bird">${offerMessage}</div>${saleMessage}<div class="plan-grid">${PRO_PLANS.map(plan => `<button class="plan-option${plan.id === DEFAULT_PLAN_ID ? ' active' : ''}" data-plan="${plan.id}" aria-pressed="${plan.id === DEFAULT_PLAN_ID}"><b>${plan.name}</b>${discount ? `<strong>${discountedPrice(plan.price, discount)} <del>${plan.price}</del></strong><small>${discount}% offer shown · payment confirmation required</small>` : `<strong>${plan.price}</strong><small>${plan.note}</small>`}</button>`).join('')}</div><p class="paywall-hint" role="status">Checkout is not connected in this build. No payment is taken and Pro access is not activated.</p><button class="btn paywall-continue">Continue with ${discount ? discountedPrice(PRO_PLANS.find(plan => plan.id === activePlan).price, discount) : PRO_PLANS.find(plan => plan.id === activePlan).price}</button><div class="paywall-divider"><span>Have a signed license?</span></div><div class="redeem"><input class="license-token" aria-label="Signed license token" placeholder="Paste license token"><button class="btn btn--outline activate-license">Activate</button></div><p class="license-status muted-copy" role="status" aria-live="polite"></p><small class="muted-copy">License verification is local. Payment processing and signing keys stay outside the apps.</small></section>`
   document.body.append(backdrop)
-  const close = () => backdrop.remove()
+  const previouslyFocused = document.activeElement
+  const close = () => {
+    backdrop.remove()
+    document.removeEventListener('keydown', onKey)
+    if (previouslyFocused?.isConnected) previouslyFocused.focus()
+  }
+  const onKey = event => { if (event.key === 'Escape') { event.stopPropagation(); close() } }
+  document.addEventListener('keydown', onKey)
+  backdrop.querySelector('.paywall-close').focus()
   backdrop.addEventListener('click', event => { if (event.target === backdrop || event.target.closest('.paywall-close')) close() })
   const continueButton = backdrop.querySelector('.paywall-continue')
   backdrop.querySelectorAll('.plan-option').forEach(option => option.addEventListener('click', () => {

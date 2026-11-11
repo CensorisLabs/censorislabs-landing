@@ -1,5 +1,6 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
+import { APP_VERSION } from './version.js'
 import { showPaywall } from '../../shared/paywall.js'
 
 const twoHours = 2 * 60 * 60 * 1000
@@ -17,13 +18,17 @@ const newsroomLinks = [
   ['The Hindu BusinessLine · Money & Banking', 'https://www.thehindubusinessline.com/money-and-banking/'],
 ]
 const readJson = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback } catch { return fallback } }
-let sources = readJson('censoris-bank-sources', defaultSources)
-let articles = readJson('censoris-bank-headlines', [])
+const storedSources = readJson('censoris-bank-sources', null)
+const usableSources = Array.isArray(storedSources) ? storedSources.filter(source => source && typeof source.url === 'string' && source.url.trim()) : []
+let sources = usableSources.length ? usableSources : defaultSources
+const storedArticles = readJson('censoris-bank-headlines', [])
+let articles = Array.isArray(storedArticles) ? storedArticles.filter(article => article && typeof article === 'object' && article.title) : []
 let lastRefresh = Number(localStorage.getItem('censoris-bank-last-refresh') || 0)
 let isRefreshing = false
 
 mountApp({
   appId: 'indian-banking-brief',
+  version: APP_VERSION,
   eyebrow: 'INDIA · BANKING BRIEF',
   title: 'The banking signal, gathered.',
   description: 'Official Reserve Bank of India and SEBI updates, gathered locally and refreshed every two hours while the app is open. Headlines link to their original sources.',
@@ -66,29 +71,44 @@ async function getFeed(url) {
   return await response.text()
 }
 
+// Cache writes are best effort: a full or blocked storage area must not leave the
+// brief stuck on "Checking sources…" with refresh permanently disabled.
+function writeCache(key, value) { try { localStorage.setItem(key, value); return true } catch { return false } }
+
 async function refresh() {
   if (isRefreshing) return
   isRefreshing = true
-  $('refresh-state').textContent = `Checking ${sources.length} source${sources.length === 1 ? '' : 's'}…`
-  const results = await Promise.allSettled(sources.map(async source => parseFeed(await getFeed(source.url), source)))
-  const updated = results.filter(result => result.status === 'fulfilled').flatMap(result => result.value)
-  const errors = results.filter(result => result.status === 'rejected').length
-  if (updated.length) {
-    const byId = new Map([...updated, ...articles].map(item => [item.id, item]))
-    articles = [...byId.values()].sort((a, b) => b.timestamp - a.timestamp).slice(0, 180)
-    localStorage.setItem('censoris-bank-headlines', JSON.stringify(articles))
-    renderHeadlines()
+  try {
+    $('refresh-state').textContent = `Checking ${sources.length} source${sources.length === 1 ? '' : 's'}…`
+    const results = await Promise.allSettled(sources.map(async source => parseFeed(await getFeed(source.url), source)))
+    const updated = results.filter(result => result.status === 'fulfilled').flatMap(result => result.value)
+    const errors = results.filter(result => result.status === 'rejected').length
+    if (updated.length) {
+      const byId = new Map([...updated, ...articles].map(item => [item.id, item]))
+      articles = [...byId.values()].sort((a, b) => b.timestamp - a.timestamp).slice(0, 180)
+      writeCache('censoris-bank-headlines', JSON.stringify(articles))
+      renderHeadlines()
+    }
+    lastRefresh = Date.now()
+    writeCache('censoris-bank-last-refresh', String(lastRefresh))
+    $('refresh-state').textContent = errors ? `${updated.length} new or recent headlines · ${errors} source${errors === 1 ? '' : 's'} unavailable · checked ${new Date(lastRefresh).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : `${updated.length} headlines available · refreshed ${new Date(lastRefresh).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+  } catch {
+    $('refresh-state').textContent = 'Could not refresh the feeds. Check your connection and try again. Browser builds can be blocked by publisher cross-origin policies; the desktop and mobile builds fetch the feeds directly.'
+  } finally {
+    isRefreshing = false
   }
-  lastRefresh = Date.now()
-  localStorage.setItem('censoris-bank-last-refresh', String(lastRefresh))
-  $('refresh-state').textContent = errors ? `${updated.length} new or recent headlines · ${errors} source${errors === 1 ? '' : 's'} unavailable · checked ${new Date(lastRefresh).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : `${updated.length} headlines available · refreshed ${new Date(lastRefresh).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
-  isRefreshing = false
 }
 
 renderSources(); renderHeadlines()
 $('newsroom-links').innerHTML = newsroomLinks.map(([label, url]) => `<div class="source-row"><span>${escapeHtml(label)}</span><a class="btn btn--quiet" href="${url}" target="_blank" rel="noreferrer noopener">Open ↗</a></div>`).join('')
 $('refresh').addEventListener('click', () => { void refresh() })
 $('pro-sources').addEventListener('click', () => showPaywall('publisher feeds and topic alerts'))
-if (!lastRefresh || Date.now() - lastRefresh >= twoHours) void refresh()
+const cacheIsFresh = Boolean(lastRefresh) && Date.now() - lastRefresh < twoHours
+if (cacheIsFresh) {
+  $('refresh-state').textContent = articles.length
+    ? `${articles.length} cached headlines · last checked ${new Date(lastRefresh).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+    : 'No cached headlines yet. Refresh to check the sources.'
+}
+if (!cacheIsFresh) void refresh()
 window.setInterval(() => { if (Date.now() - lastRefresh >= twoHours) void refresh() }, 60_000)
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastRefresh >= twoHours) void refresh() })

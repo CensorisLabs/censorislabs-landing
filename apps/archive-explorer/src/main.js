@@ -1,9 +1,11 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
+import { APP_VERSION } from './version.js'
 import { showPaywall } from '../../shared/paywall.js'
 
 mountApp({
   appId: 'archive-explorer', eyebrow: 'PUBLIC DIGITAL COLLECTIONS', title: 'Find something worth keeping.',
+  version: APP_VERSION,
   description: 'Search public Internet Archive item metadata and open the original collection page. Access and reuse rights vary by item; check its rights statement before using it.',
   content: `<section class="panel"><p class="eyebrow">INTERNET ARCHIVE SEARCH</p><h2>Explore the catalog</h2><form id="search-form" class="search-row"><input id="query" required placeholder="Title, creator, topic, or phrase" aria-label="Search the Internet Archive"><select id="media"><option value="">All formats</option><option value="texts">Texts</option><option value="movies">Movies</option><option value="audio">Audio</option><option value="software">Software</option><option value="image">Images</option></select><button class="btn">Search</button></form><div class="actions"><button class="btn btn--quiet" id="save-search">Save this search · Pro</button><span class="status" id="status" aria-live="polite">Searches are sent to archive.org.</span></div></section><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">CATALOG RESULTS</p><h2 id="heading">Recent finds</h2></div><a class="btn btn--outline" href="https://archive.org" target="_blank" rel="noopener noreferrer">Visit Archive.org ↗</a></div><div id="results" class="result-grid" aria-live="polite"><div class="empty" style="grid-column:1/-1">Search for a title or subject to explore items.</div></div><div class="actions"><button class="btn btn--quiet" id="more" hidden>Load more</button></div><p class="source-credit">Search metadata provided by the Internet Archive Advanced Search API. Item availability, rights, and download options are determined by the item page.</p></section>`
 })
@@ -39,4 +41,3 @@ async function search(append = false) {
 $('search-form').addEventListener('submit', (event) => { event.preventDefault(); void search() })
 $('more').addEventListener('click', () => { page += 1; void search(true) })
 $('save-search').addEventListener('click', () => showPaywall('saved archive searches'))
-window.addEventListener('censorislabs:show-paywall', (event) => showPaywall(event.detail?.feature || 'suite offers'))

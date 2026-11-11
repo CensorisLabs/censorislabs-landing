@@ -1,5 +1,6 @@
 import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
+import { APP_VERSION } from './version.js'
 import { showPaywall } from '../../shared/paywall.js'
 
 const safeRead = () => { try { return JSON.parse(localStorage.getItem('censoris-energy-data') || 'null') } catch { return null } }
@@ -11,6 +12,7 @@ let fixed = Number(saved.fixed) || 0
 
 mountApp({
   appId: 'home-energy-estimator',
+  version: APP_VERSION,
   eyebrow: 'HOUSEHOLD · ENERGY ESTIMATOR',
   title: 'Know what each appliance costs.',
   description: 'Estimate monthly electricity use from appliance wattage, hours, and your local tariff. All calculations and entries stay on this device.',
@@ -44,5 +46,6 @@ function renderRows() {
 function escapeHtml(value) { return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]) }
 $('add').addEventListener('click', () => { appliances.push({ name: '', watts: 0, hours: 0, quantity: 1 }); renderRows(); calculate(); const inputs = document.querySelectorAll('[data-field="name"]'); inputs[inputs.length - 1]?.focus() })
 ;['days','tariff','fixed'].forEach(id => $(id).addEventListener('input', calculate))
+;['days','tariff','fixed'].forEach(id => $(id).addEventListener('change', () => { $(id).value = String(id === 'days' ? days : id === 'tariff' ? tariff : fixed) }))
 $('pro').addEventListener('click', () => showPaywall('scenarios and bill history'))
 renderRows(); calculate()

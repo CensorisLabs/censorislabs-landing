@@ -1,0 +1,9 @@
+{
+  "appId": "in.censorislabs.calorie",
+  "appName": "kcal Calorie Tracker",
+  "webDir": "dist",
+  "backgroundColor": "#0e1110",
+  "android": {
+    "allowMixedContent": false
+  }
+}

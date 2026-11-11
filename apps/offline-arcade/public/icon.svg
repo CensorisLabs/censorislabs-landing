@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="OA">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1e24"/>
+      <stop offset="1" stop-color="#101216"/>
+    </linearGradient>
+    <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0a05f" stop-opacity="1"/>
+      <stop offset="1" stop-color="#e0a05f" stop-opacity="0.72"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#e0a05f" stroke-opacity="0.28" stroke-width="4"/>
+  <text x="50%" y="50%" dy="0.34em" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="196" letter-spacing="6" fill="url(#fg)">OA</text>
+  <circle cx="256" cy="392" r="7" fill="#e0a05f" fill-opacity="0.85"/>
+</svg>

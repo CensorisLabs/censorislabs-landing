@@ -1,6 +1,6 @@
 # kcal feature additions (40-item extension)
 
-Scope: extend the existing kcal calorie-calculator app without adding runtime dependencies and without changing the local-only storage key / suite shell / paywall.
+Scope: extend the existing kcal calorie-calculator app without adding runtime dependencies and without changing the local-only storage key or suite shell.
 
 Items (counted in More → Feature guide via `src/data/features.js`):
 

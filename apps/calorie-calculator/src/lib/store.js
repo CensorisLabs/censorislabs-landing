@@ -1,6 +1,7 @@
 import { FOODS, FOOD_MAP, ALLERGEN_TAGS } from '../data/foods.js'
 import { RECIPES } from '../data/recipes.js'
 import { ACHIEVEMENTS } from '../data/achievements.js'
+import { BRAND_FOODS, BRAND_MAP, BRAND_CODE_MAP } from '../data/brands.js'
 import { nutrientsForFood, sumNutrients, targetsFor, dayTotals, scoreDay, zeroNutrients, estimatedGI } from './calc.js'
 
 const KEY = 'censoris-kcal-v2'
@@ -294,11 +295,20 @@ export function getTotals(date = todayKey(), profile = getProfile()) {
 }
 
 export function foodList() {
-  return [...state.customFoods, ...FOODS]
+  return [...state.customFoods, ...BRAND_FOODS, ...FOODS]
 }
 
 export function findFood(id) {
-  return state.customFoods.find(food => food.id === id) || FOOD_MAP.get(id) || null
+  return state.customFoods.find(food => food.id === id) || BRAND_MAP.get(id) || FOOD_MAP.get(id) || null
+}
+
+export function findFoodByCode(code) {
+  const clean = String(code || '').replace(/[^0-9]/g, '')
+  if (!clean) return null
+  return state.customFoods.find(food => food.code === clean)
+    || BRAND_CODE_MAP.get(clean)
+    || FOODS.find(food => food.code === clean)
+    || null
 }
 
 export function findRecipe(id) {
@@ -339,9 +349,16 @@ export function recipeTotals(recipe) {
 
 export function foodAllowed(food, profile = getProfile()) {
   if (!food) return false
-  if (profile.diet === 'vegetarian' && !food.tags.includes('v')) return false
-  if (profile.diet === 'vegan' && !food.tags.includes('vg')) return false
-  if (profile.diet === 'pescatarian' && !food.tags.includes('v') && !['salmon', 'tuna-canned', 'prawns', 'fish-curry'].includes(food.id)) return false
+  // Branded packs rarely state a reliable diet tag. Hiding every one of them
+  // would make the offline catalogue useless, so unknown-diet foods stay
+  // visible and are marked in the picker; imported rows that declare a diet
+  // are filtered like any other food.
+  const dietUnknown = food.dietUnknown || (food.tags || []).includes('branded')
+  if (!dietUnknown) {
+    if (profile.diet === 'vegetarian' && !food.tags.includes('v')) return false
+    if (profile.diet === 'vegan' && !food.tags.includes('vg')) return false
+    if (profile.diet === 'pescatarian' && !food.tags.includes('v') && !['salmon', 'tuna-canned', 'prawns', 'fish-curry'].includes(food.id)) return false
+  }
   if (profile.allergens?.length) {
     for (const allergen of ALLERGEN_TAGS) {
       if (profile.allergens.includes(allergen.id) && allergen.foods.includes(food.id)) return false

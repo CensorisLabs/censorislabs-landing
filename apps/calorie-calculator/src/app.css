@@ -875,3 +875,11 @@ html[data-kc-theme="light"] .kc-calendar-day.is-outside{opacity:.4}
 .kc-file-drop:hover{border-color:var(--accent-line);background:var(--accent-soft)}
 .kc-import-preview{display:grid;gap:8px;padding:12px;border:1px solid var(--kc-line);border-radius:12px;background:var(--kc-raise)}
 .kc-import-preview h3{font:600 14px var(--kc-font);color:var(--kc-ink)}
+
+/* Food CSV import preview */
+.kc-import-rows{display:grid;gap:6px}
+.kc-import-row{display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border:1px solid var(--kc-line);border-radius:8px;background:var(--kc-paper)}
+.kc-import-row span{min-width:0;display:grid;gap:1px}
+.kc-import-row b{font:600 12px var(--kc-font);color:var(--kc-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kc-import-row small{font-size:10px;color:var(--kc-muted)}
+.kc-import-kcal{font:600 11px var(--kc-font);color:var(--kc-muted);white-space:nowrap}

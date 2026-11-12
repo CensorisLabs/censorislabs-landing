@@ -38,6 +38,8 @@ export const FEATURE_GROUPS = [
       'On-device camera barcode scanning',
       'CSV import from MyFitnessPal and Apple Health',
       'Offline barcode/code lookup',
+      'Bundled branded barcode catalogue (Open Food Facts)',
+      'Import branded foods and barcodes from CSV',
       'Voice food search',
       'Recipe builder',
       'Log a recipe in one tap',

@@ -17,6 +17,7 @@ import {
   deleteCustomFood,
   recipeTotals,
   foodAllowed,
+  findFoodByCode,
   allergenWarning,
   state,
   uid,
@@ -73,7 +74,7 @@ function foodRow(food, profile) {
   const warning = allergenWarning(food, profile)
   return `<button type="button" class="kc-food-row" data-food="${esc(food.id)}">
     <span class="kc-food-avatar" aria-hidden="true">${CATEGORY_LOOK[food.cat] || '🍽️'}</span>
-    <span class="kc-food-main"><b>${esc(food.name)}</b><small>${esc(food.serving?.label || '100 g')} · ${fmt(servingKcal(food))} kcal ${warning ? `· ⚠ ${esc(warning)}` : ''}</small></span>
+    <span class="kc-food-main"><b>${esc(food.name)}</b><small>${food.brand ? `${esc(food.brand)} · ` : ''}${esc(food.serving?.label || '100 g')} · ${fmt(servingKcal(food))} kcal ${food.dietUnknown || (food.tags || []).includes('branded') ? '· check diet ' : ''}${warning ? `· ⚠ ${esc(warning)}` : ''}</small></span>
     <span class="kc-food-macros"><i>P ${fmt(nutrientsForFood(food, food.serving?.g || 100).p)}</i><i>C ${fmt(nutrientsForFood(food, food.serving?.g || 100).c)}</i><i>F ${fmt(nutrientsForFood(food, food.serving?.g || 100).f)}</i></span>
     <span class="kc-food-add">${icon('plus')}</span>
   </button>`
@@ -147,7 +148,7 @@ export function openFoodPicker({ date = ui.date, meal = null, mode = 'log', plan
         if (query) {
           const tokens = query.split(/\s+/).filter(Boolean)
           pool = pool.filter(food => {
-            const haystack = `${food.name} ${food.cat} ${(food.tags || []).join(' ')} ${food.code || ''}`.toLowerCase()
+            const haystack = `${food.name} ${food.brand || ''} ${food.cat} ${(food.tags || []).join(' ')} ${food.code || ''}`.toLowerCase()
             return tokens.every(token => haystack.includes(token)) || food.code === query
           })
         }
@@ -252,7 +253,7 @@ export function openCodeLookup({ date = ui.date, meal = null, mode = 'log', plan
         const clean = String(value || '').replace(/\\s/g, '')
         if (!clean) return
         input.value = clean
-        const food = foodList().find(item => item.code === clean)
+        const food = findFoodByCode(clean)
         if (!food) {
           status.textContent = `No match for ${clean}. Add it as a custom food.`
           status.classList.add('is-warn')

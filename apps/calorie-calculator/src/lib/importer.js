@@ -8,6 +8,7 @@
 // uploaded, and re-importing the same file skips entries that already match.
 
 import { addEntry, getDay, makeQuickEntry, setWellbeing, setWeight } from './store.js'
+import { parseCsv } from './csv.js'
 
 const MAX_KCAL = 20000
 
@@ -15,36 +16,7 @@ function pad(value) {
   return String(value).padStart(2, '0')
 }
 
-/** RFC 4180-ish parser: quoted fields, escaped quotes, CRLF and BOM. */
-export function parseCsv(text) {
-  const source = String(text || '').replace(/^\uFEFF/, '')
-  const rows = []
-  let row = []
-  let field = ''
-  let quoted = false
-
-  for (let index = 0; index < source.length; index += 1) {
-    const character = source[index]
-    if (quoted) {
-      if (character === '"') {
-        if (source[index + 1] === '"') { field += '"'; index += 1 } else quoted = false
-      } else {
-        field += character
-      }
-      continue
-    }
-    if (character === '"') quoted = true
-    else if (character === ',') { row.push(field); field = '' }
-    else if (character === '\n') {
-      row.push(field); field = ''
-      if (row.some(cell => String(cell).trim() !== '')) rows.push(row)
-      row = []
-    } else if (character !== '\r') field += character
-  }
-  row.push(field)
-  if (row.some(cell => String(cell).trim() !== '')) rows.push(row)
-  return rows
-}
+export { parseCsv } from './csv.js'
 
 function headerKey(value) {
   return String(value || '')

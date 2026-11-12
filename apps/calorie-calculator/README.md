@@ -2,7 +2,7 @@
 
 A private, offline-first calorie, food, macro and habit tracker for Android, Windows and the web. kcal is part of the CensorisLabs suite: all data stays on the device, in `localStorage` under `censoris-kcal-v2`, with no accounts, no sync and no network calls.
 
-Version **2.8.0**.
+Version **2.9.0**.
 
 ## Features
 

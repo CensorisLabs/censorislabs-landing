@@ -25,6 +25,7 @@ import {
 import { formatVolume, greeting, targetsFor } from './lib/calc.js'
 import { icon, toast } from './lib/ui.js'
 import { bindRenderer, ui, go, stepDate, goToday, on, handleAction, handleForm } from './lib/runtime.js'
+import { syncNativeReminders, isNativeReminderPlatform } from './lib/reminders.js'
 import { renderToday } from './views/today.js'
 import { renderDiary } from './views/diary.js'
 import { renderProgress } from './views/progress.js'
@@ -249,6 +250,8 @@ try {
 } catch { /* private mode */ }
 
 render()
+
+if (isNativeReminderPlatform()) syncNativeReminders(state.settings).catch(() => {})
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {

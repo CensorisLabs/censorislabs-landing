@@ -43,6 +43,7 @@ import {
   openStepSettings,
 } from '../lib/dialogs-app.js'
 import { openCsvImport } from '../lib/dialogs-import.js'
+import { syncNativeReminders, requestReminderPermission, isNativeReminderPlatform } from '../lib/reminders.js'
 import { exportBackup, exportCsv, daySummaryText, profileBackupSummary } from '../lib/export.js'
 import { APP_VERSION } from '../shared/version.js'
 import { renderInsights } from './insights.js'
@@ -142,11 +143,11 @@ function preferencesTab(profile) {
       <p class="kc-meta">On Android the hardware step counter can fill this in automatically; elsewhere log steps on Today. Stride, cadence and step-credit settings live in Steps setup.</p>
     </section>
     <section class="kc-card">
-      <div class="kc-card__head"><div><p class="kc-eyebrow">REMINDERS</p><h3>A gentle nudge, not a nag</h3><p>Reminders only run while kcal is open. They never leave this device.</p></div><button type="button" class="kc-text-btn" data-action="more:notify">${icon('info')} Notification permission</button></div>
+      <div class="kc-card__head"><div><p class="kc-eyebrow">REMINDERS</p><h3>A gentle nudge, not a nag</h3><p>In the installed Android app, reminders are scheduled with the phone's notification system, so they arrive even when kcal is closed. In a browser they appear while the app is open. They never leave this device.</p></div><button type="button" class="kc-text-btn" data-action="more:notify">${icon('info')} Notification permission</button></div>
       <label class="kc-switch-row"><span><b>Water reminders</b><small>Prompt me when I am behind my hydration guide.</small></span><input type="checkbox" data-action="more:reminder" data-kind="water" ${state.settings.reminders.water ? 'checked' : ''}></label>
       <label class="kc-switch-row"><span><b>Meal reminders</b><small>One quiet prompt at breakfast, lunch and dinner time.</small></span><input type="checkbox" data-action="more:reminder" data-kind="meals" ${state.settings.reminders.meals ? 'checked' : ''}></label>
       <div class="kc-preference-row"><div><b>Water reminder interval</b><small>How often the hydration prompt may appear.</small></div><select id="water-interval" class="kc-select kc-select--inline"><option value="60" ${state.settings.waterInterval === 60 ? 'selected' : ''}>Every hour</option><option value="90" ${state.settings.waterInterval === 90 ? 'selected' : ''}>Every 90 minutes</option><option value="120" ${state.settings.waterInterval === 120 ? 'selected' : ''}>Every 2 hours</option><option value="180" ${state.settings.waterInterval === 180 ? 'selected' : ''}>Every 3 hours</option></select></div>
-      <p class="kc-meta">Notification permission is requested by your browser or operating system. If it is denied, reminders appear as in-app toasts while the app is open.</p>
+      <p class="kc-meta">Everything is scheduled locally on this device. If notifications are blocked, reminders fall back to in-app toasts while the app is open.</p>
     </section>
     <section class="kc-card">
       <div class="kc-card__head"><div><p class="kc-eyebrow">FOOD BUDGET</p><h3>${state.settings.budget ? `₹${fmt(state.settings.budget)} per day` : 'No budget set'}</h3><p>Food costs are optional estimates you enter per food or custom entry.</p></div></div>
@@ -291,19 +292,31 @@ on('more:density', element => {
 on('more:appearance', () => document.querySelector('.appearance-toggle')?.click())
 on('more:reminder', element => {
   const kind = element.dataset.kind
-  if (element.checked && 'Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().catch(() => {})
-  }
   update(() => {
     state.settings.reminders ||= { water: false, meals: false }
     state.settings.reminders[kind] = element.checked
   }, { label: 'Update reminders' })
-  toast(element.checked ? 'Reminders on while kcal is open' : 'Reminders off')
+  if (!isNativeReminderPlatform()) {
+    if (element.checked && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {})
+    toast(element.checked ? 'Reminders on while kcal is open' : 'Reminders off')
+    return
+  }
+  if (!element.checked) toast('Device reminders cancelled')
+  else toast('Scheduling reminders on this device…')
+  syncNativeReminders(state.settings).then(result => {
+    if (result.exactAlarmBlocked) { toast('Android needs the Alarms & reminders permission for kcal before it can schedule these.', 'error'); return }
+    if (result.permission === 'denied' || result.permission === 'error') { toast('Notifications are blocked. Allow them for kcal in Android settings.', 'error'); return }
+    if (result.scheduled) toast(`${result.scheduled} reminders scheduled — they fire while kcal is closed`)
+  })
 })
 on('more:notify', async () => {
-  if (!('Notification' in window)) { toast('Notifications are not available on this device.', 'error'); return }
-  const permission = await Notification.requestPermission()
-  toast(permission === 'granted' ? 'Notifications allowed' : 'Notifications remain blocked; in-app toasts will be used', permission === 'granted' ? 'ok' : 'error')
+  const permission = await requestReminderPermission()
+  if (permission === 'unsupported') { toast('Notifications are not available on this device.', 'error'); return }
+  const granted = permission === 'granted'
+  toast(granted ? 'Notifications allowed' : 'Notifications remain blocked; in-app toasts will be used', granted ? 'ok' : 'error')
+  if (granted && isNativeReminderPlatform()) {
+    syncNativeReminders(state.settings).then(result => { if (result.scheduled) toast(`${result.scheduled} reminders scheduled on this device`) })
+  }
 })
 on('more:export', () => {
   exportBackup()

@@ -289,6 +289,7 @@ export const FEATURE_GROUPS = [
       'Keyboard shortcuts',
       'Water reminders',
       'Meal reminders',
+      'Reminders scheduled on Android so they fire with the app closed',
       'Installable offline app',
       'Offline status indicator',
       'JSON export',

@@ -35,6 +35,22 @@ if (existsSync(manifestPath)) {
   }
 }
 
+// Scheduled reminders need Android 13's runtime notification permission, exact
+// alarms so a nudge is not batched hours late, and the boot permission so the
+// schedule survives a restart. The plugin supplies its own receivers; these are
+// only the manifest permissions Gradle merges from the app.
+const reminderPermissions = ['android.permission.POST_NOTIFICATIONS', 'android.permission.SCHEDULE_EXACT_ALARM', 'android.permission.RECEIVE_BOOT_COMPLETED']
+if (existsSync(manifestPath)) {
+  let reminderManifest = readFileSync(manifestPath, 'utf8')
+  const missingReminder = reminderPermissions.filter(name => !reminderManifest.includes(name))
+  if (missingReminder.length) {
+    const reminderLines = missingReminder.map(name => `    <uses-permission android:name="${name}" />`).join('\n')
+    reminderManifest = reminderManifest.replace(/<application/, reminderLines + '\n\n    <application')
+    writeFileSync(manifestPath, reminderManifest)
+    console.log(`Added to AndroidManifest.xml: ${missingReminder.join(', ')}`)
+  }
+}
+
 // The Health Connect plugin writes its notification strings into strings.xml
 // itself, sometimes several elements on one line and without XML/Android
 // escaping. aapt2 rejects that ("Invalid unicode escape sequence in string"),

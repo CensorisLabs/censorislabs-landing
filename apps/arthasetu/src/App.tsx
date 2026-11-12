@@ -5,7 +5,7 @@ import { HealthPage, type Account, type Mandate } from './features/health/Health
 import { estimateTax } from './domain/finance.ts'
 import type { ParsedTransaction } from './domain/statement.ts'
 import { CATEGORY_OPTIONS, suggestCategory } from './domain/statement.ts'
-import { applyRule, detectSubscriptions, formatDate, materializeRecurring, recurringCommitment, monthKey, monthLabel, nextId, saveRule, spendChange, toIsoDate, todayIso } from './domain/ledger.ts'
+import { applyRule, detectSubscriptions, formatDate, ledgerCsv, materializeRecurring, recurringCommitment, monthKey, monthLabel, nextId, saveRule, spendChange, toIsoDate, todayIso } from './domain/ledger.ts'
 import StatementImport from './features/statement/StatementImport.tsx'
 import { hashPin, PIN_KEY, readFinanceData, readFinanceDataSync, saveFinanceData, verifyPin, type FinanceData } from './domain/vault.ts'
 import { DEFAULT_PLANNING, readPlanningState, type PlanningState } from './domain/planning.ts'
@@ -99,10 +99,7 @@ export default function App() {
 
   function duplicateTransaction(item: Tx) { update([{ ...item, id: nextId() }, ...tx]); notify(`${item.merchant} duplicated`) }
   function exportCsv() {
-    const escape = (value: string | number) => { const text = String(value); const needsQuotes = text.includes(',') || text.includes('"') || text.includes(String.fromCharCode(10)); return needsQuotes ? `"${text.replaceAll('"', '""')}"` : text }
-    const rows = [['date', 'merchant', 'category', 'type', 'account', 'amount'], ...tx.map(item => [item.date, item.merchant, item.category, item.type, item.account, item.amount])]
-    const csv = rows.map(row => row.map(escape).join(',')).join(String.fromCharCode(10))
-    const blob = new Blob([String.fromCharCode(65279) + csv], { type: 'text/csv;charset=utf-8' })
+    const blob = new Blob([ledgerCsv(tx)], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `arthasetu-ledger-${month}.csv`; anchor.click(); URL.revokeObjectURL(url)
     notify(`${tx.length} transactions exported`)
   }

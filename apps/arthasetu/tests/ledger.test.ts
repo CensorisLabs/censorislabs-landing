@@ -4,6 +4,7 @@ import {
   applyRule,
   detectSubscriptions,
   formatDate,
+  ledgerCsv,
   materializeRecurring,
   monthKey,
   monthLabel,
@@ -97,4 +98,10 @@ test('recurring commitment counts rules, not generated copies', () => {
     { id: 3, merchant: 'Salary', amount: 90000, type: 'income' as const, recurring: 'monthly' as const },
   ]
   assert.deepEqual(recurringCommitment(tx), { count: 1, monthly: 20000, merchants: ['Rent'] })
+})
+
+test('ledger CSV quotes commas and quotes and starts with a BOM', () => {
+  const csv = ledgerCsv([{ date: '2026-01-02', merchant: 'Cafe, "Blue"', category: 'Food', type: 'expense', account: 'UPI', amount: 250 }])
+  assert.ok(csv.startsWith(String.fromCharCode(65279) + 'date,merchant'))
+  assert.ok(csv.includes('"Cafe, ""Blue"""'))
 })

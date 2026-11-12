@@ -188,3 +188,16 @@ export function recurringCommitment(transactions: Array<{ recurring?: 'monthly';
   const rules = transactions.filter(item => item.recurring === 'monthly' && !item.recurrenceOf && item.type === 'expense')
   return { count: rules.length, monthly: rules.reduce((sum, item) => sum + item.amount, 0), merchants: rules.map(item => item.merchant) }
 }
+
+export type CsvRow = { date: string; merchant: string; category: string; type: string; account: string; amount: number }
+
+/** Serialises ledger rows with RFC 4180 quoting and a leading BOM for Excel. */
+export function ledgerCsv(rows: CsvRow[]): string {
+  const cell = (value: string | number) => {
+    const text = String(value)
+    return [',', '"', '\n'].some(char => text.includes(char)) ? `"${text.replaceAll('"', '""')}"` : text
+  }
+  const header = ['date', 'merchant', 'category', 'type', 'account', 'amount']
+  const lines = [header, ...rows.map(row => [row.date, row.merchant, row.category, row.type, row.account, row.amount])]
+  return String.fromCharCode(65279) + lines.map(line => line.map(cell).join(',')).join(String.fromCharCode(10))
+}

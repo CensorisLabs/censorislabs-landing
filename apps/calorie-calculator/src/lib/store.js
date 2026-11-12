@@ -155,6 +155,10 @@ export function defaultState() {
       createdAt: Date.now(),
       installDismissed: false,
     },
+    vitals: [],
+    medications: [],
+    medicationLogs: [],
+    symptoms: [],
     updatedAt: Date.now(),
   }
 }
@@ -191,6 +195,10 @@ function migrate(raw) {
     activeProfileId: active,
     customFoods: Array.isArray(raw.customFoods) ? raw.customFoods : [],
     recipes: Array.isArray(raw.recipes) ? raw.recipes : base.recipes,
+    vitals: Array.isArray(raw.vitals) ? raw.vitals : [],
+    medications: Array.isArray(raw.medications) ? raw.medications : [],
+    medicationLogs: Array.isArray(raw.medicationLogs) ? raw.medicationLogs : [],
+    symptoms: Array.isArray(raw.symptoms) ? raw.symptoms : [],
     settings: { ...base.settings, ...(raw.settings || {}), reminders: { ...base.settings.reminders, ...(raw.settings?.reminders || {}) } },
   }
 }
@@ -1073,4 +1081,85 @@ export function addProfile(name = 'New profile') {
   state.logs[profile.id] = {}
   persist()
   return profile
+}
+
+// --- Health tracker: vitals, medications and symptoms -----------------------
+
+function vitalNumber(value, min, max) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return null
+  return Math.min(max, Math.max(min, Math.round(parsed * 10) / 10))
+}
+
+export function logVital(vital = {}) {
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(vital.date || '')) ? vital.date : todayKey()
+  const entry = {
+    id: uid('vital'),
+    date,
+    at: Date.now(),
+    systolic: vitalNumber(vital.systolic, 70, 260),
+    diastolic: vitalNumber(vital.diastolic, 40, 160),
+    pulse: vitalNumber(vital.pulse, 30, 230),
+    glucose: vitalNumber(vital.glucose, 20, 700),
+    glucoseContext: ['fasting', 'post', 'random'].includes(vital.glucoseContext) ? vital.glucoseContext : 'random',
+    spo2: vitalNumber(vital.spo2, 50, 100),
+    tempC: vitalNumber(vital.tempC, 30, 45),
+    respRate: vitalNumber(vital.respRate, 4, 80),
+    note: String(vital.note || '').trim().slice(0, 400),
+  }
+  state.vitals.unshift(entry)
+  state.vitals = state.vitals.slice(0, 3000)
+  return entry
+}
+
+export function removeVital(id) {
+  state.vitals = state.vitals.filter(item => item.id !== id)
+}
+
+export function saveMedication({ name, dose = '', time = '', note = '' } = {}) {
+  const clean = String(name || '').trim()
+  if (!clean) return null
+  const medication = {
+    id: uid('med'),
+    name: clean.slice(0, 80),
+    dose: String(dose || '').trim().slice(0, 60),
+    time: /^([01]\d|2[0-3]):[0-5]\d$/.test(String(time || '')) ? time : '',
+    note: String(note || '').trim().slice(0, 200),
+    active: true,
+    createdAt: Date.now(),
+  }
+  state.medications.push(medication)
+  return medication
+}
+
+export function removeMedication(id) {
+  state.medications = state.medications.filter(item => item.id !== id)
+  state.medicationLogs = state.medicationLogs.filter(item => item.medId !== id)
+}
+
+export function toggleMedicationLog(medId, date = todayKey()) {
+  const exists = state.medicationLogs.some(item => item.medId === medId && item.date === date)
+  if (exists) state.medicationLogs = state.medicationLogs.filter(item => !(item.medId === medId && item.date === date))
+  else state.medicationLogs.push({ id: uid('medlog'), medId, date, at: Date.now() })
+  return !exists
+}
+
+export function logSymptom({ name, severity = 1, note = '', date = todayKey() } = {}) {
+  const clean = String(name || '').trim()
+  if (!clean) return null
+  const entry = {
+    id: uid('symptom'),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? date : todayKey(),
+    at: Date.now(),
+    name: clean.slice(0, 60),
+    severity: Math.min(3, Math.max(1, Math.round(Number(severity) || 1))),
+    note: String(note || '').trim().slice(0, 300),
+  }
+  state.symptoms.unshift(entry)
+  state.symptoms = state.symptoms.slice(0, 3000)
+  return entry
+}
+
+export function removeSymptom(id) {
+  state.symptoms = state.symptoms.filter(item => item.id !== id)
 }

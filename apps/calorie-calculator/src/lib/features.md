@@ -59,3 +59,7 @@ Bugs fixed during this extension:
 - Calendar was absent; added a calendar view wired to existing day scores.
 - Steps ring previously could render with a stale "todayKey" if timezone crossed midnight during a session, guarded by re-reading `todayKey()` at render time.
 - Water ring on reload could show full ring briefly before hydration numbers load; hydration is now computed synchronously from stored state.
+
+## Health tracker
+
+Vitals (blood pressure, resting pulse, glucose, SpO2, temperature, breathing rate), a daily medication tick-list with 7-day adherence, a symptom diary with severity, and a 7-day step summary with goal days and active minutes. All entries stay on the device and the ranges shown are general adult guides, not diagnoses.

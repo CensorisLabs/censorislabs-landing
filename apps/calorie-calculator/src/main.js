@@ -28,6 +28,7 @@ import { bindRenderer, ui, go, stepDate, goToday, on, handleAction, handleForm }
 import { renderToday } from './views/today.js'
 import { renderDiary } from './views/diary.js'
 import { renderProgress } from './views/progress.js'
+import { renderHealth } from './views/health.js'
 import { renderPlan } from './views/plan.js'
 import { renderCalendar } from './views/calendar.js'
 import { renderStudio } from './views/studio.js'
@@ -44,6 +45,7 @@ const NAV = [
   { id: 'today', label: 'Today', icon: 'home' },
   { id: 'diary', label: 'Diary', icon: 'book' },
   { id: 'progress', label: 'Progress', icon: 'chart' },
+  { id: 'health', label: 'Health', icon: 'heart' },
   { id: 'plan', label: 'Plan', icon: 'utensils' },
   { id: 'calendar', label: 'Calendar', icon: 'calendar' },
   { id: 'studio', label: 'Studio', icon: 'flask' },
@@ -54,6 +56,7 @@ const VIEWS = {
   today: renderToday,
   diary: renderDiary,
   progress: renderProgress,
+  health: renderHealth,
   plan: renderPlan,
   calendar: renderCalendar,
   studio: renderStudio,

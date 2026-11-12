@@ -57,7 +57,12 @@ jobs:
         env:
           VITE_LICENSE_PUBLIC_KEY: ${{ secrets.LICENSE_PUBLIC_KEY }}
           VITE_TMDB_COMMERCIAL_LICENSE: ${{ secrets.TMDB_COMMERCIAL_LICENSE }}
-        run: npm run android:build
+        run: |
+          npm run android:build || {
+            echo "Android build failed; retrying once to ride out transient Maven dependency fetch errors"
+            sleep 15
+            npm run android:build
+          }
       - name: Prepare APK release asset
         shell: bash
         run: |

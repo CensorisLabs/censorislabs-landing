@@ -152,3 +152,33 @@ export function saveRule(merchant: string, category: string) {
 export function applyRule(merchant: string, fallback: string): string {
   return readRules()[String(merchant || '').toLowerCase().trim()] || fallback
 }
+
+export type RecurringTx = { id: number; date: string; recurring?: 'monthly'; recurrenceOf?: number }
+
+function daysInMonth(key: string): number {
+  const match = key.match(/^([0-9]{4})-([0-9]{2})$/)
+  if (!match) return 28
+  return new Date(Number(match[1]), Number(match[2]), 0).getDate()
+}
+
+/** Adds a monthly copy of each recurring transaction for every month after its
+ * date up to the current month. Existing copies are detected by recurrenceOf +
+ * month, so running this repeatedly never duplicates a row. */
+export function materializeRecurring<T extends RecurringTx>(transactions: T[], currentMonth = monthKey()): T[] {
+  const out = [...transactions]
+  const covered = new Set(transactions.filter(item => item.recurrenceOf).map(item => `${item.recurrenceOf}:${item.date.slice(0, 7)}`))
+  for (const source of transactions.filter(item => item.recurring === 'monthly' && !item.recurrenceOf)) {
+    const day = Number(source.date.slice(8, 10)) || 1
+    let key = shiftMonth(source.date.slice(0, 7), 1)
+    for (let count = 0; count < 36 && key <= currentMonth; count += 1) {
+      const marker = `${source.id}:${key}`
+      if (!covered.has(marker)) {
+        const date = `${key}-${String(Math.min(day, daysInMonth(key))).padStart(2, '0')}`
+        out.push({ ...source, id: nextId(), date, recurring: undefined, recurrenceOf: source.id })
+        covered.add(marker)
+      }
+      key = shiftMonth(key, 1)
+    }
+  }
+  return out
+}

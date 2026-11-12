@@ -5,13 +5,13 @@ import { HealthPage, type Account, type Mandate } from './features/health/Health
 import { estimateTax } from './domain/finance.ts'
 import type { ParsedTransaction } from './domain/statement.ts'
 import { CATEGORY_OPTIONS, suggestCategory } from './domain/statement.ts'
-import { applyRule, detectSubscriptions, formatDate, monthKey, monthLabel, nextId, saveRule, spendChange, toIsoDate, todayIso } from './domain/ledger.ts'
+import { applyRule, detectSubscriptions, formatDate, materializeRecurring, monthKey, monthLabel, nextId, saveRule, spendChange, toIsoDate, todayIso } from './domain/ledger.ts'
 import StatementImport from './features/statement/StatementImport.tsx'
 import { hashPin, PIN_KEY, readFinanceData, readFinanceDataSync, saveFinanceData, verifyPin, type FinanceData } from './domain/vault.ts'
 import { DEFAULT_PLANNING, readPlanningState, type PlanningState } from './domain/planning.ts'
 
 type Page = 'Overview' | 'Transactions' | 'Budgets' | 'Investments' | 'Financial health' | 'Tax planner' | 'Analytics & FIRE' | 'Debt planner' | 'Security'
-type Tx = { id: number; merchant: string; category: string; date: string; amount: number; type: 'income' | 'expense'; account: string }
+type Tx = { id: number; merchant: string; category: string; date: string; amount: number; type: 'income' | 'expense'; account: string; recurring?: 'monthly'; recurrenceOf?: number }
 const money = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`
 function isTransaction(value: unknown): value is Tx { if (!value || typeof value !== 'object') return false; const item = value as Record<string, unknown>; return Number.isFinite(item.id) && typeof item.merchant === 'string' && typeof item.category === 'string' && typeof item.date === 'string' && Number.isFinite(item.amount) && (item.type === 'income' || item.type === 'expense') && typeof item.account === 'string' }
 function readInitialTransactions(): Tx[] { const values = readFinanceDataSync()?.transactions; return Array.isArray(values) && values.every(isTransaction) ? (values as Tx[]).map(item => ({ ...item, date: toIsoDate(item.date) })) : [] }
@@ -28,7 +28,7 @@ export default function App() {
   const [page, setPage] = useState<Page>('Overview')
   const [isLocked, setIsLocked] = useState(() => Boolean(localStorage.getItem(PIN_KEY)))
   const [sessionSecret, setSessionSecret] = useState('')
-  const [tx, setTx] = useState<Tx[]>(readInitialTransactions)
+  const [tx, setTx] = useState<Tx[]>(() => materializeRecurring(readInitialTransactions()))
   const [accounts, setAccounts] = useState<Account[]>(getInitialAccounts)
   const [mandates, setMandates] = useState<Mandate[]>(getInitialMandates)
   const [planning, setPlanning] = useState<PlanningState>(getInitialPlanning)
@@ -174,7 +174,8 @@ function AddModal({ accounts, onClose, onSave }: { accounts: Account[]; onClose:
   const [date, setDate] = useState(todayIso())
   const [type, setType] = useState<'expense' | 'income'>('expense')
   const [account, setAccount] = useState(accounts[0]?.name || 'UPI')
-  return <div className="modal-backdrop"><form className="modal" onSubmit={e => { e.preventDefault(); onSave({ merchant, amount: Number(amount), category: type === 'income' ? 'Income' : category, date, type, account }) }}><button type="button" className="modal-close" onClick={onClose}>×</button><div className="eyebrow">LOCAL LEDGER</div><h2>Add transaction</h2><label>Merchant<input required autoFocus value={merchant} onChange={e => setMerchant(e.target.value)} placeholder="e.g. BigBasket" /></label><label>Amount in rupees<input required type="number" min="1" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" /></label><div className="inline-create-row"><label>Date<input type="date" required value={date} onChange={e => setDate(e.target.value)} /></label><label>Type<select value={type} onChange={e => setType(e.target.value as 'expense' | 'income')}><option value="expense">Expense</option><option value="income">Income</option></select></label></div><div className="inline-create-row"><label>Category<select value={category} disabled={type === 'income'} onChange={e => setCategory(e.target.value)}>{CATEGORY_OPTIONS.filter(name => name !== 'Income').map(name => <option key={name}>{name}</option>)}</select></label><label>Account<input value={account} onChange={e => setAccount(e.target.value)} list="account-names" placeholder="UPI / HDFC" /><datalist id="account-names">{accounts.map(item => <option key={item.id} value={item.name} />)}</datalist></label></div><div className="modal-actions"><button type="button" className="secondary" onClick={onClose}>Cancel</button><button className="add-button">Save locally</button></div></form></div>
+  const [recurring, setRecurring] = useState(false)
+  return <div className="modal-backdrop"><form className="modal" onSubmit={e => { e.preventDefault(); onSave({ merchant, amount: Number(amount), category: type === 'income' ? 'Income' : category, date, type, account, recurring: recurring && type === 'expense' ? 'monthly' : undefined }) }}><button type="button" className="modal-close" onClick={onClose}>×</button><div className="eyebrow">LOCAL LEDGER</div><h2>Add transaction</h2><label>Merchant<input required autoFocus value={merchant} onChange={e => setMerchant(e.target.value)} placeholder="e.g. BigBasket" /></label><label>Amount in rupees<input required type="number" min="1" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" /></label><div className="inline-create-row"><label>Date<input type="date" required value={date} onChange={e => setDate(e.target.value)} /></label><label>Type<select value={type} onChange={e => setType(e.target.value as 'expense' | 'income')}><option value="expense">Expense</option><option value="income">Income</option></select></label></div><label className="check-line"><input type="checkbox" checked={recurring} onChange={e => setRecurring(e.target.checked)} /> Repeat monthly</label><div className="inline-create-row"><label>Category<select value={category} disabled={type === 'income'} onChange={e => setCategory(e.target.value)}>{CATEGORY_OPTIONS.filter(name => name !== 'Income').map(name => <option key={name}>{name}</option>)}</select></label><label>Account<input value={account} onChange={e => setAccount(e.target.value)} list="account-names" placeholder="UPI / HDFC" /><datalist id="account-names">{accounts.map(item => <option key={item.id} value={item.name} />)}</datalist></label></div><div className="modal-actions"><button type="button" className="secondary" onClick={onClose}>Cancel</button><button className="add-button">Save locally</button></div></form></div>
 }
 function ParserModal({ onClose, onSave }: { onClose: () => void; onSave: (t: Omit<Tx, 'id'>) => void }) {
   const [text, setText] = useState('Your A/c XX1234 is debited by Rs. 1,250.00 on 08-10-26 at UPI/Swiggy. Avl bal Rs. 3,18,450.')

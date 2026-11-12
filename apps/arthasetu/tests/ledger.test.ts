@@ -4,6 +4,7 @@ import {
   applyRule,
   detectSubscriptions,
   formatDate,
+  materializeRecurring,
   monthKey,
   monthLabel,
   monthTotals,
@@ -76,4 +77,14 @@ test('merchant rules survive a storage round trip and are per merchant', () => {
 test('ids stay unique inside one millisecond', () => {
   const ids = new Set(Array.from({ length: 500 }, () => nextId()))
   assert.equal(ids.size, 500)
+})
+
+test('monthly transactions materialise once per month without duplicates', () => {
+  const source = { id: 1, date: '2026-01-31', amount: 649, type: 'expense' as const, merchant: 'Rent', recurring: 'monthly' as const }
+  const first = materializeRecurring([source], '2026-03')
+  assert.equal(first.length, 3)
+  assert.deepEqual(first.slice(1).map(item => item.date), ['2026-02-28', '2026-03-31'])
+  assert.ok(first.slice(1).every(item => item.recurrenceOf === 1))
+  const second = materializeRecurring(first, '2026-03')
+  assert.equal(second.length, 3)
 })

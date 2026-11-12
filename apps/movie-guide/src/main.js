@@ -2,69 +2,122 @@ import '../../shared/base.css'
 import { mountApp } from '../../shared/shell.js'
 import { APP_VERSION } from './version.js'
 
+// A small, hand-checked starting catalogue. No API key, account or licence is
+// required: search happens on this device and every title links to JustWatch,
+// which owns the current regional availability data.
+const CATALOG = [
+  { title: 'Dangal', year: 2016, type: 'movie', genres: ['Drama', 'Sport'], note: 'A former wrestler trains his daughters for the international stage.' },
+  { title: 'Gully Boy', year: 2019, type: 'movie', genres: ['Drama', 'Music'], note: 'A Mumbai street rapper finds his voice in the underground scene.' },
+  { title: 'Andhadhun', year: 2018, type: 'movie', genres: ['Thriller', 'Comedy'], note: 'A blind pianist becomes entangled in a murder he was not meant to witness.' },
+  { title: 'Tumbbad', year: 2018, type: 'movie', genres: ['Horror', 'Fantasy'], note: 'A family guards a cursed treasure across generations.' },
+  { title: '3 Idiots', year: 2009, type: 'movie', genres: ['Comedy', 'Drama'], note: 'Three engineering students push back against a rigid education system.' },
+  { title: 'Lagaan', year: 2001, type: 'movie', genres: ['Drama', 'Sport'], note: 'Villagers wager their land tax on a cricket match against colonial officers.' },
+  { title: 'RRR', year: 2022, type: 'movie', genres: ['Action', 'Drama'], note: 'Two revolutionaries collide in a maximalist period action epic.' },
+  { title: 'Kumbalangi Nights', year: 2019, type: 'movie', genres: ['Drama', 'Family'], note: 'Four brothers rebuild a home and themselves in a Kerala fishing village.' },
+  { title: 'Super Deluxe', year: 2019, type: 'movie', genres: ['Drama', 'Thriller'], note: 'Interlocking stories test a group of strangers over one difficult day.' },
+  { title: 'Vikram Vedha', year: 2017, type: 'movie', genres: ['Action', 'Thriller'], note: 'A cop and a criminal trade stories that blur the line between them.' },
+  { title: 'The Lunchbox', year: 2013, type: 'movie', genres: ['Romance', 'Drama'], note: 'A misdelivered lunchbox starts an unlikely correspondence in Mumbai.' },
+  { title: 'Queen', year: 2014, type: 'movie', genres: ['Comedy', 'Drama'], note: 'A cancelled wedding becomes the start of a solo European trip.' },
+  { title: 'Parasite', year: 2019, type: 'movie', genres: ['Thriller', 'Drama'], note: 'A struggling family slowly moves into the lives of a wealthy household.' },
+  { title: 'Everything Everywhere All at Once', year: 2022, type: 'movie', genres: ['Sci-Fi', 'Comedy'], note: 'A laundromat owner discovers the multiverse and her own family.' },
+  { title: 'Arrival', year: 2016, type: 'movie', genres: ['Sci-Fi', 'Drama'], note: 'A linguist tries to communicate with visitors whose language bends time.' },
+  { title: 'Mad Max: Fury Road', year: 2015, type: 'movie', genres: ['Action', 'Adventure'], note: 'A chase across a desert wasteland becomes a fight for freedom.' },
+  { title: 'Spirited Away', year: 2001, type: 'movie', genres: ['Animation', 'Fantasy'], note: 'A child works in a spirit bathhouse to bring her parents back.' },
+  { title: 'The Grand Budapest Hotel', year: 2014, type: 'movie', genres: ['Comedy', 'Drama'], note: 'A concierge and lobby boy chase a disputed inheritance across Europe.' },
+  { title: 'Whiplash', year: 2014, type: 'movie', genres: ['Drama', 'Music'], note: 'A drummer and a ruthless teacher push each other toward perfection.' },
+  { title: 'Knives Out', year: 2019, type: 'movie', genres: ['Mystery', 'Comedy'], note: 'A detective unpicks a wealthy family after the patriarch dies.' },
+  { title: 'The Social Network', year: 2010, type: 'movie', genres: ['Drama', 'History'], note: 'The founding of a social network, told through competing claims.' },
+  { title: 'Chernobyl', year: 2019, type: 'series', genres: ['Drama', 'History'], note: 'The reactor disaster and the cost of official denial.' },
+  { title: 'The Last of Us', year: 2023, type: 'series', genres: ['Drama', 'Adventure'], note: 'A smuggler escorts a teenager across a broken country.' },
+  { title: 'Severance', year: 2022, type: 'series', genres: ['Sci-Fi', 'Thriller'], note: 'Office workers separate their work memories from their home lives.' },
+  { title: 'Dark', year: 2017, type: 'series', genres: ['Sci-Fi', 'Mystery'], note: 'A missing child exposes tangled timelines in a small German town.' },
+  { title: 'Fleabag', year: 2016, type: 'series', genres: ['Comedy', 'Drama'], note: 'A sharp, grieving woman narrates her own messy life.' },
+  { title: 'The Wire', year: 2002, type: 'series', genres: ['Crime', 'Drama'], note: 'Baltimore institutions, seen through the people inside them.' },
+  { title: 'Panchayat', year: 2020, type: 'series', genres: ['Comedy', 'Drama'], note: 'A reluctant village clerk learns the rhythms of rural office life.' },
+  { title: 'Sacred Games', year: 2018, type: 'series', genres: ['Crime', 'Thriller'], note: 'A Mumbai cop follows a gangster’s countdown across the city.' },
+  { title: 'The Family Man', year: 2019, type: 'series', genres: ['Action', 'Drama'], note: 'A middle-class intelligence officer balances a desk job and a family.' },
+  { title: 'Delhi Crime', year: 2019, type: 'series', genres: ['Crime', 'Drama'], note: 'Investigators work a case that became a national reckoning.' },
+  { title: 'Better Call Saul', year: 2015, type: 'series', genres: ['Crime', 'Drama'], note: 'A small-time lawyer talks himself toward a larger, worse life.' },
+]
+const STORE = 'censoris-watchlist'
+const readList = () => { try { const value = JSON.parse(localStorage.getItem(STORE) || '[]'); return Array.isArray(value) ? value : [] } catch { return [] } }
+let watchlist = readList()
+let filterType = 'all'
+let filterGenre = 'all'
+
 mountApp({
-  appId: 'movie-guide', eyebrow: 'FILM & SERIES DISCOVERY', title: 'Find where the story is streaming.',
+  appId: 'movie-guide',
+  eyebrow: 'FILM & SERIES DISCOVERY',
+  title: 'Find where the story is streaming.',
   version: APP_VERSION,
-  description: 'Search titles and check reported streaming, rental, or purchase options by country. Availability changes by region and over time.',
-  content: `<section class="panel"><p class="eyebrow">SEARCH TITLES</p><h2>What do you want to watch?</h2><form class="search-row" id="search-form"><input id="query" required placeholder="Movie or show title" aria-label="Search title"><select id="region" aria-label="Country"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="DE">Germany</option></select><button class="btn">Search</button></form><details style="margin-top:16px"><summary class="field-label">Set a TMDB API key for provider availability</summary><div class="field" style="margin-top:10px"><label for="api-key">TMDB API key · kept in memory only</label><input id="api-key" type="password" autocomplete="off" placeholder="Paste your API key"></div><p class="source-credit">Provider API support is disabled until CensorisLabs has the commercial TMDB license configured. Until then, open a direct JustWatch search. A client-side key is visible to users and must not be treated as a secret.</p></details><div class="actions"><span class="status" id="status" aria-live="polite">Provider data is country-specific.</span></div></section><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">SEARCH RESULTS</p><h2>Choose a title</h2></div><span class="pill" id="region-label">India</span></div><div id="results" class="result-grid" aria-live="polite"><div class="empty" style="grid-column:1/-1">Search for a movie or series to see options.</div></div></section><section class="panel" style="margin-top:18px" id="availability" hidden><p class="eyebrow">AVAILABILITY</p><h2 id="selected-title"></h2><div id="providers"></div><p class="source-credit">Streaming availability data powered by TMDB and JustWatch. The listed services may be incomplete and links can lead to a regional search page instead of the exact title.</p></section><details class="panel" style="margin-top:18px"><summary class="field-label">Data sources and credits</summary><div class="source-credit" style="margin-top:14px"><a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer"><img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" alt="TMDB" width="48" height="48" loading="lazy"></a><p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p><p>Streaming availability data is provided via TMDB's JustWatch partnership. This commercial app needs an approved commercial TMDB license before provider API mode can be enabled.</p><a href="https://www.themoviedb.org/about/logos-attribution" target="_blank" rel="noopener noreferrer">TMDB logos and attribution ↗</a></div></details>`
+  description: 'Search a curated catalogue on this device, keep a watchlist, and open a country-specific JustWatch search for current streaming, rent or buy options. No account or API key needed.',
+  content: `<section class="panel"><p class="eyebrow">SEARCH TITLES</p><h2>What do you want to watch?</h2><form class="search-row" id="search-form"><input id="query" type="search" placeholder="Movie, show, genre or mood" aria-label="Search the catalogue"><select id="type" aria-label="Type"><option value="all">Films and series</option><option value="movie">Films</option><option value="series">Series</option></select><select id="genre" aria-label="Genre"><option value="all">Any genre</option></select><button class="btn">Search</button></form><div class="actions"><button class="btn btn--quiet" id="surprise">Surprise me</button><select id="region" aria-label="Country for availability links"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="DE">Germany</option></select><span class="status" id="status" aria-live="polite">Search runs on this device.</span></div><p class="source-credit">Availability is not stored here. Every “Where to watch” link opens JustWatch for the selected country, where the current provider list lives.</p></section><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">CATALOGUE</p><h2 id="heading">All titles</h2></div><span class="pill" id="count">0 titles</span></div><div id="results" class="result-grid" aria-live="polite"></div></section><section class="panel" style="margin-top:18px" id="watchlist-panel" hidden><div class="section-heading"><div><p class="eyebrow">YOUR LIST</p><h2>Watchlist</h2></div><button class="btn btn--quiet" id="clear-list">Clear list</button></div><div id="watchlist" class="news-list"></div></section>`
 })
 
-const $ = (id) => document.getElementById(id)
-let apiKey = import.meta.env.VITE_TMDB_API_KEY || ''
-const commercialLicenseCleared = import.meta.env.VITE_TMDB_COMMERCIAL_LICENSE === 'true'
-const escape = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
-const titleOf = item => item.title || item.name || 'Untitled'
-function keyNow() { return $('api-key').value.trim() || apiKey }
-function justwatchLink(title, region) { return `https://www.justwatch.com/${region.toLowerCase()}/search?q=${encodeURIComponent(title)}` }
-let lastItems = [], lastSelection = null, lastNotice = null
-function renderNotice(query, message) {
-  lastItems = []
-  lastNotice = { query, message }
-  $('results').innerHTML = `<div class="empty" style="grid-column:1/-1">${message} <p><a href="${justwatchLink(query, $('region').value)}" target="_blank" rel="noopener noreferrer">Search JustWatch for “${escape(query)}” ↗</a></p></div>`
+const $ = id => document.getElementById(id)
+const escape = value => String(value || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const keyOf = item => `${item.title}:${item.year}`
+const justwatch = (title, region) => `https://www.justwatch.com/${region.toLowerCase()}/search?q=${encodeURIComponent(title)}`
+
+function genreOptions() {
+  const genres = [...new Set(CATALOG.flatMap(item => item.genres))].sort()
+  $('genre').innerHTML = '<option value="all">Any genre</option>' + genres.map(genre => `<option>${escape(genre)}</option>`).join('')
 }
-function renderItems(items) {
-  lastItems = items
-  lastNotice = null
-  $('results').innerHTML = items.length ? items.map((item) => {
-    const type = item.media_type || (item.title ? 'movie' : 'tv')
-    const image = item.poster_path ? `https://image.tmdb.org/t/p/w185${encodeURIComponent(item.poster_path).replace('%2F','/')}` : ''
-    return `<article class="result-item"><div style="display:flex;gap:12px">${image ? `<img src="${image}" alt="" loading="lazy" style="width:68px;height:100px;object-fit:cover;border-radius:6px">` : ''}<div><span class="eyebrow">${escape(type)} · ${escape((item.release_date || item.first_air_date || '').slice(0,4))}</span><h3>${escape(titleOf(item))}</h3><p>${escape(item.overview || 'No synopsis available.')}</p></div></div><div class="actions"><button class="btn btn--outline" data-id="${escape(item.id)}" data-type="${escape(type)}" data-title="${escape(titleOf(item))}">Check where to watch</button><a class="btn btn--quiet" href="${justwatchLink(titleOf(item), $('region').value)}" target="_blank" rel="noopener noreferrer">Search JustWatch ↗</a></div></article>`
-  }).join('') : '<div class="empty" style="grid-column:1/-1">No movie or series titles found.</div>'
-  $('results').querySelectorAll('[data-id]').forEach(button => button.addEventListener('click', () => { void loadProviders(button.dataset.id, button.dataset.type, button.dataset.title) }))
+
+function saveWatchlist() {
+  try { localStorage.setItem(STORE, JSON.stringify(watchlist)) } catch { /* storage can be full */ }
+  renderWatchlist()
 }
-async function search() {
-  const query = $('query').value.trim(); const key = keyNow()
-  $('status').textContent = 'Searching titles…'
-  if (!commercialLicenseCleared) { renderNotice(query, 'TMDB provider search will turn on after commercial API licensing is configured.'); $('status').textContent = 'Provider API mode is not enabled.'; return }
-  if (!key) { renderNotice(query, 'Add a TMDB API key to browse results, or open a JustWatch search.'); $('status').textContent = 'No TMDB key set.'; return }
-  try {
-    const params = new URLSearchParams({ query, include_adult: 'false', language: 'en-US', api_key: key })
-    const response = await fetch(`https://api.themoviedb.org/3/search/multi?${params}`)
-    if (!response.ok) throw new Error(`TMDB search returned ${response.status}.`)
-    const data = await response.json(); const items = (data.results || []).filter(item => ['movie','tv'].includes(item.media_type)); renderItems(items); $('status').textContent = `${items.length} titles found.`
-  } catch (error) { $('results').innerHTML = `<div class="empty error" style="grid-column:1/-1">${escape(error.message || 'Could not search TMDB. Check the key and connection.')}</div>`; $('status').textContent = 'Search unavailable.' }
+
+function renderWatchlist() {
+  $('watchlist-panel').hidden = watchlist.length === 0
+  $('watchlist').innerHTML = watchlist.map(item => `<article class="news-item"><a href="${justwatch(item.title, $('region').value)}" target="_blank" rel="noopener noreferrer">${escape(item.title)} (${item.year}) ↗</a><div class="news-meta"><span>${escape(item.type)}</span><button class="btn btn--quiet" data-remove="${escape(keyOf(item))}">Remove</button></div></article>`).join('')
+  $('watchlist').querySelectorAll('[data-remove]').forEach(button => button.addEventListener('click', () => {
+    watchlist = watchlist.filter(item => keyOf(item) !== button.dataset.remove)
+    saveWatchlist()
+    renderResults()
+  }))
 }
-async function loadProviders(id, type, title) {
-  const key = keyNow(); const region = $('region').value
-  lastSelection = { id, type, title }
-  $('availability').hidden = false; $('selected-title').textContent = title; $('providers').innerHTML = '<div class="empty">Loading current availability…</div>'
-  try {
-    const response = await fetch(`https://api.themoviedb.org/3/${type}/${encodeURIComponent(id)}/watch/providers?${new URLSearchParams({ api_key: key })}`)
-    if (!response.ok) throw new Error(`Provider lookup returned ${response.status}.`)
-    const data = await response.json(); const country = data.results?.[region]
-    if (!country) { $('providers').innerHTML = `<div class="empty">No provider list is currently available for ${escape(region)}. <p><a href="${justwatchLink(title, region)}" target="_blank" rel="noopener noreferrer">Search on JustWatch ↗</a></p></div>`; return }
-    const groups = [['Stream', country.flatrate], ['Free / with ads', country.free], ['Rent', country.rent], ['Buy', country.buy]].filter(([, list]) => list?.length)
-    $('providers').innerHTML = `${groups.map(([label, list]) => `<div class="source-row"><span><b>${label}</b></span><div class="provider-list">${list.map(provider => `<a class="provider-pill" href="${escape(country.link || justwatchLink(title, region))}" target="_blank" rel="noopener noreferrer">${provider.logo_path ? `<img src="https://image.tmdb.org/t/p/w92${provider.logo_path}" alt="">` : ''}<span>${escape(provider.provider_name)}</span></a>`).join('')}</div></div>`).join('')}<p><a href="${escape(country.link || justwatchLink(title, region))}" target="_blank" rel="noopener noreferrer">See source availability ↗</a></p>`
-  } catch (error) { $('providers').innerHTML = `<div class="empty error">${escape(error.message || 'Could not load provider data.') } <p><a href="${justwatchLink(title, region)}" target="_blank" rel="noopener noreferrer">Search JustWatch ↗</a></p></div>` }
+
+function card(item, region) {
+  const saved = watchlist.some(entry => keyOf(entry) === keyOf(item))
+  return `<article class="result-item"><span class="eyebrow">${escape(item.type)} · ${item.year} · ${escape(item.genres.join(' / '))}</span><h3>${escape(item.title)}</h3><p>${escape(item.note)}</p><div class="actions"><a class="btn btn--outline" href="${justwatch(item.title, region)}" target="_blank" rel="noopener noreferrer">Where to watch ↗</a><button class="btn btn--quiet" data-save="${escape(keyOf(item))}" aria-label="${saved ? 'Remove from watchlist' : 'Add to watchlist'}">${saved ? '★ Saved' : '☆ Watchlist'}</button></div></article>`
 }
-$('api-key').value = apiKey
-$('api-key').addEventListener('input', () => { apiKey = $('api-key').value.trim() })
-$('region').addEventListener('change', () => {
-  $('region-label').textContent = $('region').selectedOptions[0].textContent
-  // Availability and JustWatch links are country-specific, so existing results
-  // must not keep pointing at the previous region.
-  if (lastItems.length) renderItems(lastItems)
-  else if (lastNotice) renderNotice(lastNotice.query, lastNotice.message)
-  if (lastSelection) void loadProviders(lastSelection.id, lastSelection.type, lastSelection.title)
+
+function currentResults() {
+  const query = $('query').value.trim().toLowerCase()
+  return CATALOG.filter(item => (filterType === 'all' || item.type === filterType) && (filterGenre === 'all' || item.genres.includes(filterGenre)) && (!query || `${item.title} ${item.note} ${item.genres.join(' ')}`.toLowerCase().includes(query)))
+}
+
+function renderResults(items = currentResults()) {
+  const region = $('region').value
+  $('count').textContent = `${items.length} title${items.length === 1 ? '' : 's'}`
+  $('heading').textContent = $('query').value.trim() ? `Results for “${$('query').value.trim()}”` : 'All titles'
+  $('results').innerHTML = items.length ? items.map(item => card(item, region)).join('') : '<div class="empty" style="grid-column:1/-1">No title matched. Try a shorter search, or switch genre and type.</div>'
+  $('results').querySelectorAll('[data-save]').forEach(button => button.addEventListener('click', () => {
+    const item = CATALOG.find(entry => keyOf(entry) === button.dataset.save)
+    if (!item) return
+    if (watchlist.some(entry => keyOf(entry) === keyOf(item))) watchlist = watchlist.filter(entry => keyOf(entry) !== keyOf(item))
+    else watchlist = [item, ...watchlist]
+    saveWatchlist()
+    renderResults()
+    $('status').textContent = watchlist.some(entry => keyOf(entry) === keyOf(item)) ? `${item.title} added to your watchlist.` : `${item.title} removed from your watchlist.`
+  }))
+}
+
+genreOptions()
+$('search-form').addEventListener('submit', event => { event.preventDefault(); filterType = $('type').value; filterGenre = $('genre').value; renderResults() })
+$('type').addEventListener('change', () => { filterType = $('type').value; renderResults() })
+$('genre').addEventListener('change', () => { filterGenre = $('genre').value; renderResults() })
+$('query').addEventListener('input', () => renderResults())
+$('region').addEventListener('change', () => { renderResults(); renderWatchlist() })
+$('surprise').addEventListener('click', () => {
+  const pool = currentResults()
+  if (!pool.length) { $('status').textContent = 'Nothing to pick from. Clear the search first.'; return }
+  const pick = pool[Math.floor(Math.random() * pool.length)]
+  $('status').textContent = `Try ${pick.title} (${pick.year}).`
+  renderResults([pick])
 })
-$('search-form').addEventListener('submit', event => { event.preventDefault(); void search() })
+$('clear-list').addEventListener('click', () => { watchlist = []; saveWatchlist(); renderResults() })
+renderResults()
+renderWatchlist()

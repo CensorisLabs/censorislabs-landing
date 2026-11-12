@@ -19,10 +19,14 @@ const newsroomLinks = [
 const readJson = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback } catch { return fallback } }
 const storedSources = readJson('censoris-bank-sources', null)
 const usableSources = Array.isArray(storedSources) ? storedSources.filter(source => source && typeof source.url === 'string' && source.url.trim()) : []
-let sources = usableSources.length ? usableSources : defaultSources
+const customSources = usableSources.filter(source => !defaultSources.some(base => base.url === source.url))
+let sources = [...defaultSources, ...customSources]
 const storedArticles = readJson('censoris-bank-headlines', [])
 let articles = Array.isArray(storedArticles) ? storedArticles.filter(article => article && typeof article === 'object' && article.title) : []
 let lastRefresh = Number(localStorage.getItem('censoris-bank-last-refresh') || 0)
+let savedIds = new Set(readJson('censoris-bank-saved', []))
+let savedOnly = false
+let filterText = ''
 let isRefreshing = false
 
 mountApp({
@@ -31,7 +35,7 @@ mountApp({
   eyebrow: 'INDIA · BANKING BRIEF',
   title: 'The banking signal, gathered.',
   description: 'Official Reserve Bank of India and SEBI updates, gathered locally and refreshed every two hours while the app is open. Headlines link to their original sources.',
-  content: `<div class="content-grid"><section class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><p class="eyebrow">LATEST UPDATES</p><h2>Source-linked headlines</h2></div><button class="btn btn--outline" id="refresh">↻ Refresh now</button></div><p class="muted-copy" id="refresh-state" aria-live="polite">Loading local feed cache…</p><div class="news-list" id="headlines"></div></section><aside class="result-card"><p class="eyebrow">CONNECTED SOURCES</p><h2>Primary feeds</h2><div id="source-list"></div><div class="feature-lock"><span><b>Add publisher feeds & topic alerts</b><small>Custom RSS sources · private watch filters</small></span></div><p class="notice">Automatic checks run every two hours while this app is open, and resume when it is reopened. The last headlines remain available offline. A complete “all sources” feed does not exist, so you can add feeds you are entitled to use with Pro.</p></aside></div><section class="panel" style="margin-top:18px"><p class="eyebrow">MORE NEWSROOMS</p><h2>Open a publisher directly</h2><p class="muted-copy">These links open each newsroom’s latest banking coverage. The app does not republish publisher RSS content.</p><div id="newsroom-links"></div></section>`,
+  content: `<div class="content-grid"><section class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><p class="eyebrow">LATEST UPDATES</p><h2>Source-linked headlines</h2></div><button class="btn btn--outline" id="refresh">↻ Refresh now</button></div><p class="muted-copy" id="refresh-state" aria-live="polite">Loading local feed cache…</p><div class="actions"><input id="filter" type="search" placeholder="Filter headlines" aria-label="Filter headlines" style="flex:1"><button class="btn btn--quiet" id="show-saved">Saved only</button></div><div class="news-list" id="headlines"></div></section><aside class="result-card"><p class="eyebrow">CONNECTED SOURCES</p><h2>Primary feeds</h2><div id="source-list"></div><form id="feed-form" class="field" style="margin-top:14px"><label for="feed-url">Add a publisher RSS/Atom feed</label><div class="actions" style="margin-top:6px"><input id="feed-url" type="url" placeholder="https://example.com/feed.xml" style="flex:1"><button class="btn btn--outline">Add feed</button></div></form><div id="custom-feeds"></div><p class="notice">Automatic checks run every two hours while this app is open, and resume when it is reopened. The last headlines remain available offline. A complete “all sources” feed does not exist. Add any RSS or Atom feed you are entitled to use; it stays in this browser.</p></aside></div><section class="panel" style="margin-top:18px"><p class="eyebrow">MORE NEWSROOMS</p><h2>Open a publisher directly</h2><p class="muted-copy">These links open each newsroom’s latest banking coverage. The app does not republish publisher RSS content.</p><div id="newsroom-links"></div></section>`,
 })
 
 const $ = (id) => document.getElementById(id)
@@ -39,14 +43,27 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, character => ({ 
 const safeUrl = (value) => { try { const url = new URL(value); return url.protocol === 'https:' ? url.href : '' } catch { return '' } }
 
 function renderSources() {
-  $('source-list').innerHTML = sources.map(source => `<div class="source-row"><span><b>${escapeHtml(source.name)}</b><small>${escapeHtml(source.category || 'Custom feed')}</small></span><span class="pill">RSS</span></div>`).join('')
+  $('source-list').innerHTML = sources.map(source => `<div class="source-row"><span><b>${escapeHtml(source.name)}</b><small>${escapeHtml(source.category || 'Custom feed')}</small></span>${source.category === 'Custom feed' ? `<button class="btn btn--quiet" data-remove-feed="${escapeHtml(source.id)}" aria-label="Remove ${escapeHtml(source.name)}">Remove</button>` : '<span class="pill">RSS</span>'}</div>`).join('')
+  $('source-list').querySelectorAll('[data-remove-feed]').forEach(button => button.addEventListener('click', () => {
+    sources = sources.filter(source => source.id !== button.dataset.removeFeed)
+    writeCache('censoris-bank-sources', JSON.stringify(sources.filter(source => source.category === 'Custom feed')))
+    renderSources()
+  }))
 }
 
 function renderHeadlines() {
-  $('headlines').innerHTML = articles.length ? articles.map(article => {
+  const query = filterText.toLowerCase()
+  const visible = articles.filter(article => (!savedOnly || savedIds.has(article.id)) && (!query || `${article.title} ${article.source}`.toLowerCase().includes(query)))
+  $('headlines').innerHTML = visible.length ? visible.map(article => {
     const link = safeUrl(article.link)
-    return `<article class="news-item"><a href="${escapeHtml(link || '#')}" target="_blank" rel="noreferrer noopener">${escapeHtml(article.title)}</a><div class="news-meta"><span>${escapeHtml(article.source)}</span><time>${escapeHtml(article.date || 'Recently published')}</time></div></article>`
-  }).join('') : '<div class="empty">No cached headlines yet. Connect to the internet and refresh the official feeds.</div>'
+    return `<article class="news-item"><a href="${escapeHtml(link || '#')}" target="_blank" rel="noreferrer noopener">${escapeHtml(article.title)}</a><div class="news-meta"><span>${escapeHtml(article.source)}</span><time>${escapeHtml(article.date || 'Recently published')}</time><button class="btn btn--quiet" data-save="${escapeHtml(article.id)}" aria-label="${savedIds.has(article.id) ? 'Remove from saved' : 'Save headline'}">${savedIds.has(article.id) ? '★' : '☆'}</button></div></article>`
+  }).join('') : `<div class="empty">${savedOnly ? 'No saved headlines yet. Tap ☆ on a headline to keep it.' : query ? 'No headlines match that filter.' : 'No cached headlines yet. Connect to the internet and refresh the official feeds.'}</div>`
+  $('headlines').querySelectorAll('[data-save]').forEach(button => button.addEventListener('click', () => {
+    const id = button.dataset.save
+    if (savedIds.has(id)) savedIds.delete(id); else savedIds.add(id)
+    writeCache('censoris-bank-saved', JSON.stringify([...savedIds]))
+    renderHeadlines()
+  }))
 }
 
 function parseFeed(xml, source) {
@@ -98,6 +115,21 @@ async function refresh() {
   }
 }
 
+$('feed-form').addEventListener('submit', event => {
+  event.preventDefault()
+  const value = $('feed-url').value.trim()
+  let url
+  try { url = new URL(value) } catch { $('refresh-state').textContent = 'Enter a full https:// feed URL.'; return }
+  if (url.protocol !== 'https:') { $('refresh-state').textContent = 'Only https:// feeds can be added.'; return }
+  if (sources.some(source => source.url === url.href)) { $('refresh-state').textContent = 'That feed is already in the list.'; return }
+  sources = [...sources, { id: `custom-${Date.now()}`, name: url.hostname, url: url.href, category: 'Custom feed' }]
+  writeCache('censoris-bank-sources', JSON.stringify(sources.filter(source => source.category === 'Custom feed')))
+  $('feed-url').value = ''
+  renderSources()
+  void refresh()
+})
+$('filter').addEventListener('input', event => { filterText = event.currentTarget.value.trim(); renderHeadlines() })
+$('show-saved').addEventListener('click', event => { savedOnly = !savedOnly; event.currentTarget.textContent = savedOnly ? 'Show all' : 'Saved only'; renderHeadlines() })
 renderSources(); renderHeadlines()
 $('newsroom-links').innerHTML = newsroomLinks.map(([label, url]) => `<div class="source-row"><span>${escapeHtml(label)}</span><a class="btn btn--quiet" href="${url}" target="_blank" rel="noreferrer noopener">Open ↗</a></div>`).join('')
 $('refresh').addEventListener('click', () => { void refresh() })

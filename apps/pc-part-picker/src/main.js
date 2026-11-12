@@ -46,10 +46,30 @@ mountApp({
   eyebrow: 'PC HARDWARE · COMPATIBILITY',
   title: 'Plan a build with confidence.',
   description: 'Choose parts, enter prices from your preferred shops, and catch common socket, memory, clearance, and power mismatches before you buy.',
-  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">YOUR BUILD</p><h2>Choose components</h2><div id="part-list"></div><div class="actions"><button class="btn" id="save-build">Save this build</button><button class="btn btn--quiet" id="reset">Clear build</button></div><p class="status" id="save-status" aria-live="polite"></p></section><aside class="result-card"><span class="metric-label">ESTIMATED BUILD TOTAL</span><div class="metric" id="total">₹0</div><div class="metric-list"><div class="metric-row"><span>Estimated component draw</span><strong id="draw">—</strong></div><div class="metric-row"><span>Suggested PSU headroom</span><strong id="headroom">—</strong></div></div><p class="notice" id="compatibility" aria-live="polite">Choose components to check the selected combination.</p></aside></div><section class="panel" style="margin-top:18px"><p class="eyebrow">CENSORISLABS PRO</p><h2>Keep more than one build.</h2><p>Compare saved configurations, track your own shop prices, and export a clean parts list for your next upgrade.</p><div class="feature-lock"><span><b>Build library & price comparison</b><small>Multiple local builds · no account required</small></span></div><p class="muted-copy" style="margin:14px 0 0">Compatibility checks cover the fields shown here. Check exact board BIOS support, cooler fit, power connectors, and vendor specifications before purchase.</p></section>`,
+  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">YOUR BUILD</p><h2>Choose components</h2><div id="part-list"></div><div class="field"><label for="build-name">Name this build</label><input id="build-name" placeholder="e.g. Studio PC" maxlength="40"></div><div class="actions"><button class="btn" id="save-build">Save this build</button><button class="btn btn--outline" id="export-build">Copy parts list</button><button class="btn btn--quiet" id="reset">Clear build</button></div><p class="status" id="save-status" aria-live="polite"></p><div id="build-library"></div></section><aside class="result-card"><span class="metric-label">ESTIMATED BUILD TOTAL</span><div class="metric" id="total">₹0</div><div class="metric-list"><div class="metric-row"><span>Estimated component draw</span><strong id="draw">—</strong></div><div class="metric-row"><span>Suggested PSU headroom</span><strong id="headroom">—</strong></div></div><p class="notice" id="compatibility" aria-live="polite">Choose components to check the selected combination.</p></aside></div>`,
 })
 
 const $ = (id) => document.getElementById(id)
+const LIBRARY_KEY = 'censoris-pc-builds'
+function readBuilds() { try { const value = JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]'); return Array.isArray(value) ? value.filter(entry => entry && entry.name && entry.state && typeof entry.state === 'object') : [] } catch { return [] } }
+let builds = readBuilds()
+function writeBuilds() { try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(builds.slice(0, 20))) } catch {} }
+function snapshot(name) { return { name, savedAt: Date.now(), state: { ...state }, prices: { ...priceState }, storageText: document.querySelector('[data-key="storage"]')?.selectedOptions[0]?.text || '', total: Object.values(priceState).reduce((sum, price) => sum + (Number(price) || 0), 0) } }
+function renderLibrary() {
+  $('build-library').innerHTML = builds.length ? `<p class="eyebrow" style="margin-top:20px">SAVED BUILDS</p>${builds.map((entry, index) => `<div class="source-row"><span><b>${escapeHtml(entry.name)}</b><small>${money(entry.total)} · ${new Date(entry.savedAt).toLocaleDateString('en-IN')}</small></span><span class="actions"><button class="btn btn--quiet" data-load="${index}">Load</button><button class="btn btn--quiet" data-delete="${index}" aria-label="Delete ${escapeHtml(entry.name)}">×</button></span></div>`).join('')}` : ''
+  $('build-library').querySelectorAll('[data-load]').forEach(button => button.addEventListener('click', () => {
+    const entry = builds[Number(button.dataset.load)]
+    if (!entry) return
+    Object.assign(state, entry.state)
+    Object.assign(priceState, entry.prices || {})
+    $('build-name').value = entry.name
+    renderList(); update()
+    $('save-status').textContent = `Loaded “${entry.name}”.`
+  }))
+  $('build-library').querySelectorAll('[data-delete]').forEach(button => button.addEventListener('click', () => {
+    builds.splice(Number(button.dataset.delete), 1); writeBuilds(); renderLibrary()
+  }))
+}
 const money = (value) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`
 const selection = (key) => parts[key]?.[state[key]]
 function options(key) { return parts[key].map((part, index) => `<option value="${index}"${state[key] === index ? ' selected' : ''}>${part.name}</option>`).join('') }
@@ -86,6 +106,20 @@ function update() {
   $('compatibility').className = issues.length ? 'notice error' : 'notice'
   localStorage.setItem('censoris-pc-build', JSON.stringify({ ...state, prices: priceState, storageText: document.querySelector('[data-key="storage"]')?.selectedOptions[0]?.text || '' }))
 }
-renderList(); update()
-$('save-build').addEventListener('click', () => { $('save-status').textContent = 'Build saved locally on this device.' })
+renderList(); update(); renderLibrary()
+$('save-build').addEventListener('click', () => {
+  const name = $('build-name').value.trim() || `Build ${builds.length + 1}`
+  const entry = snapshot(name)
+  const existing = builds.findIndex(build => build.name.toLowerCase() === name.toLowerCase())
+  if (existing >= 0) builds[existing] = entry; else builds.unshift(entry)
+  writeBuilds(); renderLibrary()
+  $('save-status').textContent = `Saved “${name}” on this device.`
+})
+$('export-build').addEventListener('click', async () => {
+  const lines = categories.map(([key, label]) => `${label}: ${selection(key)?.name || 'not selected'}${priceState[key] ? ` — ₹${Number(priceState[key]).toLocaleString('en-IN')}` : ''}`)
+  lines.push(`Estimated total: ${money(Object.values(priceState).reduce((sum, price) => sum + (Number(price) || 0), 0))}`)
+  const text = lines.join(String.fromCharCode(10))
+  try { await navigator.clipboard.writeText(text); $('save-status').textContent = 'Parts list copied to the clipboard.' }
+  catch { $('save-status').textContent = text }
+})
 $('reset').addEventListener('click', () => { localStorage.removeItem('censoris-pc-build'); location.reload() })

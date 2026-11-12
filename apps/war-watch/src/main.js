@@ -6,7 +6,7 @@ mountApp({
   appId: 'war-watch', eyebrow: 'WORLD NEWS · CONFLICT MONITOR', title: 'The world, with sources attached.',
   version: APP_VERSION,
   description: 'A global conflict-news brief from monitored online reporting. Headlines update every two minutes while this app is open, with links to the original publishers.',
-  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">LIVE MONITOR</p><h2>Conflict and security headlines</h2></div><span class="live-badge">AUTO-REFRESH · 2 MIN</span></div><div class="actions"><button class="btn" id="refresh">Refresh now</button><select id="topic" class="feed-input" style="max-width:260px"><option value="conflicts">Armed conflicts and ceasefires</option><option value="humanitarian">Conflict and humanitarian response</option><option value="regional">Wars, attacks and military operations</option></select></div><p class="status" id="status" aria-live="polite">Waiting for the first refresh.</p><div id="results" class="news-list" aria-live="polite"><div class="empty">Connecting to global news indexes…</div></div><p class="source-credit">Search index: GDELT DOC 2.0. GDELT monitors online sources worldwide, but no news index includes every outlet or guarantees immediate publication. Headlines and reporting belong to their publishers; check multiple sources for developing events.</p></section>`
+  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">LIVE MONITOR</p><h2>Conflict and security headlines</h2></div><span class="live-badge">AUTO-REFRESH · 2 MIN</span></div><div class="actions"><button class="btn" id="refresh">Refresh now</button><button class="btn btn--quiet" id="saved-view">Saved</button><select id="topic" class="feed-input" style="max-width:260px"><option value="conflicts">Armed conflicts and ceasefires</option><option value="humanitarian">Conflict and humanitarian response</option><option value="regional">Wars, attacks and military operations</option></select></div><p class="status" id="status" aria-live="polite">Waiting for the first refresh.</p><div id="results" class="news-list" aria-live="polite"><div class="empty">Connecting to global news indexes…</div></div><p class="source-credit">Search index: GDELT DOC 2.0. GDELT monitors online sources worldwide, but no news index includes every outlet or guarantees immediate publication. Headlines and reporting belong to their publishers; check multiple sources for developing events.</p></section>`
 })
 
 const $ = (id) => document.getElementById(id)
@@ -16,7 +16,26 @@ const queries = {
   humanitarian: '(conflict OR war) AND (humanitarian OR displacement OR aid OR civilian OR refugee)',
   regional: '(airstrike OR "drone strike" OR artillery OR missile OR invasion OR hostilities OR battlefield)',
 }
-let timer = null, controller = null, lastKeys = new Set(), isLoading = false
+let timer = null, controller = null, lastKeys = new Set(), isLoading = false, savedView = false
+const SAVED_KEY = 'censoris-war-saved'
+const TOPIC_KEY = 'censoris-war-topic'
+const readSaved = () => { try { const value = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(value) ? value : [] } catch { return [] } }
+let saved = readSaved()
+try { const topic = localStorage.getItem(TOPIC_KEY); if (topic && ['conflicts','humanitarian','regional'].includes(topic)) $('topic').value = topic } catch {}
+function toggleSaved(item) {
+  if (saved.some(entry => entry.url === item.url)) saved = saved.filter(entry => entry.url !== item.url)
+  else saved = [{ title: item.title, url: item.url, domain: item.domain, seendate: item.seendate, sourcecountry: item.sourcecountry }, ...saved].slice(0, 100)
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)) } catch {}
+  if (savedView) renderSaved()
+  return saved.some(entry => entry.url === item.url)
+}
+function renderSaved() {
+  savedView = true
+  $('saved-view').textContent = 'Show live'
+  $('status').textContent = `${saved.length} saved stor${saved.length === 1 ? 'y' : 'ies'} on this device`
+  $('results').innerHTML = saved.length ? saved.map(item => `<article class="news-item war-story"><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">${escape(item.title)} ↗</a><div class="news-meta"><span>${escape(item.domain || 'Original source')}</span><span>${escape(seenDate(item.seendate))}</span><button class="btn btn--quiet" data-unsave="${escape(item.url)}">Remove</button></div></article>`).join('') : '<div class="empty">No saved stories yet. Tap ☆ Save on a live headline.</div>'
+  $('results').querySelectorAll('[data-unsave]').forEach(button => button.addEventListener('click', () => { saved = saved.filter(entry => entry.url !== button.dataset.unsave); try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)) } catch {}; renderSaved() }))
+}
 function seenDate(value) {
   if (!/^\d{14}$/.test(value || '')) return value || 'Date not provided'
   return new Date(`${value.slice(0,4)}-${value.slice(4,6)}-${value.slice(6,8)}T${value.slice(8,10)}:${value.slice(10,12)}:${value.slice(12,14)}Z`).toLocaleString()
@@ -31,9 +50,14 @@ function render(articles) {
     const key = item.url
     const fresh = !lastKeys.has(key)
     lastKeys.add(key)
-    return `<article class="news-item war-story"><div class="section-heading"><span class="eyebrow">${region}</span>${fresh ? '<span class="pill">NEW</span>' : ''}</div><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a><div class="news-meta"><span>${domain}</span><span>${date}</span></div></article>`
+    return `<article class="news-item war-story"><div class="section-heading"><span class="eyebrow">${region}</span>${fresh ? '<span class="pill">NEW</span>' : ''}</div><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a><div class="news-meta"><span>${domain}</span><span>${date}</span><button class="btn btn--quiet" data-save="${escape(item.url)}" data-index="${visible.indexOf(item)}">${saved.some(entry => entry.url === item.url) ? '★ Saved' : '☆ Save'}</button></div></article>`
   }).join('')
   $('results').innerHTML = markup || '<div class="empty">No stories matched this filter in the current index window.</div>'
+  $('results').querySelectorAll('[data-save]').forEach(button => button.addEventListener('click', () => {
+    const item = visible[Number(button.dataset.index)]
+    if (!item) return
+    button.textContent = toggleSaved(item) ? '★ Saved' : '☆ Save'
+  }))
 }
 async function refresh() {
   if (isLoading || document.hidden) return
@@ -58,6 +82,11 @@ async function refresh() {
 }
 function schedule() { if (timer) clearInterval(timer); timer = setInterval(() => { if (!document.hidden) void refresh() }, 120_000) }
 $('refresh').addEventListener('click', refresh)
-$('topic').addEventListener('change', () => { lastKeys = new Set(); void refresh() })
+$('topic').addEventListener('change', () => {
+  lastKeys = new Set()
+  try { localStorage.setItem(TOPIC_KEY, $('topic').value) } catch {}
+  savedView = false; $('saved-view').textContent = 'Saved'; void refresh()
+})
+$('saved-view').addEventListener('click', () => { if (savedView) { savedView = false; $('saved-view').textContent = 'Saved'; void refresh() } else renderSaved() })
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void refresh() })
 schedule(); void refresh()

@@ -15,7 +15,7 @@ The suite contains ArthaSetu and ten independent companion apps. App source, com
 | Open Social | `social-feed` | Public timeline, search, posts, likes and boosts for Mastodon-compatible servers | Chosen server; an optional token stays in memory only |
 | Archive Explorer | `archive-explorer` | Internet Archive catalog search, type filters and item links | Internet Archive Advanced Search API |
 | Offline Arcade | `offline-arcade` | 2048, memory match and tic-tac-toe | None after install |
-| Where to Watch | `movie-guide` | Movie/show search and regional streaming-provider discovery | JustWatch search links; TMDB provider API only after CensorisLabs has a commercial license |
+| Where to Watch | `movie-guide` | Offline curated film/show catalogue, watchlist and regional JustWatch links | JustWatch search links; no API key or commercial licence needed |
 | World Conflict Brief | `war-watch` | Conflict and humanitarian news headlines with publisher links | GDELT DOC 2.0, refresh every two minutes while the app is open |
 
 Third-party news and provider lists can be incomplete or delayed. Source links remain visible; the apps do not claim coverage of every publisher or immediate alerts while closed. Qur’an translations keep their source attribution. This repository does not mirror entire third-party libraries.
@@ -45,6 +45,6 @@ Local Android builds without a release keystore produce a debug APK. The release
 
 ## External data requirements
 
-- **Where to Watch:** TMDB says its free developer API is for non-commercial use, requires attribution and an approved logo, and commercial projects should obtain a commercial license. The app includes attribution and keeps provider API mode disabled until configured. Watch-provider results are sourced with JustWatch and are not exhaustive. Do not set `VITE_TMDB_COMMERCIAL_LICENSE=true` before CensorisLabs receives the commercial license.
+- **Where to Watch:** ships a curated, on-device catalogue and links each title to the current JustWatch page for the selected country. It needs no TMDB key, account or commercial licence, and it does not copy provider lists into the app.
 - **World Conflict Brief:** uses GDELT's online news index, not a full list of all reporting outlets. The two-minute cadence runs only while open; there is no push service.
 - **Open Social:** is a Mastodon-compatible ActivityPub client, not a client for X. Public timeline and status search availability vary by server.

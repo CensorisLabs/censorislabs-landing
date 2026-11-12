@@ -6,10 +6,19 @@ mountApp({
   appId: 'social-feed', eyebrow: 'SOCIAL · FEDIVERSE CLIENT', title: 'Your social web, your pace.',
   version: APP_VERSION,
   description: 'A lightweight client for public Mastodon-compatible timelines. Browse without an account, or connect an instance with a session-only access token to post.',
-  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">CONNECT TO AN INSTANCE</p><h2>Choose your social home</h2><div class="field-grid"><div class="field"><label for="instance">Server address</label><input id="instance" value="mastodon.world" autocomplete="url" placeholder="mastodon.world"></div><div class="field"><label for="token">Access token · optional</label><input id="token" type="password" autocomplete="off" placeholder="Used only in this open session"></div></div><div class="actions"><button class="btn" id="refresh">Load public timeline</button><button class="btn btn--outline" id="search-feed">Search posts</button></div><div class="field" style="margin-top:14px"><label for="query">Search text</label><input id="query" placeholder="Topics, tags, or phrases"></div><p class="source-credit">Public post search depends on the chosen server’s search setup. The client does not scrape X or bypass sign-in controls. Never paste a token on a shared device.</p></section><aside class="panel"><p class="eyebrow">WRITE A POST</p><h2>Keep it yours.</h2><textarea id="composer" rows="5" maxlength="500" placeholder="Write a short post…" style="width:100%;background:#17191e;border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:12px"></textarea><div class="actions"><button class="btn" id="publish">Publish to instance</button><span class="status" id="status" aria-live="polite">Public preview is ready.</span></div></aside></div><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">PUBLIC TIMELINE</p><h2>Across your instance</h2></div><span class="pill" id="feed-source">mastodon.world</span></div><div id="results" class="news-list" aria-live="polite"><div class="empty">Load a public timeline to see posts from the selected instance.</div></div></section>`
+  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">CONNECT TO AN INSTANCE</p><h2>Choose your social home</h2><div class="field-grid"><div class="field"><label for="instance">Server address</label><input id="instance" value="mastodon.world" autocomplete="url" placeholder="mastodon.world"></div><div class="field"><label for="token">Access token · optional</label><input id="token" type="password" autocomplete="off" placeholder="Used only in this open session"></div></div><div class="actions"><button class="btn" id="refresh">Load public timeline</button><button class="btn btn--outline" id="search-feed">Search posts</button></div><div class="field" style="margin-top:14px"><label for="query">Search text</label><input id="query" placeholder="Topics, tags, or phrases"></div><p class="source-credit">Public post search depends on the chosen server’s search setup. The client does not scrape X or bypass sign-in controls. Never paste a token on a shared device.</p></section><aside class="panel"><p class="eyebrow">WRITE A POST</p><h2>Keep it yours.</h2><textarea id="composer" rows="5" maxlength="500" placeholder="Write a short post…" style="width:100%;background:#17191e;border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:12px"></textarea><div class="actions"><button class="btn" id="publish">Publish to instance</button><span class="pill" id="count">0 / 500</span><span class="status" id="status" aria-live="polite">Public preview is ready.</span></div></aside></div><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">PUBLIC TIMELINE</p><h2>Across your instance</h2></div><span class="pill" id="feed-source">mastodon.world</span></div><div id="results" class="news-list" aria-live="polite"><div class="empty">Load a public timeline to see posts from the selected instance.</div></div></section>`
 })
 
 const $ = (id) => document.getElementById(id)
+const SERVER_KEY = 'censoris-social-server'
+const DRAFT_KEY = 'censoris-social-draft'
+try {
+  const server = localStorage.getItem(SERVER_KEY)
+  if (server) $('instance').value = server
+  const draft = localStorage.getItem(DRAFT_KEY)
+  if (draft) { $('composer').value = draft; $('count').textContent = `${draft.length} / 500` }
+} catch {}
+function saveDraft() { try { localStorage.setItem(DRAFT_KEY, $('composer').value) } catch {} }
 const safeText = (html) => { const node = new DOMParser().parseFromString(html || '', 'text/html'); return node.body.textContent?.trim() || '' }
 const escape = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 function instanceBase() {
@@ -62,13 +71,17 @@ async function loadTimeline() {
 }
 $('refresh').addEventListener('click', loadTimeline)
 $('search-feed').addEventListener('click', loadTimeline)
-$('instance').addEventListener('change', () => { $('feed-source').textContent = $('instance').value.trim() || 'server' })
+$('instance').addEventListener('change', () => {
+  $('feed-source').textContent = $('instance').value.trim() || 'server'
+  try { localStorage.setItem(SERVER_KEY, $('instance').value.trim()) } catch {}
+})
+$('composer').addEventListener('input', () => { $('count').textContent = `${$('composer').value.length} / 500`; saveDraft() })
 $('publish').addEventListener('click', async () => {
   try {
     const token = $('token').value.trim(); if (!token) throw new Error('Add a session-only access token with write:statuses permission to publish.')
     const status = $('composer').value.trim(); if (!status) throw new Error('Write a post first.')
     const response = await fetch(`${instanceBase()}/api/v1/statuses`, { method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' }, body: JSON.stringify({ status, visibility: 'public' }) })
     if (!response.ok) throw new Error(`Post was not published (${response.status}). Check token permissions.`)
-    $('composer').value = ''; $('status').textContent = 'Post published.'; await loadTimeline()
+    $('composer').value = ''; saveDraft(); $('count').textContent = '0 / 500'; $('status').textContent = 'Post published.'; await loadTimeline()
   } catch (error) { $('status').textContent = error.message || 'Could not publish.' }
 })

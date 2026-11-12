@@ -189,7 +189,7 @@ export function recurringCommitment(transactions: Array<{ recurring?: 'monthly';
   return { count: rules.length, monthly: rules.reduce((sum, item) => sum + item.amount, 0), merchants: rules.map(item => item.merchant) }
 }
 
-export type CsvRow = { date: string; merchant: string; category: string; type: string; account: string; amount: number }
+export type CsvRow = { date: string; merchant: string; category: string; type: string; account: string; amount: number; splits?: Array<{ category: string; amount: number }> }
 
 /** Serialises ledger rows with RFC 4180 quoting and a leading BOM for Excel. */
 export function ledgerCsv(rows: CsvRow[]): string {
@@ -197,7 +197,28 @@ export function ledgerCsv(rows: CsvRow[]): string {
     const text = String(value)
     return [',', '"', '\n'].some(char => text.includes(char)) ? `"${text.replaceAll('"', '""')}"` : text
   }
-  const header = ['date', 'merchant', 'category', 'type', 'account', 'amount']
-  const lines = [header, ...rows.map(row => [row.date, row.merchant, row.category, row.type, row.account, row.amount])]
+  const header = ['date', 'merchant', 'category', 'type', 'account', 'amount', 'splits']
+  const lines = [header, ...rows.map(row => [row.date, row.merchant, row.category, row.type, row.account, row.amount, row.splits?.map(part => `${part.category}:${part.amount}`).join(' | ') || ''])]
   return String.fromCharCode(65279) + lines.map(line => line.map(cell).join(',')).join(String.fromCharCode(10))
+}
+
+export type Split = { category: string; amount: number }
+export type SplittableTx = { category: string; amount: number; type: TxType; splits?: Split[] }
+
+/** Returns the category parts of a transaction. Falls back to its single
+ * category when splits are absent, empty, negative or do not sum to the total. */
+export function splitParts(transaction: SplittableTx): Split[] {
+  const parts = transaction.splits
+  if (!parts?.length) return [{ category: transaction.category, amount: transaction.amount }]
+  const total = parts.reduce((sum, part) => sum + part.amount, 0)
+  const valid = parts.every(part => typeof part.category === 'string' && part.category.trim().length > 0 && Number.isFinite(part.amount) && part.amount > 0)
+  return valid && Math.abs(total - transaction.amount) < 0.01 ? parts : [{ category: transaction.category, amount: transaction.amount }]
+}
+
+/** Expense totals per category, honouring splits. */
+export function categoryTotals(transactions: SplittableTx[]): Record<string, number> {
+  return transactions.filter(item => item.type === 'expense').reduce<Record<string, number>>((totals, item) => {
+    for (const part of splitParts(item)) totals[part.category] = (totals[part.category] || 0) + part.amount
+    return totals
+  }, {})
 }

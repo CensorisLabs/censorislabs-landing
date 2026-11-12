@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   applyRule,
   detectSubscriptions,
+  categoryTotals,
   formatDate,
   ledgerCsv,
   materializeRecurring,
@@ -101,7 +102,18 @@ test('recurring commitment counts rules, not generated copies', () => {
 })
 
 test('ledger CSV quotes commas and quotes and starts with a BOM', () => {
-  const csv = ledgerCsv([{ date: '2026-01-02', merchant: 'Cafe, "Blue"', category: 'Food', type: 'expense', account: 'UPI', amount: 250 }])
+  const csv = ledgerCsv([{ date: '2026-01-02', merchant: 'Cafe, "Blue"', category: 'Food', type: 'expense', account: 'UPI', amount: 250, splits: [{ category: 'Food', amount: 150 }, { category: 'Home', amount: 100 }] }])
   assert.ok(csv.startsWith(String.fromCharCode(65279) + 'date,merchant'))
   assert.ok(csv.includes('"Cafe, ""Blue"""'))
+  assert.ok(csv.includes('Food:150 | Home:100'))
+})
+
+test('category totals honour a valid two-way split', () => {
+  const tx = [{ category: 'Groceries', amount: 500, type: 'expense' as const, splits: [{ category: 'Groceries', amount: 300 }, { category: 'Home', amount: 200 }] }]
+  assert.deepEqual(categoryTotals(tx), { Groceries: 300, Home: 200 })
+})
+
+test('category totals ignore splits that do not add up', () => {
+  const tx = [{ category: 'Dining', amount: 500, type: 'expense' as const, splits: [{ category: 'Dining', amount: 300 }] }]
+  assert.deepEqual(categoryTotals(tx), { Dining: 500 })
 })

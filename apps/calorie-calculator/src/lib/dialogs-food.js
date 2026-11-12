@@ -23,6 +23,7 @@ import {
   MEALS,
   relativeDate,
 } from './store.js'
+import { barcodeDetectorAvailable, startCameraScan, scanImageFile } from './barcode.js'
 import {
   nutrientsForFood,
   nutrientScore,
@@ -208,20 +209,104 @@ export function openFoodPicker({ date = ui.date, meal = null, mode = 'log', plan
 
 export function openCodeLookup({ date = ui.date, meal = null, mode = 'log', planDate = null } = {}) {
   const targetMeal = meal || mealForNow()
+  const canScan = barcodeDetectorAvailable()
+  const body = `<div class="kc-code">
+    <div class="kc-scan">
+      <video id="scan-video" playsinline muted aria-label="Camera preview for barcode scanning"></video>
+      <div class="kc-scan__idle" id="scan-idle">${icon('barcode')}<b>Scan a barcode</b><small>${canScan ? 'Point the rear camera at the barcode. Decoding happens on this device.' : 'This browser cannot decode barcodes. Type the number below instead.'}</small></div>
+      <div class="kc-scan__reticle" id="scan-reticle" hidden><span></span></div>
+    </div>
+    <div class="kc-scan-actions">
+      ${canScan ? `<button type="button" class="kc-btn kc-btn--soft kc-btn--sm" id="scan-start">${icon('barcode')} Start camera</button><label class="kc-btn kc-btn--ghost kc-btn--sm kc-upload-btn">${icon('upload')} Scan a photo<input id="scan-file" type="file" accept="image/*" hidden></label>` : ''}
+      <span class="kc-scan-status" id="scan-status" role="status"></span>
+    </div>
+    <form id="code-form" class="kc-form">
+      <label class="kc-field"><span>Barcode number</span><input id="code-input" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 8901058001011"></label>
+      <p class="kc-note">${icon('info')} Packaged foods in this database carry a 13-digit demo code. Scanning and lookup work offline; no product service is contacted.</p>
+      <div class="kc-form-actions"><button type="button" class="kc-btn kc-btn--ghost" data-close-modal>Cancel</button><button class="kc-btn" type="submit">${icon('search')} Find food</button></div>
+    </form>
+  </div>`
   openModal({
-    title: 'Barcode lookup',
-    eyebrow: 'OFFLINE CODE SEARCH',
-    subtitle: 'Packaged foods in this database carry a 13-digit demo code. Nothing is sent to a server.',
+    title: 'Scan or enter a barcode',
+    eyebrow: 'ON-DEVICE SCAN',
+    subtitle: 'Camera decoding stays on this device.',
     size: 'sm',
-    body: `<form id="code-form" class="kc-form"><label class="kc-field"><span>Barcode number</span><input id="code-input" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 8901058001011" data-autofocus></label><p class="kc-note">${icon('info')} Camera scanning would need a product catalogue service. This offline lookup works with the codes stored in the food database and your custom foods.</p><div class="kc-form-actions"><button type="button" class="kc-btn kc-btn--ghost" data-close-modal>Cancel</button><button class="kc-btn" type="submit">${icon('search')} Find food</button></div></form>`,
+    body,
     onMount(modal) {
-      modal.querySelector('#code-form').addEventListener('submit', event => {
-        event.preventDefault()
-        const value = modal.querySelector('#code-input').value.replace(/\s/g, '')
-        const food = foodList().find(item => item.code === value)
-        if (!food) { toast('No food matches that code yet. Add it as a custom food.', 'error'); return }
+      const input = modal.querySelector('#code-input')
+      const video = modal.querySelector('#scan-video')
+      const idle = modal.querySelector('#scan-idle')
+      const reticle = modal.querySelector('#scan-reticle')
+      const status = modal.querySelector('#scan-status')
+      const backdrop = modal.closest('.kc-modal-backdrop')
+      let stopCamera = null
+      const observer = new MutationObserver(() => {
+        if (document.body.contains(backdrop)) return
+        observer.disconnect()
+        stopCamera?.()
+        stopCamera = null
+      })
+      observer.observe(document.body, { childList: true })
+
+      const finish = value => {
+        const clean = String(value || '').replace(/\\s/g, '')
+        if (!clean) return
+        input.value = clean
+        const food = foodList().find(item => item.code === clean)
+        if (!food) {
+          status.textContent = `No match for ${clean}. Add it as a custom food.`
+          status.classList.add('is-warn')
+          return
+        }
+        status.classList.remove('is-warn')
         if (mode === 'plan') openPlanPortion(food, planDate || date, targetMeal)
         else openPortion(food, { date, meal: targetMeal })
+      }
+
+      modal.querySelector('#code-form').addEventListener('submit', event => {
+        event.preventDefault()
+        finish(input.value)
+      })
+
+      modal.querySelector('#scan-start')?.addEventListener('click', async () => {
+        status.classList.remove('is-warn')
+        status.textContent = 'Starting camera…'
+        try {
+          stopCamera = await startCameraScan(video, value => {
+            finish(value)
+            toast(`Scanned ${value}`)
+          })
+          idle.hidden = true
+          reticle.hidden = false
+          status.textContent = 'Scanning… hold the barcode inside the frame.'
+        } catch (error) {
+          idle.hidden = false
+          reticle.hidden = true
+          status.classList.add('is-warn')
+          status.textContent = error?.message === 'unsupported'
+            ? 'Camera scanning is not supported here. Type the number instead.'
+            : 'No camera or camera permission refused. Type the number instead.'
+        }
+      })
+
+      modal.querySelector('#scan-file')?.addEventListener('change', async event => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        status.classList.remove('is-warn')
+        status.textContent = 'Reading photo…'
+        try {
+          const value = await scanImageFile(file)
+          if (value) {
+            finish(value)
+            toast(`Scanned ${value}`)
+          } else {
+            status.classList.add('is-warn')
+            status.textContent = 'No barcode found in that photo.'
+          }
+        } catch {
+          status.classList.add('is-warn')
+          status.textContent = 'That photo could not be read.'
+        }
       })
     },
   })

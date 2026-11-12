@@ -35,6 +35,7 @@ export const FEATURE_GROUPS = [
       'Food detail card with portion preview',
       'Half, single and double portion presets',
       'Create custom foods',
+      'On-device camera barcode scanning',
       'Offline barcode/code lookup',
       'Voice food search',
       'Recipe builder',

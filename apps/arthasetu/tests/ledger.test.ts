@@ -9,6 +9,7 @@ import {
   monthLabel,
   monthTotals,
   nextId,
+  recurringCommitment,
   saveRule,
   shiftMonth,
   spendChange,
@@ -87,4 +88,13 @@ test('monthly transactions materialise once per month without duplicates', () =>
   assert.ok(first.slice(1).every(item => item.recurrenceOf === 1))
   const second = materializeRecurring(first, '2026-03')
   assert.equal(second.length, 3)
+})
+
+test('recurring commitment counts rules, not generated copies', () => {
+  const tx = [
+    { id: 1, merchant: 'Rent', amount: 20000, type: 'expense' as const, recurring: 'monthly' as const },
+    { id: 2, merchant: 'Rent', amount: 20000, type: 'expense' as const, recurrenceOf: 1 },
+    { id: 3, merchant: 'Salary', amount: 90000, type: 'income' as const, recurring: 'monthly' as const },
+  ]
+  assert.deepEqual(recurringCommitment(tx), { count: 1, monthly: 20000, merchants: ['Rent'] })
 })

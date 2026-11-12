@@ -182,3 +182,9 @@ export function materializeRecurring<T extends RecurringTx>(transactions: T[], c
   }
   return out
 }
+
+/** Monthly committed spend from active recurring rules (not generated copies). */
+export function recurringCommitment(transactions: Array<{ recurring?: 'monthly'; recurrenceOf?: number; type: TxType; amount: number; merchant: string }>) {
+  const rules = transactions.filter(item => item.recurring === 'monthly' && !item.recurrenceOf && item.type === 'expense')
+  return { count: rules.length, monthly: rules.reduce((sum, item) => sum + item.amount, 0), merchants: rules.map(item => item.merchant) }
+}

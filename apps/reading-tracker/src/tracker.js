@@ -4,6 +4,7 @@ import { buddyMood, buddyLine, computeStreaks, finishedInYear, lastDays, levelIn
 import { booksCSV, notesCSV, quotesCSV, sessionsCSV } from './lib/csv.js'
 import { plainBackup, encryptBackup, decryptBackup, readBackupText } from './lib/crypto.js'
 import { finishForecast, isValidIsbn, markdownArchive, plansToICS, rateFlashcard, recommendBook, weeklyDigest } from './lib/extended.js'
+import { parseGoodreads } from './lib/goodreads.js'
 
 const STORE_KEY = 'censorislabs-reading-tracker-v1'
 const LEGACY_KEY = 'reading-tracker-state'
@@ -77,7 +78,7 @@ export function startReadingTracker(root) {
   const state = loadState()
   let view = 'home', month = (() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() } })()
   let selectedDate = todayISO(), query = '', filter = 'all', collectionFilter = '', sort = 'recent', activeBook = '', activeQuoteId = '', recallRevealed = false, timerBook = '', timerStart = 0, elapsed = 0, timerInterval = 0, bookDraft = null, matchSource = '', cameraStream = null, cameraFrame = 0, cameraDetector = null
-  let notice = '', noticeHandle = 0, importingFile = null, modal = '', reminderTick = 0, timerPreset = 25, timerGoal = 25 * 60, timerBreak = false, timerComplete = false, revealedCard = '', coverOcrWorker = null, coverGuessMode = false
+  let notice = '', noticeHandle = 0, importingFile = null, goodreadsFile = null, modal = '', reminderTick = 0, timerPreset = 25, timerGoal = 25 * 60, timerBreak = false, timerComplete = false, revealedCard = '', coverOcrWorker = null, coverGuessMode = false
 
   const today = () => todayISO()
   const persist = async () => {
@@ -377,6 +378,7 @@ export function startReadingTracker(root) {
   root.addEventListener('submit',e=>{e.preventDefault();submitForm(e.target)})
   root.addEventListener('change',e=>{
     if(e.target.id==='restore-file'){importingFile=e.target.files?.[0]||null;render();return}
+    if(e.target.id==='goodreads-file'){goodreadsFile=e.target.files?.[0]||null;render();return}
     if(e.target.id==='cover-photo-file'){handleCoverPhoto(e.target.files?.[0]);return}
     if(e.target.matches('[data-read-day]'))return
   })
@@ -432,6 +434,18 @@ export function startReadingTracker(root) {
     if(action==='backup-plain'){await download(`reading-tracker-backup-${today()}.json`,JSON.stringify(plainBackup(state),null,2),'application/json');toast('Backup saved. The plain backup is not encrypted.');return}
     if(action==='backup-encrypted'){modal='encrypt';render();return}
     if(action==='restore-backup'){await restoreBackup();return}
+    if(action==='import-goodreads'){
+      if(!goodreadsFile)return toast('Choose a Goodreads CSV first.')
+      try{
+        const parsed=parseGoodreads(await goodreadsFile.text())
+        const existing=new Set(state.books.map(b=>`${String(b.title).toLowerCase()}|${String(b.author||'').toLowerCase()}`))
+        const fresh=parsed.books.filter(b=>!existing.has(`${b.title.toLowerCase()}|${b.author.toLowerCase()}`))
+        if(!fresh.length){goodreadsFile=null;render();return toast('No new titles were found in that export.')}
+        for(const book of fresh)state.books.push({id:uid(),currentPage:0,totalPages:0,status:'planning',tags:[],favorite:false,rating:0,notes:[],quotes:[],...book})
+        await persist();goodreadsFile=null;render();toast(`Imported ${fresh.length} book${fresh.length===1?'':'s'} from Goodreads.`)
+      }catch(error){toast(error.message||'Could not import that CSV.')}
+      return
+    }
     if(action.startsWith('csv-')){const kind=action.slice(4),data=kind==='books'?booksCSV(state):kind==='sessions'?sessionsCSV(state):kind==='notes'?notesCSV(state):quotesCSV(state);await download(`reading-tracker-${kind}-${today()}.csv`,data,'text/csv;charset=utf-8');toast(`${kind} CSV ready to save.`);return}
     if(action==='print-report'){window.print();return}
     if(action==='lookup'){await lookupBook();return}

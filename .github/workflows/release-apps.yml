@@ -41,6 +41,9 @@ jobs:
       - name: Install app dependencies
         working-directory: apps/${{ matrix.app }}
         run: npm install --no-audit --no-fund
+      - name: Run tests where present
+        working-directory: apps/${{ matrix.app }}
+        run: npm test --if-present
       - name: Configure signed Android release
         working-directory: apps/${{ matrix.app }}
         env:
@@ -93,6 +96,9 @@ jobs:
       - name: Install app dependencies
         working-directory: apps/${{ matrix.app }}
         run: npm install --no-audit --no-fund
+      - name: Run tests where present
+        working-directory: apps/${{ matrix.app }}
+        run: npm test --if-present
       - name: Build Windows app
         working-directory: apps/${{ matrix.app }}
         env:
@@ -112,9 +118,25 @@ jobs:
           path: release-assets/${{ matrix.app }}-windows.exe
           if-no-files-found: error
 
+
+  quality:
+    name: Site lint and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install site dependencies
+        run: npm install --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Build site
+        run: npm run build
+
   publish:
     name: Verify size and publish release
-    needs: [android, windows]
+    needs: [android, windows, quality]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

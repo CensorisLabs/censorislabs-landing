@@ -51,7 +51,7 @@ function pad(value: number) {
 }
 
 function formatDisplayDate(year: number, month: number, day: number) {
-  return `${pad(day)} ${MONTHS[month - 1]} ${year}`
+  return `${year}-${pad(month)}-${pad(day)}`
 }
 
 /** Parses dd/mm/yyyy, dd-mm-yy, ISO and "10 Nov 2026" into a display date. */

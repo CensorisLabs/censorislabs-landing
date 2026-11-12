@@ -1622,3 +1622,8 @@ p {
     justify-content: center;
   }
 }
+
+.suite-release-notes { margin-top: 40px; padding: 28px 30px; border: 1px solid rgba(20, 40, 30, 0.12); border-radius: 18px; background: rgba(255, 255, 255, 0.6); }
+.suite-release-notes h2 { margin: 6px 0 4px; }
+.suite-release-date { margin: 0 0 14px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.65; }
+.suite-release-body { margin: 0 0 16px; white-space: pre-wrap; line-height: 1.65; max-width: 72ch; }

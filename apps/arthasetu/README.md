@@ -1,13 +1,28 @@
+# ArthaSetu
 
-## Free and Pro licensing
+A private, device-first money workspace for Indian households. Every feature is free: there is no Pro tier, no account, no licence key and no payment flow. Data stays in the browser/app storage on the device.
 
-The app includes a centralized `LicenseProvider` with these local statuses: `FREE`, `PRO_MONTHLY`, `PRO_YEARLY`, and `PRO_LIFETIME`. Free users retain manual transactions, standard budgets, up to two-account workflow, basic tax estimation, and ordinary JSON backup/restore.
+## What it does
 
-The following are Pro-gated: SMS parsing, advanced investment/XIRR analytics, loan planning, tax optimization, FIRE forecasting, encrypted vault/security, custom rules, and financial reports. The paywall shows:
+- **Ledger** — add expenses and income with a real date picker, choose the account, search the month, and filter the whole ledger by month. Dates are stored as ISO so sorting and month totals are reliable.
+- **SMS parsing** — paste a bank or UPI SMS and the amount, direction, date and merchant are read offline. Merchant category rules are remembered, so the next Swiggy message is already filed under Dining.
+- **Bank statement import** — CSV import for common Indian bank exports with per-row category suggestions, editable before saving. Imported merchant categories become rules automatically.
+- **Budgets** — 50/30/20 view over the selected month.
+- **Investments, debt, tax and FIRE tools** — XIRR, loan payoff, tax comparison and long-term planning, all local.
+- **Security** — optional PIN lock and an encrypted vault backup.
+- **Backups** — JSON export (schema version 2, validated on restore) and encrypted backup.
 
-- ₹69/month
-- ₹299/year
-- ₹499 early-bird lifetime for the first 1,000 users
-- ₹999 standard lifetime after the early-bird period
+## Development
 
-Offline keys use the format `ARTHASETU-PRO_<STATUS>-<16-character SHA-256 checksum>`, validated locally with Web Crypto and stored only as the license status. `makeOfflineLicenseKey()` is available for a controlled activation service or developer tooling. The checkout callback is ready to connect to Razorpay, UPI Intent, or Cashfree; this plain-local build deliberately does not collect payment or claim a successful purchase.
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # tsc -b && vite build
+npm test         # node --test tests/*.test.ts
+```
+
+The ledger helpers in `src/domain/ledger.ts` (date normalisation, month windows, merchant rules, subscription detection) are pure functions covered by `tests/ledger.test.ts`.
+
+## Data
+
+Everything is local. `src/domain/vault.ts` owns storage and optional AES-GCM encryption. JSON backups include `app` and `version` fields; a newer major version is refused rather than half-restored, and transaction dates are normalised on import.

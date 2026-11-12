@@ -20,13 +20,11 @@ The suite contains ArthaSetu and ten independent companion apps. App source, com
 
 Third-party news and provider lists can be incomplete or delayed. Source links remain visible; the apps do not claim coverage of every publisher or immediate alerts while closed. Qur’an translations keep their source attribution. This repository does not mirror entire third-party libraries.
 
-## Shared design, offers, and licenses
+## Shared design and licenses
 
-`shared/shell.js` and `shared/polish.css` give companion apps four themes, low-end mode, glass card styling, and the use-based offer meter. `shared/pricing.js` is the single source for ₹69 monthly, ₹299 yearly, ₹499 early-bird lifetime, and ₹999 standard lifetime plans. `shared/offers.js` unlocks a 10% coupon at 15 recorded app actions and a 15% coupon at 30; it chooses one eight-hour 10% sale window in each UTC week.
+`shared/shell.js` and `shared/polish.css` give companion apps four themes, low-end mode and the shared glass card styling. Every app in the suite is free: there is no pricing module, offer meter, licence key or paywall code in the shipped apps.
 
-Use counts are local to each app installation and can be cleared by the user. First-1,000-user 30% eligibility needs a server-side customer counter. Checkout, billing, refunds, and license issuance are not connected, so the UI shows offers as pending checkout verification and does not take payment or activate an unverified purchase.
-
-The public key `VITE_LICENSE_PUBLIC_KEY` verifies signed suite tokens on device. Never commit the private signing key. The release workflow reads `LICENSE_PUBLIC_KEY` from GitHub Actions secrets.
+The public key `VITE_LICENSE_PUBLIC_KEY` is not required by any current app build. Never commit a private signing key; the release workflow keeps provider secrets in GitHub Actions secrets.
 
 ## Installable builds and offline shell
 

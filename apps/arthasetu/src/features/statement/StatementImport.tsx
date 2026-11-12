@@ -6,6 +6,7 @@ import {
   type ParsedStatement,
   type ParsedTransaction,
 } from '../../domain/statement.ts'
+import { formatDate } from '../../domain/ledger.ts'
 
 type Props = {
   existing: Array<{ date: string; merchant: string; amount: number; type: 'income' | 'expense' }>
@@ -112,7 +113,7 @@ export default function StatementImport({ existing, onClose, onImport }: Props) 
         <div className="statement-body">
           {rows.map((row, index) => <div className={`statement-row${row.duplicate ? ' is-duplicate' : ''}${row.include ? '' : ' is-excluded'}`} key={`${row.date}-${row.merchant}-${row.amount}-${index}`}>
             <input type="checkbox" checked={row.include} onChange={event => updateRow(index, { include: event.target.checked })} aria-label={`Include ${row.merchant}`} />
-            <span>{row.date}</span>
+            <span>{formatDate(row.date)}</span>
             <span className="statement-merchant" title={row.merchant}>{row.merchant}</span>
             <select value={row.category} onChange={event => updateRow(index, { category: event.target.value })} aria-label={`Category for ${row.merchant}`}>
               {CATEGORY_OPTIONS.map(category => <option key={category} value={category}>{category}</option>)}

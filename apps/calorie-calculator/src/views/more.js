@@ -42,6 +42,7 @@ import {
   openShortcuts,
   openStepSettings,
 } from '../lib/dialogs-app.js'
+import { openCsvImport } from '../lib/dialogs-import.js'
 import { exportBackup, exportCsv, daySummaryText, profileBackupSummary } from '../lib/export.js'
 import { APP_VERSION } from '../shared/version.js'
 import { renderInsights } from './insights.js'
@@ -166,7 +167,7 @@ function dataTab(profile, stats) {
   return `<div class="kc-more-data">
     <section class="kc-card kc-backup-card">
       <div class="kc-card__head"><div><p class="kc-eyebrow">BACKUP</p><h3>${state.settings.lastExport ? `Last export ${daysAgoLabel(state.settings.lastExport)}` : 'No backup exported yet'}</h3><p>A JSON backup includes every profile, diary, food, recipe, plan and weigh-in.</p></div><span class="kc-backup-icon">${icon('download')}</span></div>
-      <div class="kc-backup-actions"><button type="button" class="kc-btn" data-action="more:export">${icon('download')} Export JSON backup</button><button type="button" class="kc-btn kc-btn--soft" data-action="more:import">${icon('upload')} Import backup</button><button type="button" class="kc-btn kc-btn--ghost" data-action="more:csv">${icon('chart')} 90-day CSV</button><button type="button" class="kc-btn kc-btn--ghost" data-action="more:report">${icon('print')} Print daily report</button></div>
+      <div class="kc-backup-actions"><button type="button" class="kc-btn" data-action="more:export">${icon('download')} Export JSON backup</button><button type="button" class="kc-btn kc-btn--soft" data-action="more:import">${icon('upload')} Import backup</button><button type="button" class="kc-btn kc-btn--soft" data-action="more:csv-import">${icon('upload')} Import MFP / Apple Health</button><button type="button" class="kc-btn kc-btn--ghost" data-action="more:csv">${icon('chart')} 90-day CSV</button><button type="button" class="kc-btn kc-btn--ghost" data-action="more:report">${icon('print')} Print daily report</button></div>
       <p class="kc-meta">${state.settings.lastExport ? `Back up regularly — this device is the only copy. ${daysAgoLabel(state.settings.lastExport)}.` : 'This device is the only copy. Export a backup and keep it somewhere safe.'}</p>
     </section>
     <div class="kc-two-col">
@@ -310,6 +311,7 @@ on('more:export', () => {
   toast('JSON backup downloaded')
 })
 on('more:import', () => openImportDialog())
+on('more:csv-import', () => openCsvImport())
 on('more:csv', () => {
   const rows = exportCsv(90)
   toast(`${fmt(rows)} diary rows exported`)

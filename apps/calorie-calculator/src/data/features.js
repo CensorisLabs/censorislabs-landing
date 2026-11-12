@@ -36,6 +36,7 @@ export const FEATURE_GROUPS = [
       'Half, single and double portion presets',
       'Create custom foods',
       'On-device camera barcode scanning',
+      'CSV import from MyFitnessPal and Apple Health',
       'Offline barcode/code lookup',
       'Voice food search',
       'Recipe builder',

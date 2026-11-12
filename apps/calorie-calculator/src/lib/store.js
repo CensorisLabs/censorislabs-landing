@@ -373,14 +373,14 @@ export function makeEntry(food, grams, qty = 1, portionLabel = '') {
   }
 }
 
-export function makeQuickEntry({ name, kcal, p = 0, c = 0, f = 0, fib = 0, sug = 0, na = 0, cost = 0 }) {
+export function makeQuickEntry({ name, kcal, p = 0, c = 0, f = 0, fib = 0, sug = 0, na = 0, cost = 0, portionLabel = '' }) {
   return {
     id: uid('entry'),
     foodId: null,
     name: name || 'Quick entry',
     grams: 0,
     qty: 1,
-    portionLabel: 'Quick add',
+    portionLabel: portionLabel || 'Quick add',
     nutrients: { kcal: Math.max(0, Number(kcal) || 0), p: Math.max(0, Number(p) || 0), c: Math.max(0, Number(c) || 0), f: Math.max(0, Number(f) || 0), fib: Math.max(0, Number(fib) || 0), sug: Math.max(0, Number(sug) || 0), na: Math.max(0, Number(na) || 0), micros: { ca: 0, fe: 0, vc: 0, va: 0, k: 0, mg: 0 } },
     gi: 55,
     cost: Math.max(0, Number(cost) || 0),

@@ -865,3 +865,13 @@ html[data-kc-theme="light"] .kc-calendar-day.is-outside{opacity:.4}
 .kc-scan-status{font:500 11.5px var(--kc-font);color:var(--kc-muted)}
 .kc-scan-status.is-warn{color:var(--amber)}
 .kc-upload-btn{position:relative;overflow:hidden}
+
+/* CSV import */
+.kc-import{display:grid;gap:12px}
+.kc-file-drop{display:grid;justify-items:center;gap:6px;padding:20px 16px;border:1.5px dashed var(--kc-line-strong);border-radius:14px;background:var(--kc-input);text-align:center;cursor:pointer}
+.kc-file-drop .kc-icon{width:26px;height:26px;color:var(--accent-2)}
+.kc-file-drop b{font:600 13px var(--kc-font);color:var(--kc-ink)}
+.kc-file-drop small{max-width:40ch;color:var(--kc-muted);font-size:11px}
+.kc-file-drop:hover{border-color:var(--accent-line);background:var(--accent-soft)}
+.kc-import-preview{display:grid;gap:8px;padding:12px;border:1px solid var(--kc-line);border-radius:12px;background:var(--kc-raise)}
+.kc-import-preview h3{font:600 14px var(--kc-font);color:var(--kc-ink)}

@@ -181,6 +181,11 @@ export function cleanMerchant(narration: string): string {
 
 type Rule = { category: string; label: string; pattern: RegExp }
 
+// NEFT/IMPS/RTGS are payment channels, not proof of an internal transfer.
+// Classifying every channel credit or debit as a transfer would hide real
+// income and spending, so only explicit transfer/repayment language matches.
+const TRANSFER_PATTERN = /(atm\b|cash withdrawal|self transfer|credit card payment|card payment|loan emi|emi\b|transfer to|transfer from|to a\/c|cheque|chq\b|fd\b|rd\b)/i
+
 const EXPENSE_RULES: Rule[] = [
   { category: 'Investments', label: 'investment or SIP', pattern: /(zerodha|groww|upstox|angel ?one|mutual fund|\bsip\b|\bnps\b|\bppf\b|\belss\b|\bdemat\b|\bstock\b|\betf\b|\bsgb\b|\bcoin\b|smallcase|indmoney|kuvera|gold bond)/i },
   { category: 'Home', label: 'rent or housing', pattern: /(rent\b|landlord|housing society|society maintenance|maintenance|nobroker|mygate|urban ?company)/i },
@@ -194,7 +199,7 @@ const EXPENSE_RULES: Rule[] = [
   { category: 'Entertainment', label: 'entertainment', pattern: /(netflix|spotify|prime video|hotstar|sonyliv|zee5|bookmyshow|pvr|inox|cinepolis|gaming|playstation|xbox|steam|youtube premium|gaana|wynk)/i },
   { category: 'Shopping', label: 'shopping', pattern: /(amazon|flipkart|myntra|ajio|meesho|nykaa|tatacliq|croma|reliance digital|decathlon|ikea|lifestyle|shoppers stop|pantaloons|westside|zudio|firstcry|pepperfry|urban ladder|fabindia)/i },
   { category: 'Taxes', label: 'tax', pattern: /(income tax|advance tax|tds\b|gst\b|challan|property tax|municipal)/i },
-  { category: 'Transfers', label: 'transfer or repayment', pattern: /(atm\b|cash withdrawal|self transfer|credit card payment|card payment|loan emi|emi\b|neft|imps|rtgs|transfer to|transfer from|to a\/c|cheque|chq\b|fd\b|rd\b)/i },
+  { category: 'Transfers', label: 'transfer or repayment', pattern: TRANSFER_PATTERN },
 ]
 
 /** A deterministic keyword categoriser, tuned to Indian statement narrations. */
@@ -202,6 +207,7 @@ export function suggestCategory(merchant: string, type: TxType, narration = ''):
   const text = `${merchant} ${narration}`.trim()
   if (type === 'income') {
     if (/salary|stipend|payroll/i.test(text)) return { category: 'Income', suggestion: 'salary credit' }
+    if (TRANSFER_PATTERN.test(text)) return { category: 'Transfers', suggestion: 'transfer or repayment' }
     if (/interest|dividend|refund|cashback|reversal|reward/i.test(text)) return { category: 'Income', suggestion: 'credit or refund' }
     return { category: 'Income', suggestion: 'money received' }
   }

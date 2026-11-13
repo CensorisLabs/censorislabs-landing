@@ -7,6 +7,23 @@
 
 export type TxType = 'income' | 'expense'
 
+export const TRANSFER_CATEGORY = 'Transfers'
+export type SummarizableTx = { date: string; amount: number; type: TxType; category?: string; merchant?: string; splits?: Array<{ category: string; amount: number }> }
+
+const TRANSFER_DESCRIPTION = /(self transfer|credit card payment|card payment|cash withdrawal|atm\b|loan emi|emi\b|transfer to|transfer from|to a\/c|cheque|chq\b|fd\b|rd\b)/i
+
+export function isTransferCategory(category?: string): boolean {
+  const value = String(category || '').trim().toLowerCase()
+  return value === 'transfers' || value === 'transfer'
+}
+
+/** A row is a transfer only when the whole row is in the transfer category.
+ * A mixed split keeps its non-transfer part in expense reporting. */
+export function isTransfer(transaction: { category?: string; merchant?: string; splits?: Array<{ category: string }> }): boolean {
+  if (transaction.splits?.length) return transaction.splits.every(part => isTransferCategory(part.category))
+  return isTransferCategory(transaction.category) || TRANSFER_DESCRIPTION.test(String(transaction.merchant || ''))
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const RULES_KEY = 'arthasetu-category-rules'
 
@@ -72,23 +89,34 @@ export function nextId(): number {
   return Date.now() * 1000 + idCounter
 }
 
-export function monthTotals(transactions: Array<{ date: string; amount: number; type: TxType }>, month: string) {
+function nonTransferExpense(transaction: SummarizableTx): number {
+  if (transaction.type !== 'expense') return 0
+  if (!transaction.splits?.length) return isTransfer(transaction) ? 0 : transaction.amount
+  return splitParts(transaction as SplittableTx)
+    .filter(part => !isTransferCategory(part.category))
+    .reduce((sum, part) => sum + part.amount, 0)
+}
+
+export function monthTotals(transactions: SummarizableTx[], month: string) {
   let income = 0
   let expenses = 0
   let count = 0
   for (const item of transactions) {
     if (!String(item.date).startsWith(month)) continue
     count += 1
-    if (item.type === 'income') income += item.amount
-    else expenses += item.amount
+    if (item.type === 'income') {
+      if (!isTransfer(item)) income += item.amount
+    } else {
+      expenses += nonTransferExpense(item)
+    }
   }
   return { income, expenses, net: income - expenses, count }
 }
 
-export function topCategories(transactions: Array<{ date: string; amount: number; type: TxType; category: string }>, month: string, limit = 4) {
+export function topCategories(transactions: Array<{ date: string; amount: number; type: TxType; category: string; merchant?: string }>, month: string, limit = 4) {
   const totals: Record<string, number> = {}
   for (const item of transactions) {
-    if (item.type !== 'expense' || !String(item.date).startsWith(month)) continue
+    if (item.type !== 'expense' || isTransfer(item) || !String(item.date).startsWith(month)) continue
     totals[item.category] = (totals[item.category] || 0) + item.amount
   }
   return Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, limit)
@@ -102,10 +130,10 @@ export function spendChange(transactions: Array<{ date: string; amount: number; 
 }
 
 /** Merchants charged in two or more distinct months look like subscriptions. */
-export function detectSubscriptions(transactions: Array<{ date: string; amount: number; type: TxType; merchant: string }>) {
+export function detectSubscriptions(transactions: Array<{ date: string; amount: number; type: TxType; merchant: string; category?: string }>) {
   const groups: Record<string, { merchant: string; amount: number; months: Set<string> }> = {}
   for (const item of transactions) {
-    if (item.type !== 'expense') continue
+    if (item.type !== 'expense' || isTransfer(item)) continue
     const key = item.merchant.toLowerCase().trim()
     if (!key) continue
     const group = groups[key] || { merchant: item.merchant, amount: item.amount, months: new Set<string>() }
@@ -184,8 +212,8 @@ export function materializeRecurring<T extends RecurringTx>(transactions: T[], c
 }
 
 /** Monthly committed spend from active recurring rules (not generated copies). */
-export function recurringCommitment(transactions: Array<{ recurring?: 'monthly'; recurrenceOf?: number; type: TxType; amount: number; merchant: string }>) {
-  const rules = transactions.filter(item => item.recurring === 'monthly' && !item.recurrenceOf && item.type === 'expense')
+export function recurringCommitment(transactions: Array<{ recurring?: 'monthly'; recurrenceOf?: number; type: TxType; amount: number; merchant: string; category?: string }>) {
+  const rules = transactions.filter(item => item.recurring === 'monthly' && !item.recurrenceOf && item.type === 'expense' && !isTransfer(item))
   return { count: rules.length, monthly: rules.reduce((sum, item) => sum + item.amount, 0), merchants: rules.map(item => item.merchant) }
 }
 
@@ -203,7 +231,7 @@ export function ledgerCsv(rows: CsvRow[]): string {
 }
 
 export type Split = { category: string; amount: number }
-export type SplittableTx = { category: string; amount: number; type: TxType; splits?: Split[] }
+export type SplittableTx = { category: string; amount: number; type: TxType; merchant?: string; splits?: Split[] }
 
 /** Returns the category parts of a transaction. Falls back to its single
  * category when splits are absent, empty, negative or do not sum to the total. */
@@ -218,7 +246,10 @@ export function splitParts(transaction: SplittableTx): Split[] {
 /** Expense totals per category, honouring splits. */
 export function categoryTotals(transactions: SplittableTx[]): Record<string, number> {
   return transactions.filter(item => item.type === 'expense').reduce<Record<string, number>>((totals, item) => {
-    for (const part of splitParts(item)) totals[part.category] = (totals[part.category] || 0) + part.amount
+    if (!item.splits?.length && isTransfer(item)) return totals
+    for (const part of splitParts(item)) {
+      if (!isTransferCategory(part.category)) totals[part.category] = (totals[part.category] || 0) + part.amount
+    }
     return totals
   }, {})
 }

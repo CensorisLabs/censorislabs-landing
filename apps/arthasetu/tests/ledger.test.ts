@@ -5,6 +5,7 @@ import {
   detectSubscriptions,
   categoryTotals,
   formatDate,
+  isTransfer,
   ledgerCsv,
   materializeRecurring,
   monthKey,
@@ -116,4 +117,26 @@ test('category totals honour a valid two-way split', () => {
 test('category totals ignore splits that do not add up', () => {
   const tx = [{ category: 'Dining', amount: 500, type: 'expense' as const, splits: [{ category: 'Dining', amount: 300 }] }]
   assert.deepEqual(categoryTotals(tx), { Dining: 500 })
+})
+
+test('internal transfers stay out of income, spending and monthly budgets', () => {
+  const tx = [
+    { date: '2026-10-01', amount: 50000, type: 'income' as const, category: 'Income' },
+    { date: '2026-10-02', amount: 1000, type: 'expense' as const, category: 'Dining' },
+    { date: '2026-10-03', amount: 20000, type: 'expense' as const, category: 'Transfers' },
+    { date: '2026-10-04', amount: 20000, type: 'income' as const, category: 'Transfers' },
+    { date: '2026-10-05', amount: 500, type: 'expense' as const, category: 'Groceries', splits: [{ category: 'Transfers', amount: 100 }, { category: 'Groceries', amount: 400 }] },
+    { date: '2026-10-06', amount: 25000, type: 'income' as const, category: 'Income', merchant: 'Self transfer from current' },
+    { date: '2026-10-07', amount: 900, type: 'expense' as const, category: 'Dining', merchant: 'Credit card payment' },
+    { date: '2026-09-20', amount: 700, type: 'expense' as const, category: 'Dining' },
+    { date: '2026-09-21', amount: 10000, type: 'expense' as const, category: 'Transfers' },
+  ]
+  assert.deepEqual(monthTotals(tx, '2026-10'), { income: 50000, expenses: 1400, net: 48600, count: 7 })
+  assert.deepEqual(monthTotals(tx, '2026-09'), { income: 0, expenses: 700, net: -700, count: 2 })
+  assert.deepEqual(categoryTotals(tx), { Dining: 1700, Groceries: 400 })
+  assert.equal(topCategories(tx, '2026-10')[0][0], 'Dining')
+  assert.equal(spendChange(tx, '2026-10').percent, 100)
+  assert.equal(isTransfer({ category: 'Transfers' }), true)
+  assert.equal(isTransfer({ category: 'Income', merchant: 'Self transfer from current' }), true)
+  assert.equal(isTransfer({ category: 'Groceries', splits: [{ category: 'Transfers' }, { category: 'Groceries' }] }), false)
 })

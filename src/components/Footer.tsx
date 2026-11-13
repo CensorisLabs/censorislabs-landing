@@ -1,4 +1,4 @@
-import type { LegalDocId } from './Legal'
+﻿import type { LegalDocId } from './Legal'
 
 interface FooterProps {
   onOpenLegal: (doc: LegalDocId) => void
@@ -49,6 +49,9 @@ export default function Footer({ onOpenLegal }: FooterProps) {
                 </li>
                 <li>
                   <a href="#/request">Request software</a>
+                </li>
+                <li>
+                  <a href="#/donate">Donate</a>
                 </li>
                 <li>
                   <a href="#sovereignty">Sovereignty</a>

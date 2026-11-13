@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react'
+﻿import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react'
 
 import Ecosystem from './components/Ecosystem'
 import Apps from './components/Apps'
 import GamePage from './components/GamePage'
 import About from './components/About'
+import Donate from './components/Donate'
 import Cursor from './components/Cursor'
 import Footer from './components/Footer'
 import Nav from './components/Nav'
@@ -24,6 +25,7 @@ const TITLES: Record<string, string> = {
   '#/apps': 'Apps',
   '#/reviews': 'Reviews & comments',
   '#/request': 'Request software',
+  '#/donate': 'Donate',
 }
 
 export default function App() {
@@ -67,6 +69,7 @@ export default function App() {
   const isAboutPage = route === '#/about'
   const isReviewsPage = route === '#/reviews'
   const isRequestPage = route === '#/request'
+  const isDonatePage = route === '#/donate'
   const isAppPage = route === '#/apps' || route.startsWith('#/apps/')
   const appId = isAppPage ? route.split('/')[2] : undefined
 
@@ -80,7 +83,7 @@ export default function App() {
       {!isGamePage && !isAtlasPage && <Nav />}
 
       <main id="main">
-        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isAppPage ? <Apps appId={appId} /> : <>
+        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isDonatePage ? <Donate /> : isAppPage ? <Apps appId={appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>

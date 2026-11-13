@@ -30,7 +30,7 @@ The app works fully offline. It does not call home, track crashes, or measure
 usage. The only network use that will ever exist:
 
 1. **Your exports** — files you choose to save or share.
-2. **Optional encrypted backup (Pro, later phase)** — to *your own* Google
+2. **Optional encrypted backup (planned)** — to *your own* Google
    Drive app-data folder, encrypted before upload. CensorisLabs cannot read
    it. There is no live sync.
 

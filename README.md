@@ -1,6 +1,6 @@
 # CensorisLabs · website and app suite
 
-The CensorisLabs GitHub repository contains the public website and the complete source for ArthaSetu plus ten companion apps. The site is a Vite/React app; `apps/` is a set of independent Vite projects sharing local-first UI, offer rules, and license verification.
+The CensorisLabs GitHub repository contains the public website and the complete source for ArthaSetu plus ten companion apps. The site is a Vite/React app; `apps/` is a set of independent Vite projects sharing local-first UI and build tooling.
 
 ## Stack
 
@@ -23,7 +23,7 @@ npm run preview    # serve the production build
 
 The site publishes an app directory at `#/apps` and one detail page per app. Each detail page checks the latest GitHub Release and enables only real `.exe` and `.apk` assets under 100 MB. The website deploys through Vercel when its connected branch is updated; binaries are served from GitHub Releases.
 
-Every app lives under `apps/<app-id>/`. Shared UI, prices, licenses, coupons, and build scripts live under `apps/shared/` and `apps/scripts/`. See [apps/README.md](apps/README.md) for the complete catalog and build notes.
+Every app lives under `apps/<app-id>/`. Shared UI, product metadata, and build scripts live under `apps/shared/` and `apps/scripts/`. See [apps/README.md](apps/README.md) for the complete catalog and build notes.
 
 ### Publish installers
 
@@ -35,11 +35,10 @@ Before the Android release workflow can succeed, add these GitHub Actions reposi
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_PASSWORD`
-- `LICENSE_PUBLIC_KEY` — public P-256 JWK used to verify suite licenses
 
 Keep the keystore and passwords backed up privately. Losing the keystore prevents signed APK updates from installing over earlier versions. The Windows EXEs are portable but not code-signed; signing them requires a Windows code-signing certificate.
 
-The release workflow publishes files only after every app succeeds and all 22 platform builds pass the size check. An oversized artifact fails the release before it is published.
+The release workflow publishes files only after every app succeeds and all platform builds pass the size check. An oversized artifact fails the release before it is published.
 
 ## A free suite
 

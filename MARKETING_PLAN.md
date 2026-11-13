@@ -2,7 +2,7 @@
 
 ## Positioning
 
-Lead with a simple promise: **small, useful tools that keep personal data on your device**. Present CensorisLabs as one family with a consistent design and shared Pro plan, while each app has its own clear job. Avoid claims such as “all sources,” “instant news,” guaranteed financial results, or complete streaming availability.
+Lead with a simple promise: **small, useful tools that keep personal data on your device**. Present CensorisLabs as one family with a consistent design and a free, donation-supported model, while each app has its own clear job. Avoid claims such as “all sources,” “instant news,” guaranteed financial results, or complete streaming availability.
 
 ## Who each app helps
 
@@ -25,7 +25,7 @@ Lead with a simple promise: **small, useful tools that keep personal data on you
 1. Publish the apps pages first, with clear free features, supported platforms, source notes, and live download status.
 2. Recruit a small opt-in beta from the audiences above. Ask testers to complete one core task on both a lower-end Android phone and a Windows PC.
 3. Fix onboarding friction and package-size issues before a public release. Publish a versioned release only after its Android signatures and install files are verified.
-4. Introduce Pro after users have had time to try each app. Keep the free tier useful. Show use-based offers after 15 and 30 meaningful actions without blocking the task in progress.
+4. Keep every feature free. Invite optional donations through the public Donate page; never gate a task or show a checkout.
 5. Start with two app-specific stories a week: a short screen recording, a source-backed tip, or a before/after workflow. Reuse the recording as a blog post and a vertical video.
 
 ## Low-cost channels
@@ -46,8 +46,8 @@ Lead with a simple promise: **small, useful tools that keep personal data on you
 
 ## Measure the launch
 
-Track only aggregate counts that users knowingly share: app-page visits, installer clicks, successful first opens, first completed task, 7-day return, crash reports, source freshness errors, and voluntary Pro interest. Avoid invasive ad tracking. Compare by app and platform so a weak install flow is not confused with weak product demand.
+Track only aggregate counts that users knowingly share: app-page visits, installer clicks, successful first opens, first completed task, 7-day return, crash reports, and source freshness errors. Avoid invasive ad tracking. Compare by app and platform so a weak install flow is not confused with weak product demand.
 
 ## Offers
 
-Use one consistent offer story across the suite: the chosen weekly eight-hour 10% event, the 10% coupon at 15 actions, the 15% coupon at 30 actions, and a first-1,000-customer 30% offer. Until checkout can verify account identity, redemption, stacking, and the first-1,000 counter, label these as previews and do not advertise them as purchasable discounts.
+Use one consistent message across the suite: every app and every feature is free. Donations are optional, one-off, and handled by the user’s own UPI app; there are no coupons, tiers, trials, or checkout flows.

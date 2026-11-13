@@ -24,7 +24,6 @@ Third-party news and provider lists can be incomplete or delayed. Source links r
 
 `shared/shell.js` and `shared/polish.css` give companion apps four themes, low-end mode and the shared glass card styling. Every app in the suite is free: there is no pricing module, offer meter, licence key or paywall code in the shipped apps.
 
-The public key `VITE_LICENSE_PUBLIC_KEY` is not required by any current app build. Never commit a private signing key; the release workflow keeps provider secrets in GitHub Actions secrets.
 
 ## Installable builds and offline shell
 

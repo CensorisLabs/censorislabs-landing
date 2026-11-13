@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 
 const LINKS = [
   { href: '#ecosystem', label: 'Ecosystem' },
@@ -7,6 +7,7 @@ const LINKS = [
   { href: '#/atlas', label: 'Atlas' },
   { href: '#/reviews', label: 'Reviews' },
   { href: '#/request', label: 'Request code' },
+  { href: '#/donate', label: 'Donate' },
   { href: '#/about', label: 'About me' },
   { href: '#products', label: 'Products' },
   { href: '#sovereignty', label: 'Sovereignty' },

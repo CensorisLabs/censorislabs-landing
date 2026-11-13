@@ -1,6 +1,6 @@
 /**
  * Settings (Phase 1 scope): language, appearance, number format, app lock,
- * about. Later phases add categories, backup/export and Pro.
+ * about. Later phases add categories and backup/export.
  */
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';

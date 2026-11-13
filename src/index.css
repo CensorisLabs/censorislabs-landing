@@ -269,7 +269,7 @@ p {
 .suite-plan h4 { margin: 0; font: 11px var(--mono); color: var(--palladium); }
 .suite-plan strong { color: var(--gold); font: 600 17px var(--sans); }
 .suite-plan span { color: var(--muted); font-size: 11px; }
-.suite-checkout-note { margin-top: 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.suite-security-note { margin-top: 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .suite-download-card { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 40px; }
 .suite-download-card .eyebrow { margin-bottom: 12px; }
 .suite-download-card p:not(.eyebrow) { margin-top: 10px; max-width: 58ch; color: var(--palladium); font-size: 13px; }

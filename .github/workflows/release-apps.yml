@@ -55,7 +55,6 @@ jobs:
       - name: Build APK
         working-directory: apps/${{ matrix.app }}
         env:
-          VITE_LICENSE_PUBLIC_KEY: ${{ secrets.LICENSE_PUBLIC_KEY }}
           VITE_TMDB_COMMERCIAL_LICENSE: ${{ secrets.TMDB_COMMERCIAL_LICENSE }}
         run: |
           npm run android:build || {
@@ -107,7 +106,6 @@ jobs:
       - name: Build Windows app
         working-directory: apps/${{ matrix.app }}
         env:
-          VITE_LICENSE_PUBLIC_KEY: ${{ secrets.LICENSE_PUBLIC_KEY }}
           VITE_TMDB_COMMERCIAL_LICENSE: ${{ secrets.TMDB_COMMERCIAL_LICENSE }}
         run: npm run windows:build
       - name: Prepare EXE release asset

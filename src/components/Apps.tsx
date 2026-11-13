@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 
 type Product = {
   id: string
@@ -12,7 +12,7 @@ type ReleaseAsset = { name: string; size: number; browser_download_url: string }
 type Release = { tag_name: string; assets: ReleaseAsset[] }
 
 export const PRODUCTS: Product[] = [
-  { id: 'arthasetu', name: 'ArthaSetu', kind: 'Personal finance · India', description: 'A private money workspace for Indian households: transactions, budgets, tax estimates, investments, and long-term plans.', free: ['Manual ledger with date, type and account pickers, plus month filtering', 'Duplicate transactions, split them across categories, repeat them monthly and export CSV', 'Bank statement CSV import with category suggestions and merchant rules', '50/30/20 budget', 'Up to two accounts', 'Basic tax estimate and JSON backup'] },
+  { id: 'arthasetu', name: 'ArthaSetu', kind: 'Personal finance · India', description: 'A private money workspace for Indian households: transactions, budgets, tax estimates, investments, and long-term plans.', free: ['Manual ledger with date, type and account pickers, plus month filtering', 'Duplicate transactions, split them across categories, repeat them monthly and export CSV', 'Bank statement CSV import with category suggestions and merchant rules', '50/30/20 budget', 'Unlimited local accounts', 'Basic tax estimate and JSON backup'] },
   { id: 'calorie-calculator', name: 'AbsoluteCal', kind: 'Health · Personal food and activity tracker', description: 'A free, device-first health tracker for meals, movement, sleep, body trends and personal health notes. Every feature is free, permanently, with no Pro tier or account.', free: ['Food diary, custom foods, recipes, templates and meal plans', 'Recently logged foods for one-tap repeat logging', 'On-device camera barcode scanning and manual nutrition entries',
     'Offline branded barcode catalogue plus a foods CSV importer',
     'Import a MyFitnessPal diary or Apple Health CSV', 'Steps, workouts, strength sets and rest timer', 'GPS walk and run tracking with an on-device route map', 'Sleep, hydration, weight, mood and health logs',
@@ -120,7 +120,7 @@ function InstallWarning({ androidOnly = false }: { androidOnly?: boolean }) {
         </ol>
       </article>
     </div>
-    <p className="suite-checkout-note">Only install files downloaded from this page or the official CensorisLabs GitHub releases. If an installer came from anywhere else, do not run it. Exact wording differs slightly between Windows and Android versions.</p>
+    <p className="suite-security-note">Only install files downloaded from this page or the official CensorisLabs GitHub releases. If an installer came from anywhere else, do not run it. Exact wording differs slightly between Windows and Android versions.</p>
   </aside>
 }
 
@@ -134,12 +134,12 @@ export default function Apps({ appId }: { appId?: string }) {
       <div className="suite-detail-head"><p className="eyebrow">CENSORISLABS APP SUITE · {selected.kind}</p><span className="suite-card__badge">Free · every feature included</span></div>
       <h1 className="suite-page-title" id="suite-page-title">{selected.name}</h1><p className="suite-lede">{selected.description}</p>
       <div className="suite-feature-columns suite-feature-columns--free-only">
-        <article className="suite-feature-card"><p className="eyebrow">EVERYTHING IS INCLUDED</p><h2>No subscription, no account, no lockouts</h2><ul>{features.map(feature => <li key={feature}>{feature}</li>)}</ul><p className="suite-checkout-note">Every feature in {selected.name} is free forever. There is no Pro tier, upgrade, trial, or payment anywhere in the app.</p></article>
+        <article className="suite-feature-card"><p className="eyebrow">EVERYTHING IS INCLUDED</p><h2>No subscription, no account, no lockouts</h2><ul>{features.map(feature => <li key={feature}>{feature}</li>)}</ul><p className="suite-security-note">Every feature in {selected.name} is free forever. There is no Pro tier, upgrade, trial, or payment anywhere in the app.</p></article>
       </div>
       {readingTracker && <div className="suite-download-card"><div><p className="eyebrow">OPEN IN YOUR BROWSER</p><h2>Use Reading Tracker</h2><p>Your books and notes stay in this browser on this device.</p></div><div className="suite-downloads"><a className="btn btn--outline" href="/reading-tracker/">Open Reading Tracker</a></div></div>}
       <Downloads appId={selected.id} /><ReleaseNotes appId={selected.id} /><InstallWarning androidOnly={readingTracker} />
     </div></section>
   }
 
-  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p><h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2></div><p className="suite-lede">Every app is free, with every feature included. No subscriptions, upgrades, accounts, or trials. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><p className="suite-checkout-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Windows or Android may show an “unknown publisher” warning the first time you install; each app page explains why and how to continue.</p></div></section>
+  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p><h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2></div><p className="suite-lede">Every app is free, with every feature included. No subscriptions, upgrades, accounts, or trials. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><p className="suite-security-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Windows or Android may show an “unknown publisher” warning the first time you install; each app page explains why and how to continue.</p></div></section>
 }

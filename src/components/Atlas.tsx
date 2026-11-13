@@ -32,6 +32,13 @@ const EMPTY_COUNTRIES: AtlasFeature<CountryProperties>[] = []
 const EMPTY_HISTORY: AtlasFeature<HistoryProperties>[] = []
 const EMPTY_WARS: WarFeature[] = []
 const CENTURY_YEARS = [...Array.from({ length: 30 }, (_, index) => -3000 + index * 100), 1, ...Array.from({ length: 19 }, (_, index) => 101 + index * 100), 2022]
+const MIN_GLOBE_DISTANCE = 2.05
+const MAX_GLOBE_DISTANCE = 8.4
+const DEFAULT_GLOBE_DISTANCE = 5.4
+type ZoomCommand = { nonce: number; kind: 'in' | 'out' | 'reset' }
+function zoomBandForDistance(distance: number) {
+  return distance < 2.85 ? 2 : distance < 4.2 ? 1 : 0
+}
 
 function yearAtCenturyStep(index: number) { return CENTURY_YEARS[Math.max(0, Math.min(CENTURY_YEARS.length - 1, index))] }
 function centuryStepForYear(year: number) { return CENTURY_YEARS.reduce((nearest, candidate, index) => Math.abs(candidate - year) < Math.abs(CENTURY_YEARS[nearest] - year) ? index : nearest, 0) }
@@ -179,12 +186,14 @@ function drawFeature(ctx: CanvasRenderingContext2D, feature: AtlasFeature<unknow
   }
 }
 
-function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historical: AtlasFeature<HistoryProperties>[], selectedCountry: string | undefined, selectedAuthorities: AtlasFeature<HistoryProperties>[], year: number) {
+function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historical: AtlasFeature<HistoryProperties>[], selectedCountry: string | undefined, selectedAuthorities: AtlasFeature<HistoryProperties>[], year: number, maxAnisotropy: number, textureWidth: number) {
   const canvas = document.createElement('canvas')
-  // The globe is displayed at roughly 600–900 CSS pixels. A 2K texture stays
-  // crisp at that size while cutting each timeline redraw and GPU upload by 4×.
-  canvas.width = 2048
-  canvas.height = 1024
+  // 4K keeps coastlines, small polities and border lines readable when the
+  // camera moves close to the surface. The texture is rebuilt only when the
+  // selected snapshot changes, not on every orbit frame.
+  canvas.width = textureWidth
+  canvas.height = textureWidth / 2
+  const lineScale = canvas.width / 2048
   const ctx = canvas.getContext('2d')!
   const ocean = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
   ocean.addColorStop(0, '#fbf8fd')
@@ -194,7 +203,7 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   const xy = ([lon, lat]: [number, number]): [number, number] => [(lon + 180) / 360 * canvas.width, (90 - lat) / 180 * canvas.height]
-  ctx.lineWidth = 1
+  ctx.lineWidth = lineScale
   for (let lat = -75; lat <= 75; lat += 15) {
     ctx.beginPath()
     for (let lon = -180; lon <= 180; lon += 2) {
@@ -217,17 +226,21 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
   // Keep present-day land outlines subtle and global; stronger land/ocean
   // contrast makes coasts readable without leaking current borders into past eras.
   countries.forEach(feature => drawFeature(ctx, feature, '#d7c9e1', 'transparent', 0, canvas.width, canvas.height))
-  historical.forEach(feature => drawFeature(ctx, feature, polityColor(feature.properties.name, .86, 55), polityColor(feature.properties.name, .92, 36), 1.2, canvas.width, canvas.height))
-  if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(107, 77, 123, .68)', .8, canvas.width, canvas.height))
-  selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(255, 92, 138, .25)', 'rgba(206, 47, 108, .98)', 3, canvas.width, canvas.height))
+  historical.forEach(feature => drawFeature(ctx, feature, polityColor(feature.properties.name, .86, 55), polityColor(feature.properties.name, .92, 36), 1.2 * lineScale, canvas.width, canvas.height))
+  if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(107, 77, 123, .68)', .8 * lineScale, canvas.width, canvas.height))
+  selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(255, 92, 138, .25)', 'rgba(206, 47, 108, .98)', 3 * lineScale, canvas.width, canvas.height))
   if (selectedCountry && year >= 2022) {
     const selected = countries.find(feature => feature.properties.name === selectedCountry)
-    if (selected) drawFeature(ctx, selected, 'rgba(192, 132, 252, .2)', 'rgba(142, 72, 190, .95)', 2.8, canvas.width, canvas.height)
+    if (selected) drawFeature(ctx, selected, 'rgba(192, 132, 252, .2)', 'rgba(142, 72, 190, .95)', 2.8 * lineScale, canvas.width, canvas.height)
   }
 
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
-  texture.anisotropy = 8
+  texture.anisotropy = maxAnisotropy
+  texture.generateMipmaps = true
+  texture.minFilter = THREE.LinearMipmapLinearFilter
+  texture.magFilter = THREE.LinearFilter
+  texture.needsUpdate = true
   return texture
 }
 
@@ -264,7 +277,7 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, onSelectLocation, onSelectWar }: {
+function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, zoomCommand, onSelectLocation, onSelectWar }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
   routes: boolean
@@ -279,19 +292,26 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   selectedWarId?: string
   selectedWarKey?: string
   year: number
+  zoomCommand: ZoomCommand | null
   onSelectLocation: (point: MapPoint) => void
   onSelectWar: (war: WarFeature) => void
 }) {
   const world = useRef<THREE.Group>(null)
   const { gl, camera } = useThree()
-  const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year), [countries, historical, selectedAuthorities, selectedCountry, year])
+  const maxAnisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy())
+  // Playback favours a fast 2K redraw; the paused view keeps the full 4K detail.
+  const textureWidth = isPlaying ? 2048 : 4096
+  const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year, maxAnisotropy, textureWidth), [countries, historical, selectedAuthorities, selectedCountry, year, maxAnisotropy, textureWidth])
   // Start on Europe, Africa and western Asia, where the historical coverage is
   // densest, instead of hiding most recorded polities around the far side.
   const spin = useRef({ x: 0.12, y: -Math.PI / 2 })
   const drag = useRef<{ id: number; x: number; y: number; startX: number; startY: number; lastTime: number; moved: boolean } | null>(null)
   const rotationVelocity = useRef({ x: 0, y: 0 })
+  const pointers = useRef(new Map<number, { x: number; y: number }>())
+  const pinch = useRef<{ distance: number; zoom: number } | null>(null)
   const suppressClickUntil = useRef(0)
-  const distance = useRef(5.4)
+  const distance = useRef(DEFAULT_GLOBE_DISTANCE)
+  const [zoomBand, setZoomBand] = useState(zoomBandForDistance(DEFAULT_GLOBE_DISTANCE))
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#d29aff', transparent: true, opacity: 0.75 }), [])
   // Keep the grouped war footprints during playback, but suspend tens of
   // thousands of individual clickable dots until the viewer pauses.
@@ -326,10 +346,12 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       : historical.filter(feature => feature.properties.name && !feature.properties.name.startsWith('(')).map(feature => ({ ...labelPoint(feature), name: feature.properties.name, area: feature.properties.area, href: feature.properties.wiki ? `https://en.wikipedia.org/wiki/${encodeURIComponent(feature.properties.wiki.replaceAll(' ', '_'))}` : feature.properties.wikidata ? `https://www.wikidata.org/wiki/${encodeURIComponent(feature.properties.wikidata)}` : '' })).filter(label => label.href)
     const largestByName = new Map<string, GlobeLabel>()
     source.forEach(label => { const current = largestByName.get(label.name); if (!current || label.area > current.area) largestByName.set(label.name, label) })
-    // Broad spacing hid almost every label at normal zoom. Keep a generous
-    // label set for each snapshot and let the map zoom/layers do the declutter.
-    return spacedLabels([...largestByName.values()], year >= 2022 ? 170 : 110, year >= 2022 ? 7 : 7)
-  }, [countries, historical, year])
+    // Close views get a denser label field so small countries and polities
+    // become readable instead of remaining hidden behind a fixed world-view set.
+    const maxLabels = zoomBand === 2 ? (year >= 2022 ? 260 : 240) : zoomBand === 1 ? (year >= 2022 ? 210 : 175) : (year >= 2022 ? 170 : 110)
+    const separation = zoomBand === 2 ? 1.8 : zoomBand === 1 ? 3.6 : 7
+    return spacedLabels([...largestByName.values()], maxLabels, separation)
+  }, [countries, historical, year, zoomBand])
   const warRegionMesh = useMemo(() => {
     const geometry = new THREE.CircleGeometry(1, 24)
     const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
@@ -368,13 +390,33 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   useEffect(() => {
     const canvas = gl.domElement
     const onDown = (event: PointerEvent) => {
-      if (event.button !== 0 || drag.current) return
+      if (event.button !== 0) return
+      canvas.setPointerCapture(event.pointerId)
+      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (pointers.current.size === 2) {
+        const [first, second] = [...pointers.current.values()]
+        pinch.current = { distance: Math.max(1, Math.hypot(first.x - second.x, first.y - second.y)), zoom: distance.current }
+        drag.current = null
+        rotationVelocity.current = { x: 0, y: 0 }
+        suppressClickUntil.current = performance.now() + 400
+        return
+      }
+      if (pointers.current.size > 1 || drag.current) return
       suppressClickUntil.current = 0
       rotationVelocity.current = { x: 0, y: 0 }
       drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, lastTime: event.timeStamp, moved: false }
-      canvas.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => {
+      if (!pointers.current.has(event.pointerId)) return
+      pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (pointers.current.size === 2 && pinch.current) {
+        const [first, second] = [...pointers.current.values()]
+        const nextDistance = Math.max(1, Math.hypot(first.x - second.x, first.y - second.y))
+        distance.current = THREE.MathUtils.clamp(pinch.current.zoom * pinch.current.distance / nextDistance, MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
+        setZoomBand(zoomBandForDistance(distance.current))
+        suppressClickUntil.current = performance.now() + 400
+        return
+      }
       if (!drag.current || drag.current.id !== event.pointerId) return
       const dx = event.clientX - drag.current.x
       const dy = event.clientY - drag.current.y
@@ -389,13 +431,16 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       drag.current.lastTime = event.timeStamp
     }
     const onUp = (event: PointerEvent) => {
+      pointers.current.delete(event.pointerId)
+      if (pointers.current.size < 2) pinch.current = null
       if (drag.current?.id === event.pointerId) {
         if (drag.current.moved) suppressClickUntil.current = performance.now() + 350
         drag.current = null
       }
     }
     const onWheel = (event: WheelEvent) => {
-      distance.current = THREE.MathUtils.clamp(distance.current + event.deltaY * 0.003, 3.35, 7.8)
+      distance.current = THREE.MathUtils.clamp(distance.current + event.deltaY * 0.003, MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
+      setZoomBand(zoomBandForDistance(distance.current))
     }
     canvas.addEventListener('pointerdown', onDown)
     canvas.addEventListener('pointermove', onMove)
@@ -408,8 +453,22 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       canvas.removeEventListener('pointerup', onUp)
       canvas.removeEventListener('pointercancel', onUp)
       canvas.removeEventListener('wheel', onWheel)
+      pointers.current.clear()
+      pinch.current = null
     }
   }, [gl])
+
+  useEffect(() => {
+    if (!zoomCommand) return
+    if (zoomCommand.kind === 'reset') {
+      distance.current = DEFAULT_GLOBE_DISTANCE
+      spin.current = { x: 0.12, y: -Math.PI / 2 }
+      rotationVelocity.current = { x: 0, y: 0 }
+    } else {
+      distance.current = THREE.MathUtils.clamp(distance.current + (zoomCommand.kind === 'in' ? -0.7 : 0.7), MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
+    }
+    setZoomBand(zoomBandForDistance(distance.current))
+  }, [zoomCommand])
 
   useEffect(() => {
     if (!selectedPoint) return
@@ -457,7 +516,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
           rotationVelocity.current = { x: 0, y: 0 }
           // Hold a selected location in view; idle auto-spin resumes after
           // the selection is cleared so users can inspect it without drift.
-          if (!lowMotion && !selectedPoint) spin.current.y += delta * 0.035
+          if (!lowMotion && !selectedPoint && zoomBand === 0) spin.current.y += delta * 0.035
         }
       }
       world.current.rotation.x = THREE.MathUtils.damp(world.current.rotation.x, spin.current.x, 6, delta)
@@ -471,7 +530,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     <ambientLight intensity={0.85} />
     <directionalLight position={[-3, 3, 4]} intensity={1.25} color="#ffffff" />
     <pointLight position={[3, -2, -2]} intensity={0.7} color="#a855f7" />
-    <mesh scale={1.075}><sphereGeometry args={[1.65, 48, 48]} /><meshBasicMaterial color="#a855f7" transparent opacity={0.09} side={THREE.BackSide} /></mesh>
+    <mesh scale={1.075}><sphereGeometry args={[1.65, 96, 96]} /><meshBasicMaterial color="#a855f7" transparent opacity={0.09} side={THREE.BackSide} /></mesh>
     <group ref={world}>
       <mesh onClick={event => {
         if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
@@ -481,11 +540,11 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
         const rawLon = Math.atan2(localPoint.z, -localPoint.x) * 180 / Math.PI - 180
         onSelectLocation({ lat, lon: ((rawLon + 540) % 360) - 180 })
       }}>
-        <sphereGeometry args={[1.6, 96, 64]} />
+        <sphereGeometry args={[1.6, 192, 128]} />
         <meshStandardMaterial map={texture} roughness={0.91} metalness={0.02} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.68, 0.006, 5, 144]} />
+        <torusGeometry args={[1.68, 0.006, 5, 240]} />
         <meshBasicMaterial color="#c084fc" transparent opacity={0.5} />
       </mesh>
       {selectedPoint && <mesh position={latLon(selectedPoint.lat, selectedPoint.lon, 1.635)}>
@@ -504,7 +563,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
         const feature = typeof event.instanceId === 'number' ? warMarkers[event.instanceId] : undefined
         if (feature) onSelectWar(feature)
       }} />}
-      {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} />)}
+      {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} scale={zoomBand === 2 ? 0.62 : zoomBand === 1 ? 0.8 : 1} />)}
       {routes && routeObjects.map((line, index) => <primitive object={line} key={`route-${index}`} />)}
       {labels && events.filter(event => event.year <= year).map(event => <mesh key={event.id} position={latLon(event.lat, event.lon, 1.625)}>
         <sphereGeometry args={[event.id === 'present' ? 0.026 : 0.018, 12, 10]} />
@@ -541,28 +600,28 @@ function largestFeatureArea(feature: AtlasFeature<CountryProperties>) {
   return Math.max(0, ...polygonsOf(feature.geometry).map(polygon => Math.abs(ringArea(unwrapRing(polygon[0] ?? [])))))
 }
 
-function GlobeTextLabel({ label }: { label: GlobeLabel }) {
+function GlobeTextLabel({ label, scale }: { label: GlobeLabel; scale: number }) {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas')
-    canvas.width = 512
-    canvas.height = 64
+    canvas.width = 768
+    canvas.height = 96
     const context = canvas.getContext('2d')!
-    context.font = '700 36px Inter, Arial, sans-serif'
+    context.font = '700 52px Inter, Arial, sans-serif'
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.lineWidth = 8
+    context.lineWidth = 10
     context.strokeStyle = 'rgba(255,255,255,.98)'
-    context.strokeText(label.name, 256, 32, 496)
-    context.fillStyle = '#241532'
-    context.fillText(label.name, 256, 32, 496)
+    context.strokeText(label.name, 384, 48, 744)
+    context.fillStyle = '#5c3378'
+    context.fillText(label.name, 384, 48, 744)
     const map = new THREE.CanvasTexture(canvas)
     map.colorSpace = THREE.SRGBColorSpace
     return map
   }, [label.name])
   const material = useMemo(() => new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: true, depthWrite: false, toneMapped: false }), [texture])
   useEffect(() => () => { texture.dispose(); material.dispose() }, [material, texture])
-  const width = Math.min(0.82, Math.max(0.2, label.name.length * 0.018))
-  return <sprite position={latLon(label.lat, label.lon, 1.635)} scale={[width, 0.08, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
+  const width = Math.min(0.82, Math.max(0.2, label.name.length * 0.018)) * scale
+  return <sprite position={latLon(label.lat, label.lon, 1.635)} scale={[width, 0.08 * scale, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
 }
 
 function formatYear(year: number) { return year < 0 ? `${Math.abs(year).toLocaleString()} BC` : year === 0 ? '1 BC / 1 AD' : `${year.toLocaleString()} AD` }
@@ -619,6 +678,7 @@ export default function Atlas() {
   const [conflictFilter, setConflictFilter] = useState('All')
   const [lowMotion, setLowMotion] = useState(() => document.documentElement.dataset.performance === 'low' || window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [expanded, setExpanded] = useState(false)
+  const [zoomCommand, setZoomCommand] = useState<ZoomCommand>({ nonce: 0, kind: 'reset' })
   const page = useRef<HTMLElement>(null)
   const searchInput = useRef<HTMLInputElement>(null)
   const rulerCache = useRef(new Map<string, DatedRuler[]>())
@@ -673,6 +733,11 @@ export default function Atlas() {
         searchInput.current?.focus()
       }
       if (event.key === 'Escape') setPlaying(false)
+      const target = event.target as HTMLElement | null
+      const typing = target?.matches('input, textarea, select, [contenteditable="true"]')
+      if (!typing && (event.key === '+' || event.key === '=')) { event.preventDefault(); requestZoom('in') }
+      if (!typing && (event.key === '-' || event.key === '_')) { event.preventDefault(); requestZoom('out') }
+      if (!typing && event.key === '0') { event.preventDefault(); requestZoom('reset') }
     }
     window.addEventListener('keydown', onShortcut)
     return () => window.removeEventListener('keydown', onShortcut)
@@ -782,6 +847,10 @@ export default function Atlas() {
     }
   }, [periodEnd, periodStart, selectedWar])
 
+  function requestZoom(kind: ZoomCommand['kind']) {
+    setZoomCommand(current => ({ nonce: current.nonce + 1, kind }))
+  }
+
   async function toggleFullscreen() {
     try {
       if (document.fullscreenElement) await document.exitFullscreen()
@@ -804,8 +873,8 @@ export default function Atlas() {
 
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
-    <Canvas className="atlas-canvas" dpr={[1, 1.6]} camera={{ position: [0, 0, 5.4], fov: 39 }} gl={{ alpha: true, antialias: true }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
+    <Canvas className="atlas-canvas" dpr={[1, 2]} style={{ touchAction: 'none' }} camera={{ position: [0, 0, DEFAULT_GLOBE_DISTANCE], fov: 39 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
     </Canvas>
 
     <header className="atlas-topbar">
@@ -865,11 +934,16 @@ export default function Atlas() {
           <p className="atlas-data-note">{rulersStatus || 'The border source identifies polities, not rulers. Only dated and referenced leader claims are listed; missing names are a source-coverage gap, not a claim that no ruler existed.'} Wikidata records can be incomplete or disputed; compare the linked record with specialist sources.</p>
         </div> : <div className="atlas-detail"><div className="atlas-detail-tag"><span>{focus.category.toUpperCase()}</span><span>◦  STORY</span></div><h2>{focus.title}</h2><p className="atlas-place">⌖ &nbsp;{focus.place}</p><p className="atlas-detail-copy">{focus.detail}</p><button className="atlas-follow" onClick={() => setYear(focus.year)}>Explore this moment <span>↗</span></button></div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place markers</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label></div>
-        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL TO ZOOM · TAP A PLACE</span></div>
+        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL OR +/− TO ZOOM · TAP A PLACE</span></div>
       </>}
     </aside>
 
     <div className="atlas-globe-caption"><span>RECORDED POLITIES COLOURED · UNMAPPED LAND LEFT NEUTRAL</span><span>{selectedWar?.properties.title ?? selectedCountry?.properties.name ?? 'TIME · PLACE · PEOPLE'}</span></div>
+    <div className="atlas-zoom-controls" role="group" aria-label="Map zoom controls">
+      <button type="button" onClick={() => requestZoom('out')} aria-label="Zoom out" title="Zoom out">−</button>
+      <button type="button" onClick={() => requestZoom('in')} aria-label="Zoom in" title="Zoom in">＋</button>
+      <button type="button" className="atlas-zoom-reset" onClick={() => requestZoom('reset')} aria-label="Reset map view" title="Reset map view">RESET</button>
+    </div>
     {mapError ? <div className="atlas-data-status atlas-data-status--error">{mapError}</div> : !mapData || !historyData ? <div className="atlas-data-status">LOADING HISTORICAL BORDERS <i /></div> : !warData ? <div className="atlas-data-status">LOADING WAR RECORDS <i /></div> : null}
     {warsError && <div className="atlas-data-status atlas-data-status--error">{warsError} The historical map remains available.</div>}
 

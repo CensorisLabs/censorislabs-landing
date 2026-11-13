@@ -389,3 +389,59 @@
 .atlas-fullscreen:focus-visible, .atlas-icon-button:focus-visible, .atlas-story:focus-visible {
   outline: 2px solid #a855f7; outline-offset: 2px;
 }
+
+/* Close-range map controls */
+.atlas-zoom-controls {
+  position: absolute;
+  z-index: 3;
+  left: 17px;
+  bottom: 122px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px;
+  border: 1px solid rgba(111, 70, 139, .19);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .86);
+  box-shadow: 0 8px 24px rgba(62, 35, 82, .1);
+  backdrop-filter: blur(12px);
+}
+
+.atlas-zoom-controls button {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(111, 70, 139, .18);
+  border-radius: 50%;
+  background: rgba(168, 85, 247, .055);
+  color: #6d3f87;
+  font: 500 15px/1 ui-monospace, monospace;
+  cursor: pointer;
+  transition: border-color .18s, background .18s, transform .18s;
+}
+
+.atlas-zoom-controls button:hover {
+  border-color: rgba(143, 73, 189, .52);
+  background: rgba(168, 85, 247, .13);
+  transform: translateY(-1px);
+}
+
+.atlas-zoom-controls .atlas-zoom-reset {
+  width: auto;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 7px;
+  letter-spacing: .08em;
+}
+
+.atlas-zoom-controls button:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .atlas-zoom-controls { left: 10px; bottom: 143px; }
+  .atlas-zoom-controls button { width: 27px; height: 27px; }
+}

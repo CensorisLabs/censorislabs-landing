@@ -119,11 +119,12 @@ export function buildInsights(profile = getProfile()) {
   add('Macros', 'protein-spread', 'Protein per meal', proteinPerMeal.length ? `${nf(Math.min(...proteinPerMeal))}–${nf(Math.max(...proteinPerMeal))} g` : '—', 'Even distribution supports muscle protein synthesis', proteinPerMeal.length && Math.max(...proteinPerMeal) > Math.min(...proteinPerMeal) * 2.5 ? 'amber' : 'good')
   add('Macros', 'protein-consistency', 'Protein consistency', proteinPerMeal.length > 1 ? `±${nf(sd(proteinPerMeal), 1)} g` : '—', 'Spread across meals rather than one big hit', '')
   add('Macros', 'micros', 'Micronutrient coverage', (() => {
-    const keys = Object.keys(weekTotals[0]?.food.micros || {})
-    if (!keys.length || !loggedWeek.length) return '—'
-    const hit = keys.filter(key => avg(weekTotals.map(item => item.food.micros[key])) >= 60)
+    const days = weekTotals.filter(item => (item.food.microsKnownEntries || 0) > 0)
+    const keys = Object.keys(days[0]?.food.micros || {})
+    if (!keys.length || !days.length) return '—'
+    const hit = keys.filter(key => avg(days.map(item => item.food.micros[key])) >= 60)
     return `${hit.length}/${keys.length}`
-  })(), 'Nutrients at 60% or more of target on average', '')
+  })(), 'Nutrients at 60% or more of target on days with micronutrient data', '')
 
   // ---- body ----
   add('Body', 'weight-trend', 'Weight trend', weights.length ? kg(trend) : '—', 'Per week over the last 14 days', weights.length && trend < 0 === (profile.goal === 'lose') ? 'good' : weights.length ? 'amber' : '')

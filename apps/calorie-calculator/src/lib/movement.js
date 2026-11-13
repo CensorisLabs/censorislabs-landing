@@ -164,7 +164,11 @@ export function movementForDay(day = {}, profile = {}) {
     return sum + minutes * perMinute
   }, 0))
   const baseline = baselineSteps(profile)
-  const coveredSteps = Math.min(steps, Math.max(walkSteps, baseline))
+  // A logged walk and the activity baseline can overlap: the walk's steps are
+  // part of the day's total, and the baseline also describes steps from that
+  // total. They are both covered, so the covered amount is additive; using the
+  // larger value alone credits the overlap twice.
+  const coveredSteps = Math.min(steps, walkSteps + baseline)
   const creditSteps = Math.max(0, steps - coveredSteps)
   const creditMetrics = creditSteps === steps ? raw : stepMetrics({ steps: creditSteps, profile })
 

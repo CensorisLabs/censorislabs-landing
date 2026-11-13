@@ -35,6 +35,7 @@ export const MICRO_TARGETS = [
   { key: 'ca', label: 'Calcium', unit: 'mg', target: 1000, icon: 'bone' },
   { key: 'fe', label: 'Iron', unit: 'mg', target: 18, icon: 'drop' },
   { key: 'vc', label: 'Vitamin C', unit: 'mg', target: 40, icon: 'orange' },
+  { key: 'va', label: 'Vitamin A', unit: 'µg', target: 900, icon: 'eye' },
   { key: 'k', label: 'Potassium', unit: 'mg', target: 3500, icon: 'banana' },
   { key: 'mg', label: 'Magnesium', unit: 'mg', target: 400, icon: 'leaf' },
 ]
@@ -49,12 +50,13 @@ export function round(value, decimals = 0) {
 }
 
 export function zeroNutrients() {
-  return { kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0, na: 0, micros: { ca: 0, fe: 0, vc: 0, va: 0, k: 0, mg: 0 } }
+  return { kcal: 0, p: 0, c: 0, f: 0, fib: 0, sug: 0, na: 0, micros: { ca: 0, fe: 0, vc: 0, va: 0, k: 0, mg: 0 }, microsEntries: 0, microsKnownEntries: 0 }
 }
 
 export function nutrientsForFood(food, grams) {
   const factor = Math.max(0, Number(grams) || 0) / (food.per || 100)
   const micros = food.micros || {}
+  const microsKnown = Boolean(food.micros) && food.microsUnknown !== true
   return {
     kcal: Math.round((food.kcal || 0) * factor),
     p: round((food.p || 0) * factor, 1),
@@ -71,6 +73,7 @@ export function nutrientsForFood(food, grams) {
       k: round((micros.k || 0) * factor, 1),
       mg: round((micros.mg || 0) * factor, 1),
     },
+    microsKnown,
   }
 }
 
@@ -90,6 +93,9 @@ export function sumNutrients(entries) {
     totals.sug += nutrients.sug || 0
     totals.na += nutrients.na || 0
     for (const key of Object.keys(totals.micros)) totals.micros[key] += nutrients.micros?.[key] || 0
+    totals.microsEntries += 1
+    const known = nutrients.microsKnown ?? entry.microsKnown ?? Object.values(nutrients.micros || {}).some(value => Number(value) > 0)
+    if (known) totals.microsKnownEntries += 1
   }
   totals.kcal = Math.round(totals.kcal)
   totals.p = round(totals.p, 1)
@@ -266,6 +272,8 @@ export function dayTotals(profile, day) {
     food.sug += totals.sug
     food.na += totals.na
     for (const key of Object.keys(food.micros)) food.micros[key] += totals.micros[key]
+    food.microsEntries += totals.microsEntries || entries.length
+    food.microsKnownEntries += totals.microsKnownEntries || 0
     cost += entries.reduce((sum, entry) => sum + (entry.cost || 0), 0)
   }
   food = { ...food, kcal: Math.round(food.kcal), p: round(food.p, 1), c: round(food.c, 1), f: round(food.f, 1), fib: round(food.fib, 1), sug: round(food.sug, 1), na: Math.round(food.na), micros: Object.fromEntries(Object.entries(food.micros).map(([key, value]) => [key, round(value, 1)])) }

@@ -151,14 +151,16 @@ export function calorieDistribution() {
 export function nutrientGaps() {
   const totals = dayTotals(getProfile(), getDay(todayKey()))
   const targets = targetsFor(getProfile())
+  const hasMicros = (totals.food.microsKnownEntries || 0) > 0
   const items = [
-    { key: 'protein', label: 'Protein', value: totals.food.p, target: targets.protein, unit: 'g' },
-    { key: 'fibre', label: 'Fibre', value: totals.food.fib, target: targets.fiber, unit: 'g' },
-    { key: 'ca', label: 'Calcium', value: totals.food.micros.ca, target: 1000, unit: 'mg' },
-    { key: 'fe', label: 'Iron', value: totals.food.micros.fe, target: 18, unit: 'mg' },
-    { key: 'vc', label: 'Vitamin C', value: totals.food.micros.vc, target: 40, unit: 'mg' },
-    { key: 'k', label: 'Potassium', value: totals.food.micros.k, target: 3500, unit: 'mg' },
-    { key: 'mg', label: 'Magnesium', value: totals.food.micros.mg, target: 400, unit: 'mg' },
+    { key: 'protein', label: 'Protein', value: totals.food.p, target: targets.protein, unit: 'g', known: true },
+    { key: 'fibre', label: 'Fibre', value: totals.food.fib, target: targets.fiber, unit: 'g', known: true },
+    { key: 'ca', label: 'Calcium', value: totals.food.micros.ca, target: 1000, unit: 'mg', known: hasMicros },
+    { key: 'fe', label: 'Iron', value: totals.food.micros.fe, target: 18, unit: 'mg', known: hasMicros },
+    { key: 'vc', label: 'Vitamin C', value: totals.food.micros.vc, target: 40, unit: 'mg', known: hasMicros },
+    { key: 'va', label: 'Vitamin A', value: totals.food.micros.va, target: 900, unit: 'µg', known: hasMicros },
+    { key: 'k', label: 'Potassium', value: totals.food.micros.k, target: 3500, unit: 'mg', known: hasMicros },
+    { key: 'mg', label: 'Magnesium', value: totals.food.micros.mg, target: 400, unit: 'mg', known: hasMicros },
   ]
   return items.map(item => ({ ...item, pct: percent(item.value, item.target), gap: Math.max(0, round(item.target - item.value, 1)) }))
 }

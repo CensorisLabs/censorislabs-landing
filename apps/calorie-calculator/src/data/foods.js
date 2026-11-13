@@ -27,7 +27,7 @@ export const FOODS = [
   food('masala-oats', 'Masala oats, cooked', 'Breakfast', 'v in q', 110, 4.2, 16, 3.2, 2.8, 1.2, 210, 200, '1 bowl (200 g)', [48, 1.4, 3, 18, 145, 32]),
   food('muesli', 'Muesli, fruit & nut', 'Breakfast', 'v q', 350, 9, 60, 9, 8, 18, 120, 45, '45 g', [60, 2.6, 0, 0, 220, 80], '8901058002049', 2.5),
   food('cornflakes', 'Corn flakes', 'Breakfast', 'v q', 357, 7.5, 84, 0.4, 3, 8, 729, 30, '30 g', [6, 2.7, 0, 0, 40, 8], '8901058003052', 0.8),
-  food('bread-white', 'White bread', 'Bread & bakery', 'v q', 265, 9, 49, 3.2, 2.7, 5, 491, 28, '1 slice (28 g)', null, '8901058004028', 0.6),
+  food('bread-white', 'White bread', 'Bread & bakery', 'v q', 265, 9, 49, 3.2, 2.7, 5, 491, 28, '1 slice (28 g)', [30, 2.5, 0, 0, 110, 20], '8901058004028', 0.6),
   food('bread-brown', 'Brown bread', 'Bread & bakery', 'v q', 250, 10, 45, 3.5, 5, 4, 450, 30, '1 slice (30 g)', [40, 2.4, 0, 0, 120, 30], '8901058005032', 0.8),
   food('egg-boiled', 'Egg, boiled', 'Dairy & eggs', 'v hp gf q', 155, 13, 1.1, 11, 0, 1.1, 124, 50, '1 large egg', [50, 1.8, 0, 149, 126, 10]),
   food('egg-white', 'Egg white', 'Dairy & eggs', 'v hp gf q', 52, 11, 0.7, 0.2, 0, 0.7, 166, 33, '1 white (33 g)', [7, 0.1, 0, 0, 163, 11]),
@@ -51,7 +51,7 @@ export const FOODS = [
   food('puttu', 'Puttu', 'Breakfast', 'v vg in', 150, 3.2, 30, 1.8, 2, 0.5, 120, 150, '1 serving (150 g)', [20, 1.2, 0, 0, 80, 20]),
   food('peanut-butter', 'Peanut butter', 'Nuts & seeds', 'v vg hp q', 588, 25, 20, 50, 6, 9, 476, 32, '2 tbsp (32 g)', [43, 1.9, 0, 0, 649, 168], '8901058006077', 1.2),
   food('honey', 'Honey', 'Sweets', 'v gf', 304, 0.3, 82, 0, 0.2, 82, 4, 21, '1 tbsp (21 g)', [6, 0.4, 0.5, 0, 52, 2]),
-  food('jam', 'Mixed fruit jam', 'Sweets', 'v', 250, 0.4, 65, 0.1, 1, 60, 30, 20, '1 tbsp (20 g)', null, '8901058007083', 0.4),
+  food('jam', 'Mixed fruit jam', 'Sweets', 'v', 250, 0.4, 65, 0.1, 1, 60, 30, 20, '1 tbsp (20 g)', [5, 0.2, 0, 0, 30, 3], '8901058007083', 0.4),
   food('greek-yogurt', 'Greek yogurt, plain', 'Dairy & eggs', 'v hp gf q', 59, 10, 3.6, 0.4, 0, 3.2, 36, 150, '1 cup (150 g)', [110, 0.1, 0, 0, 141, 11]),
   food('curd', 'Curd (dahi)', 'Dairy & eggs', 'v gf in', 61, 3.5, 4.7, 3.3, 0, 4.7, 46, 150, '1 bowl (150 g)', [121, 0.1, 1, 27, 155, 12]),
 
@@ -120,7 +120,7 @@ export const FOODS = [
   food('basmati', 'Basmati rice, cooked', 'Rice & grains', 'v vg gf in', 121, 3.5, 25, 0.4, 0.6, 0.1, 1, 150, '1 katori (150 g)', [10, 0.2, 0, 0, 30, 12]),
   food('quinoa', 'Quinoa, cooked', 'Rice & grains', 'v vg gf hp', 120, 4.4, 21.3, 1.9, 2.8, 0.9, 7, 150, '1 cup (150 g)', [17, 1.5, 0, 0, 172, 64]),
   food('pasta', 'Pasta, cooked', 'Rice & grains', 'v gf', 158, 5.8, 30.9, 0.9, 1.8, 0.6, 5, 150, '1 bowl (150 g)', [7, 0.5, 0, 0, 44, 18]),
-  food('noodles', 'Instant noodles, cooked', 'Fast food', 'v', 138, 4.5, 25, 2.1, 1.2, 0.5, 380, 150, '1 pack (150 g)', null, '8901058009097', 1.4),
+  food('noodles', 'Instant noodles, cooked', 'Fast food', 'v', 138, 4.5, 25, 2.1, 1.2, 0.5, 380, 150, '1 pack (150 g)', [10, 0.5, 0, 0, 50, 10], '8901058009097', 1.4),
   food('potato', 'Potato, boiled', 'Vegetables', 'v vg gf', 87, 1.9, 20, 0.1, 1.8, 0.9, 4, 150, '1 medium (150 g)', [8, 0.5, 13, 0, 379, 22]),
   food('sweet-potato', 'Sweet potato, baked', 'Vegetables', 'v vg gf', 86, 1.6, 20, 0.1, 3, 4.2, 55, 150, '1 medium (150 g)', [30, 0.6, 2, 700, 337, 25]),
   food('corn', 'Sweet corn', 'Vegetables', 'v vg gf', 96, 3.4, 21, 1.5, 2.4, 4.5, 1, 100, '1 cob (100 g)', [2, 0.5, 7, 9, 270, 37]),
@@ -158,7 +158,7 @@ export const FOODS = [
   food('cheese-cheddar', 'Cheddar cheese', 'Dairy & eggs', 'v hp gf', 403, 24.9, 1.3, 33, 0, 0.5, 621, 30, '1 slice (30 g)', [721, 0.7, 0, 265, 98, 28]),
   food('mozzarella', 'Mozzarella', 'Dairy & eggs', 'v hp gf', 280, 28, 3.1, 17, 0, 1.2, 16, 30, '30 g', [505, 0.2, 0, 179, 76, 20]),
   food('butter', 'Butter', 'Oils & sauces', 'v gf', 717, 0.9, 0.1, 81, 0, 0.1, 643, 10, '1 tsp (10 g)', [24, 0, 0, 684, 26, 3]),
-  food('ghee', 'Ghee', 'Oils & sauces', 'v gf in', 900, 0, 0, 100, 0, 0, 2, 10, '1 tsp (10 g)', [0, 0, 0, 0, 0, 0]),
+  food('ghee', 'Ghee', 'Oils & sauces', 'v gf in', 900, 0, 0, 100, 0, 0, 2, 10, '1 tsp (10 g)', [0, 0, 0, 700, 0, 0]),
 
   // Nuts & seeds
   food('almonds', 'Almonds', 'Nuts & seeds', 'v vg hp gf', 579, 21, 21.6, 49.9, 12.5, 4.4, 1, 20, '15 almonds (20 g)', [269, 3.7, 0, 0, 733, 270]),
@@ -177,7 +177,7 @@ export const FOODS = [
   food('granola-bar', 'Granola bar', 'Snacks', 'v q', 450, 10, 60, 20, 6, 25, 200, 40, '1 bar (40 g)', [60, 2, 0, 0, 180, 60], '8901058010109', 2),
   food('chips', 'Potato chips', 'Snacks', 'v gf', 536, 7, 53, 34, 4.4, 0.5, 525, 30, '1 small pack (30 g)', [24, 1.6, 10, 0, 1197, 67], '8901058011113', 1),
   food('popcorn', 'Popcorn, air-popped', 'Snacks', 'v vg gf', 387, 12.9, 77.8, 4.5, 14.5, 0.9, 8, 20, '1 bowl (20 g)', [7, 2.7, 0, 0, 329, 144]),
-  food('biscuit', 'Glucose biscuit', 'Snacks', 'v', 480, 6, 65, 21, 2.5, 25, 400, 20, '4 biscuits (20 g)', null, '8901058012127', 0.3),
+  food('biscuit', 'Glucose biscuit', 'Snacks', 'v', 480, 6, 65, 21, 2.5, 25, 400, 20, '4 biscuits (20 g)', [20, 1.2, 0, 0, 60, 10], '8901058012127', 0.3),
   food('gulab-jamun', 'Gulab jamun', 'Sweets', 'v in', 350, 6, 50, 14, 1, 40, 100, 40, '1 piece (40 g)', [60, 0.4, 0, 30, 70, 10]),
   food('rasgulla', 'Rasgulla', 'Sweets', 'v in', 186, 4, 36, 2.5, 0, 30, 20, 50, '1 piece (50 g)', [40, 0.2, 0, 10, 60, 8]),
   food('jalebi', 'Jalebi', 'Sweets', 'v in', 380, 4, 60, 15, 1, 45, 80, 50, '2 pieces (50 g)', [20, 0.6, 0, 0, 50, 8]),
@@ -190,9 +190,9 @@ export const FOODS = [
   food('lassi-sweet', 'Sweet lassi', 'Drinks', 'v drink in', 90, 2.5, 14, 2.5, 0, 13, 40, 250, '1 glass (250 ml)', [90, 0.1, 1, 25, 120, 10]),
   food('coconut-water', 'Coconut water', 'Drinks', 'v vg drink gf', 19, 0.7, 3.7, 0.2, 1.1, 2.6, 105, 250, '1 glass (250 ml)', [24, 0.1, 2.4, 0, 250, 14]),
   food('orange-juice', 'Orange juice', 'Drinks', 'v vg drink', 45, 0.7, 10.4, 0.2, 0.2, 8.4, 1, 250, '1 glass (250 ml)', [11, 0.2, 50, 2, 200, 11]),
-  food('soda', 'Cola soft drink', 'Drinks', 'v vg drink', 41, 0, 10.6, 0, 0, 10.6, 4, 330, '1 can (330 ml)', null, '8901058013130', 0.4),
-  food('beer', 'Beer', 'Drinks', 'v vg drink', 43, 0.5, 3.6, 0, 0, 0, 4, 330, '1 bottle (330 ml)', null, null, 1.5),
-  food('wine', 'Red wine', 'Drinks', 'v vg drink', 83, 0.1, 2.6, 0, 0, 0.6, 4, 150, '1 glass (150 ml)', null, null, 4),
+  food('soda', 'Cola soft drink', 'Drinks', 'v vg drink', 41, 0, 10.6, 0, 0, 10.6, 4, 330, '1 can (330 ml)', [2, 0, 0, 0, 5, 1], '8901058013130', 0.4),
+  food('beer', 'Beer', 'Drinks', 'v vg drink', 43, 0.5, 3.6, 0, 0, 0, 4, 330, '1 bottle (330 ml)', [4, 0, 0, 0, 27, 6], null, 1.5),
+  food('wine', 'Red wine', 'Drinks', 'v vg drink', 83, 0.1, 2.6, 0, 0, 0.6, 4, 150, '1 glass (150 ml)', [8, 0, 0, 0, 127, 10], null, 4),
 
   // Fast food & sauces
   food('pizza-margherita', 'Margherita pizza', 'Fast food', 'v', 266, 11, 33, 10, 2.3, 3.6, 598, 100, '1 slice (100 g)', [189, 1.5, 2, 80, 172, 22]),
@@ -200,8 +200,8 @@ export const FOODS = [
   food('burger-chicken', 'Chicken burger', 'Fast food', 'hp', 290, 15, 30, 12, 2, 4, 560, 180, '1 burger (180 g)', [60, 1.4, 4, 40, 250, 28]),
   food('fries', 'French fries', 'Fast food', 'v vg gf', 312, 3.4, 41, 15, 3.8, 0.3, 210, 100, '1 medium (100 g)', [15, 0.8, 5, 0, 579, 30]),
   food('sandwich-veg', 'Vegetable sandwich', 'Fast food', 'v', 210, 7, 28, 7, 3, 4, 450, 150, '1 sandwich (150 g)', [90, 1.2, 8, 40, 180, 22]),
-  food('mayonnaise', 'Mayonnaise', 'Oils & sauces', 'v gf', 680, 1, 0.6, 75, 0, 0.6, 635, 15, '1 tbsp (15 g)', null, null, 0.5),
-  food('ketchup', 'Tomato ketchup', 'Oils & sauces', 'v vg gf', 112, 1.2, 26, 0.1, 0.3, 22, 907, 15, '1 tbsp (15 g)', null, '8901058014146', 0.2),
+  food('mayonnaise', 'Mayonnaise', 'Oils & sauces', 'v gf', 680, 1, 0.6, 75, 0, 0.6, 635, 15, '1 tbsp (15 g)', [8, 0.2, 0, 0, 20, 2], null, 0.5),
+  food('ketchup', 'Tomato ketchup', 'Oils & sauces', 'v vg gf', 112, 1.2, 26, 0.1, 0.3, 22, 907, 15, '1 tbsp (15 g)', [15, 0.3, 4, 30, 369, 13], '8901058014146', 0.2),
   food('olive-oil', 'Olive oil', 'Oils & sauces', 'v vg gf', 884, 0, 0, 100, 0, 0, 2, 10, '1 tsp (10 g)', [1, 0.6, 0, 0, 1, 0]),
   food('coconut-oil', 'Coconut oil', 'Oils & sauces', 'v vg gf', 862, 0, 0, 100, 0, 0, 0, 10, '1 tsp (10 g)', [1, 0, 0, 0, 1, 0]),
 ]

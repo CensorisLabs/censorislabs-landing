@@ -194,7 +194,11 @@ function migrate(raw) {
     profiles,
     logs,
     activeProfileId: active,
-    customFoods: Array.isArray(raw.customFoods) ? raw.customFoods : [],
+    customFoods: (Array.isArray(raw.customFoods) ? raw.customFoods : []).map(food => {
+      const micros = food?.micros
+      const allZero = micros && Object.values(micros).every(value => !(Number(value) > 0))
+      return allZero && food.microsUnknown === undefined ? { ...food, microsUnknown: true } : food
+    }),
     recipes: Array.isArray(raw.recipes) ? raw.recipes : base.recipes,
     vitals: Array.isArray(raw.vitals) ? raw.vitals : [],
     medications: Array.isArray(raw.medications) ? raw.medications : [],
@@ -317,6 +321,8 @@ export function findRecipe(id) {
 
 export function recipeTotals(recipe) {
   const totals = zeroNutrients()
+  let microsEntries = 0
+  let microsKnownEntries = 0
   for (const item of recipe.items) {
     const food = findFood(item.foodId)
     if (!food) continue
@@ -329,6 +335,8 @@ export function recipeTotals(recipe) {
     totals.sug += nutrients.sug
     totals.na += nutrients.na
     for (const key of Object.keys(totals.micros)) totals.micros[key] += nutrients.micros[key] || 0
+    microsEntries += 1
+    if (nutrients.microsKnown) microsKnownEntries += 1
   }
   const perServing = recipe.servings > 0 ? recipe.servings : 1
   return {
@@ -342,7 +350,10 @@ export function recipeTotals(recipe) {
       sug: Math.round((totals.sug / perServing) * 10) / 10,
       na: Math.round(totals.na / perServing),
       micros: Object.fromEntries(Object.entries(totals.micros).map(([key, value]) => [key, value / perServing])),
+      microsKnown: microsEntries > 0 && microsKnownEntries === microsEntries,
     },
+    microsEntries,
+    microsKnownEntries,
     grams: recipe.items.reduce((sum, item) => sum + Number(item.g || 0), 0),
   }
 }
@@ -398,7 +409,7 @@ export function makeQuickEntry({ name, kcal, p = 0, c = 0, f = 0, fib = 0, sug =
     grams: 0,
     qty: 1,
     portionLabel: portionLabel || 'Quick add',
-    nutrients: { kcal: Math.max(0, Number(kcal) || 0), p: Math.max(0, Number(p) || 0), c: Math.max(0, Number(c) || 0), f: Math.max(0, Number(f) || 0), fib: Math.max(0, Number(fib) || 0), sug: Math.max(0, Number(sug) || 0), na: Math.max(0, Number(na) || 0), micros: { ca: 0, fe: 0, vc: 0, va: 0, k: 0, mg: 0 } },
+    nutrients: { kcal: Math.max(0, Number(kcal) || 0), p: Math.max(0, Number(p) || 0), c: Math.max(0, Number(c) || 0), f: Math.max(0, Number(f) || 0), fib: Math.max(0, Number(fib) || 0), sug: Math.max(0, Number(sug) || 0), na: Math.max(0, Number(na) || 0), micros: { ca: 0, fe: 0, vc: 0, va: 0, k: 0, mg: 0 }, microsKnown: false },
     gi: 55,
     cost: Math.max(0, Number(cost) || 0),
     at: Date.now(),
@@ -436,6 +447,7 @@ export function addRecipe(date, meal, recipe, servings = 1) {
       sug: round(totals.sug * servings, 1),
       na: totals.na * servings,
       micros: Object.fromEntries(Object.entries(totals.micros).map(([key, value]) => [key, value * servings])),
+      microsKnown: totals.microsKnown,
     },
     gi: 50,
     cost: 0,

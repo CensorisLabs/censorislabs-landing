@@ -4,7 +4,9 @@
 //
 // Expected columns (header names are matched loosely):
 //   name, brand, barcode, category, kcal, protein, carbs, fat, fiber,
-//   sugar, sodium (mg), serving (g), serving label, diet (veg/vegan/nonveg)
+//   sugar, sodium (mg), calcium (mg), iron (mg), vitamin c (mg),
+//   vitamin a (µg), potassium (mg), magnesium (mg), serving (g), serving label,
+//   diet (veg/vegan/nonveg)
 
 import { parseCsv } from './csv.js'
 
@@ -72,6 +74,12 @@ export function readFoodsCsv(text) {
     fib: findColumn(headers, ['fiber', 'fibre', 'dietary fiber', 'fiber g']),
     sug: findColumn(headers, ['sugar', 'sugars', 'sugar g']),
     na: findColumn(headers, ['sodium', 'sodium mg', 'salt', 'salt g']),
+    ca: findColumn(headers, ['calcium', 'calcium mg']),
+    fe: findColumn(headers, ['iron', 'iron mg']),
+    vc: findColumn(headers, ['vitamin c', 'vitamin c mg']),
+    va: findColumn(headers, ['vitamin a', 'vitamin a mcg', 'vitamin a µg', 'vitamin a g']),
+    k: findColumn(headers, ['potassium', 'potassium mg']),
+    mg: findColumn(headers, ['magnesium', 'magnesium mg']),
     serving: findColumn(headers, ['serving', 'serving size', 'serving g', 'serving weight', 'portion']),
     label: findColumn(headers, ['serving label', 'serving name', 'portion label', 'unit']),
     diet: findColumn(headers, ['diet', 'veg', 'vegetarian', 'food type']),
@@ -97,6 +105,15 @@ export function readFoodsCsv(text) {
 
     const servingG = Math.max(1, Math.min(2000, numberFrom(cell(columns.serving)) || 100))
     const diet = dietTags(cell(columns.diet))
+    const micros = {
+      ca: Math.max(0, numberFrom(cell(columns.ca))),
+      fe: Math.max(0, numberFrom(cell(columns.fe))),
+      vc: Math.max(0, numberFrom(cell(columns.vc))),
+      va: Math.max(0, numberFrom(cell(columns.va))),
+      k: Math.max(0, numberFrom(cell(columns.k))),
+      mg: Math.max(0, numberFrom(cell(columns.mg))),
+    }
+    const hasMicros = Object.values(micros).some(value => value > 0)
     foods.push({
       name: name.slice(0, 80),
       brand: cell(columns.brand).slice(0, 40),
@@ -109,6 +126,8 @@ export function readFoodsCsv(text) {
       fib: Math.round(Math.max(0, numberFrom(cell(columns.fib))) * 10) / 10,
       sug: Math.round(Math.max(0, numberFrom(cell(columns.sug))) * 10) / 10,
       na: Math.round(na),
+      ...(hasMicros ? { micros } : {}),
+      microsUnknown: !hasMicros,
       serving: servingG,
       label: cell(columns.label).slice(0, 40) || `${servingG} g`,
       tags: diet.tags,
@@ -144,6 +163,8 @@ export function applyFoodImport(foods, { customFoods, saveCustomFood }) {
       fib: food.fib,
       sug: food.sug,
       na: food.na,
+      ...(food.micros ? { micros: food.micros } : existing?.micros ? { micros: existing.micros } : {}),
+      microsUnknown: food.micros ? false : existing?.micros ? false : true,
       serving: { g: food.serving, label: food.label },
       ...(food.code ? { code: food.code } : {}),
     })

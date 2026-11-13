@@ -33,6 +33,18 @@ test('missing calories are calculated from macros', () => {
   assert.deepEqual(foods[0].tags, ['imported'])
 })
 
+test('micronutrient columns are imported per 100 g', () => {
+  const { foods } = readFoodsCsv('Name,Kcal,Calcium (mg),Iron (mg),Vitamin C (mg),Vitamin A (µg),Potassium (mg),Magnesium (mg)\nRagi bowl,120,350,3.9,0,0,220,90')
+  assert.deepEqual(foods[0].micros, { ca: 350, fe: 3.9, vc: 0, va: 0, k: 220, mg: 90 })
+  assert.equal(foods[0].microsUnknown, false)
+})
+
+test('foods without micronutrient columns are marked as unknown, not zero', () => {
+  const { foods } = readFoodsCsv('Name,Kcal\nPlain snack,200')
+  assert.equal(foods[0].micros, undefined)
+  assert.equal(foods[0].microsUnknown, true)
+})
+
 test('rows without a name or any nutrition are skipped', () => {
   const { foods, skipped } = readFoodsCsv('Name,Kcal\n,120\nEmpty food,\nReal food,90')
   assert.equal(foods.length, 1)

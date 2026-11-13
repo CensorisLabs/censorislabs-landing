@@ -315,6 +315,7 @@ export function openCodeLookup({ date = ui.date, meal = null, mode = 'log', plan
 
 function microRows(food, grams) {
   const nutrients = nutrientsForFood(food, grams)
+  if (!nutrients.microsKnown) return '<p class="kc-micro-empty kc-muted">Micronutrients are not reported for this food.</p>'
   return MICRO_TARGETS.map(micro => {
     const value = nutrients.micros[micro.key] || 0
     return `<div class="kc-micro"><span>${esc(micro.label)}</span><b>${fmt(value, value < 10 ? 1 : 0)} ${micro.unit}</b><i style="width:${Math.min(100, value / micro.target * 100)}%"></i></div>`
@@ -590,6 +591,8 @@ export function openCustomFood({ date = ui.date, meal = null, food = null } = {}
         if (!name || !Number.isFinite(kcal)) { toast('Add a name and calories.', 'error'); return }
         const selectedTags = [...form.querySelectorAll('.kc-check input:checked')].map(input => input.value)
         if (!selectedTags.length) selectedTags.push('v')
+        const micros = Object.fromEntries(MICRO_TARGETS.map(item => [item.key, Math.max(0, Number(form.querySelector(`#cf-m-${item.key}`).value) || 0)]))
+        const hasMicros = Object.values(micros).some(value => value > 0)
         const customFood = {
           id: food?.id || `custom-${uid('food')}`,
           name,
@@ -604,7 +607,8 @@ export function openCustomFood({ date = ui.date, meal = null, food = null } = {}
           sug: Math.max(0, Number(form.querySelector('#cf-sug').value) || 0),
           na: Math.max(0, Number(form.querySelector('#cf-na').value) || 0),
           serving: { label: form.querySelector('#cf-serving-label').value.trim() || '1 serving', g: Math.max(1, Number(form.querySelector('#cf-serving-g').value) || 100) },
-          micros: Object.fromEntries(MICRO_TARGETS.map(item => [item.key, Math.max(0, Number(form.querySelector(`#cf-m-${item.key}`).value) || 0)])),
+          ...(hasMicros ? { micros } : {}),
+          microsUnknown: !hasMicros,
           cost: Math.max(0, Number(form.querySelector('#cf-cost').value) || 0),
           code: form.querySelector('#cf-code').value.trim() || undefined,
           custom: true,

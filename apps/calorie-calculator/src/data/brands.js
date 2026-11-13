@@ -15,6 +15,7 @@ const branded = (code, name, brand, cat, kcal, p, c, f, fib, sug, na, servingG, 
   per: 100,
   kcal, p, c, f, fib, sug, na,
   serving: { g: servingG, label: servingLabel },
+  microsUnknown: true,
   code,
 })
 

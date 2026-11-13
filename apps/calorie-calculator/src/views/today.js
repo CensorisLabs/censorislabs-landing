@@ -203,6 +203,9 @@ export function renderToday(root) {
   const plate = suggestedPlate(profile, totals, mealForNow())
   const stepGoal = Number(profile.stepGoal) || 8000
   const movement = totals.movement
+  const microEntries = totals.food.microsEntries || 0
+  const microKnownEntries = totals.food.microsKnownEntries || 0
+  const hasMicroData = microKnownEntries > 0
   const noteId = 'day-note'
 
   root.innerHTML = `<div class="kc-view kc-today">
@@ -341,11 +344,11 @@ export function renderToday(root) {
       </section>
       <section class="kc-card kc-micro-card">
         <div class="kc-card__head"><div><p class="kc-eyebrow">MICRONUTRIENTS</p><h3>Daily coverage</h3><p>From the foods logged on this day.</p></div><button type="button" class="kc-text-btn" data-action="today:diary">Diary</button></div>
-        <div class="kc-micro-list">${MICRO_TARGETS.map(micro => {
+        <div class="kc-micro-list">${hasMicroData ? MICRO_TARGETS.map(micro => {
           const value = totals.food.micros[micro.key] || 0
           return `<div class="kc-micro-row"><span>${esc(micro.label)}</span>${bar(value, micro.target, 'fibre')}<b>${fmt(value, value < 10 ? 1 : 0)} ${micro.unit}</b></div>`
-        }).join('')}</div>
-        <p class="kc-meta">These are estimates; supplement decisions belong with a clinician.</p>
+        }).join('') : '<p class="kc-muted">No logged food has micronutrient data, so coverage is not estimated.</p>'}</div>
+        <p class="kc-meta">${hasMicroData ? `${microKnownEntries === microEntries ? 'All' : `${microKnownEntries} of ${microEntries}`} logged entries include micronutrient data. ` : ''}These are estimates; supplement decisions belong with a clinician.</p>
       </section>
     </div>
 

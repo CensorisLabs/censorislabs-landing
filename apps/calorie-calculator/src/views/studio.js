@@ -174,7 +174,7 @@ function kitchenTab(profile) {
   const proteinValue = foodList().filter(food => food.cost > 0 && food.p > 0).map(food => ({ ...food, value: food.p / food.cost })).sort((a, b) => b.value - a.value).slice(0, 5)
   const dense = [...foodList()].sort((a, b) => b.kcal - a.kcal).slice(0, 5)
   const light = [...foodList()].sort((a, b) => a.kcal - b.kcal).slice(0, 5)
-  const gap = nutrientGaps().slice().sort((a, b) => a.pct - b.pct)[0]
+  const gap = nutrientGaps().filter(item => item.known !== false).sort((a, b) => a.pct - b.pct)[0]
   const gapPool = foodList().filter(food => foodAllowed(food, profile))
   const pairings = gapPool.map(food => {
     let value = 0
@@ -214,7 +214,7 @@ function nutritionTab(profile) {
   const day = getDay(todayKey())
   const totals = dayTotals(profile, day)
   const targets = targetsFor(profile)
-  const microGaps = nutrientGaps()
+  const microGaps = nutrientGaps().filter(item => item.known !== false)
   const worst = [...microGaps].sort((a, b) => a.pct - b.pct).slice(0, 3)
   const protein = proteinDistribution()
   const calories = calorieDistribution()
@@ -249,7 +249,7 @@ function nutritionTab(profile) {
     ${labCard('MINERALS', 'Sodium-to-potassium ratio', 'A higher ratio is common in restaurant-heavy days. Food data is approximate.', sodiumPotassium == null ? emptyLab('Log potassium-rich food to calculate this ratio.') : `<div class="kc-lab-hero-value">${sodiumPotassium}<small>Na : K</small></div>${labRow('Sodium', `${fmt(totals.food.na)} mg`)}${labRow('Potassium', `${fmt(totals.food.micros.k, 0)} mg`)}<p class="kc-lab-fine">Under 1.0 is a useful direction for most everyday plates; clinical advice may differ.</p>`)}
     ${labCard('PROTEIN', 'Protein distribution score', 'Protein is more useful spread across meals than saved for dinner.', `<div class="kc-lab-hero-value">${protein.score}<small>/100</small></div><div class="kc-lab-list">${protein.values.map(item => labRow(item.label, `${fmt(item.p, 1)} g`, `${item.pct}% of today’s protein`)).join('')}</div>`)}
     ${labCard('CALORIES', 'Calorie distribution by meal', 'Where today’s energy actually landed.', `<div class="kc-lab-list">${calories.map(item => labRow(item.label, `${fmt(item.kcal)} kcal`, `${item.pct}%`)).join('')}</div>`)}
-    ${labCard('GAPS', 'Nutrient-gap finder', 'The three nutrients furthest from today’s guide.', `<div class="kc-lab-list">${worst.map(item => labRow(item.label, `${item.pct}%`, `${fmt(item.gap, 1)} ${item.unit} to go`)).join('')}</div>`)}
+    ${labCard('GAPS', 'Nutrient-gap finder', 'The three nutrients furthest from today’s guide.', worst.length ? `<div class="kc-lab-list">${worst.map(item => labRow(item.label, `${item.pct}%`, `${fmt(item.gap, 1)} ${item.unit} to go`)).join('')}</div>` : emptyLab('Log a food with micronutrient data to see mineral and vitamin gaps.'))}
     ${labCard('FIBRE', 'Fibre-gap food suggestions', 'Foods that add fibre without requiring a supplement.', `<div class="kc-lab-list">${fiberFoods.map(food => labRow(esc(food.name), `${fmt(food.fib, 1)} g`, `per 100 g · ${fmt(food.kcal)} kcal`)).join('')}</div>`)}
     ${labCard('PROTEIN GAP', 'Protein-gap food suggestions', 'High-protein additions from the offline database.', `<div class="kc-lab-list">${proteinFoods.map(food => labRow(esc(food.name), `${fmt(food.p, 1)} g`, `per 100 g · ${fmt(food.kcal)} kcal`)).join('')}</div>`)}
     ${labCard('HYDRATION', 'Hydration pacing calculator', `A simple spread of your ${fmt(targets.water)} ml guide across the waking day.`, `<form class="kc-lab-form kc-lab-form--two" data-form="studio:rhythm"><label class="kc-field"><span>Wake</span><input name="wake" type="time" value="${esc(wake)}"></label><label class="kc-field"><span>Bed</span><input name="bed" type="time" value="${esc(bed)}"></label><button class="kc-btn kc-btn--soft kc-btn--sm" type="submit">Update</button></form><div class="kc-lab-list">${hydrationRows.map(row => labRow(row.label, `${fmt(row.amount)} ml`)).join('')}</div><p class="kc-lab-fine">${perHour} ml per waking hour is a pacing guide, not a rule. Thirst, weather, activity and medical advice matter.</p>`)}

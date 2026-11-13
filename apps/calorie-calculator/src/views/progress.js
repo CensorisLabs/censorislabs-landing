@@ -153,7 +153,8 @@ function nutritionTab(profile) {
   const totalKcal = logged.reduce((sum, row) => sum + row.totals.food.kcal, 0)
   const avgPct = percent(averages.kcal, targets.kcal)
   const calorieItems = rows.map(row => ({ label: prettyDate(row.date, { weekday: 'long', day: 'numeric', month: 'short' }), short: prettyDate(row.date, { weekday: 'narrow' }), value: row.totals.food.kcal }))
-  const microAverages = MICRO_TARGETS.map(micro => ({ ...micro, value: rangeAvg(logged.map(row => row.totals.food.micros[micro.key] || 0)) }))
+  const microDays = logged.filter(row => (row.totals.food.microsKnownEntries || 0) > 0)
+  const microAverages = MICRO_TARGETS.map(micro => ({ ...micro, value: rangeAvg(microDays.map(row => row.totals.food.micros[micro.key] || 0)) }))
   const heat = dateSeries(ui.date, 112).map(date => {
     const day = getDay(date, false)
     const totals = dayTotals(profile, day)
@@ -198,7 +199,8 @@ function nutritionTab(profile) {
       </section>
       <section class="kc-card">
         <div class="kc-card__head"><div><p class="kc-eyebrow">MICRONUTRIENTS</p><h3>Average coverage</h3><p>Where the logged food lands against a daily guide.</p></div></div>
-        <div class="kc-micro-list">${microAverages.map(micro => `<div class="kc-micro-row"><span>${esc(micro.label)}</span>${bar(micro.value, micro.target, 'fibre')}<b>${fmt(micro.value, micro.value < 10 ? 1 : 0)} ${micro.unit}</b></div>`).join('')}</div>
+        ${microDays.length ? `<div class="kc-micro-list">${microAverages.map(micro => `<div class="kc-micro-row"><span>${esc(micro.label)}</span>${bar(micro.value, micro.target, 'fibre')}<b>${fmt(micro.value, micro.value < 10 ? 1 : 0)} ${micro.unit}</b></div>`).join('')}</div>` : '<p class="kc-muted">No logged day has micronutrient data, so no average is shown.</p>'}
+        <p class="kc-meta">${microDays.length ? `Based on ${microDays.length} of ${logged.length} logged day${logged.length === 1 ? '' : 's'} with micronutrient data.` : 'Branded, quick-add and imported entries often omit micronutrients.'}</p>
       </section>
     </div>
     <section class="kc-card">

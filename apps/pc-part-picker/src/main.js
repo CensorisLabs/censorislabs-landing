@@ -39,6 +39,8 @@ const saved = readSavedBuild()
 const savedIndex = (key) => { const index = Number(saved[key]); return Number.isInteger(index) && index >= 0 && index < parts[key].length ? index : -1 }
 const state = Object.fromEntries(categories.map(([key]) => [key, savedIndex(key)]))
 const priceState = Object.fromEntries(categories.map(([key]) => [key, typeof saved.prices?.[key] === 'string' || typeof saved.prices?.[key] === 'number' ? saved.prices[key] : '']))
+let storageName = typeof saved?.storageText === 'string' ? saved.storageText : ''
+const priceTotal = () => categories.reduce((sum, [key]) => { const picked = state[key] >= 0 && parts[key]?.[state[key]]; const value = Number(priceState[key]); return sum + (picked && Number.isFinite(value) && value > 0 ? value : 0) }, 0)
 
 mountApp({
   appId: 'pc-part-picker',
@@ -54,19 +56,21 @@ const LIBRARY_KEY = 'censoris-pc-builds'
 function readBuilds() { try { const value = JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]'); return Array.isArray(value) ? value.filter(entry => entry && entry.name && entry.state && typeof entry.state === 'object') : [] } catch { return [] } }
 let builds = readBuilds()
 function writeBuilds() { try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(builds.slice(0, 20))) } catch {} }
-function snapshot(name) { return { name, savedAt: Date.now(), state: { ...state }, prices: { ...priceState }, storageText: document.querySelector('[data-key="storage"]')?.selectedOptions[0]?.text || '', total: Object.values(priceState).reduce((sum, price) => sum + (Number(price) || 0), 0) } }
+function snapshot(name) { return { name, savedAt: Date.now(), state: { ...state }, prices: { ...priceState }, storageText: storageName, total: priceTotal() } }
 function renderLibrary() {
   $('build-library').innerHTML = builds.length ? `<p class="eyebrow" style="margin-top:20px">SAVED BUILDS</p>${builds.map((entry, index) => `<div class="source-row"><span><b>${escapeHtml(entry.name)}</b><small>${money(entry.total)} · ${new Date(entry.savedAt).toLocaleDateString('en-IN')}</small></span><span class="actions"><button class="btn btn--quiet" data-load="${index}">Load</button><button class="btn btn--quiet" data-delete="${index}" aria-label="Delete ${escapeHtml(entry.name)}">×</button></span></div>`).join('')}` : ''
   $('build-library').querySelectorAll('[data-load]').forEach(button => button.addEventListener('click', () => {
     const entry = builds[Number(button.dataset.load)]
     if (!entry) return
-    Object.assign(state, entry.state)
-    Object.assign(priceState, entry.prices || {})
+    for (const [key] of categories) { const index = Number(entry.state[key]); state[key] = Number.isInteger(index) && index >= 0 && index < parts[key].length ? index : -1 }
+    for (const [key] of categories) { const value = Number(entry.prices?.[key]); priceState[key] = Number.isFinite(value) && value >= 0 ? String(value) : '' }
+    storageName = typeof entry.storageText === 'string' ? entry.storageText : ''
     $('build-name').value = entry.name
     renderList(); update()
     $('save-status').textContent = `Loaded “${entry.name}”.`
   }))
   $('build-library').querySelectorAll('[data-delete]').forEach(button => button.addEventListener('click', () => {
+    if (!window.confirm(`Delete “${builds[Number(button.dataset.delete)]?.name || 'this build'}”?`)) return
     builds.splice(Number(button.dataset.delete), 1); writeBuilds(); renderLibrary()
   }))
 }
@@ -80,17 +84,29 @@ function renderList() {
   }).join('')
   // Storage is an open text entry because form factor and interface vary by drive.
   document.querySelector('.part-select[data-key="storage"]').innerHTML = `<option value="-1">Select storage</option><option>NVMe SSD · 1 TB</option><option>NVMe SSD · 2 TB</option><option>SATA SSD · 1 TB</option><option>Hard drive · 2 TB</option>`
-  document.querySelectorAll('.part-select').forEach(select => select.addEventListener('change', event => { const key = event.currentTarget.dataset.key; state[key] = key === 'storage' ? event.currentTarget.selectedIndex - 1 : Number(event.currentTarget.value); update() }))
-  document.querySelectorAll('.part-price').forEach(input => input.addEventListener('input', event => { priceState[event.currentTarget.dataset.key] = event.currentTarget.value; update() }))
+  document.querySelectorAll('.part-select').forEach(select => select.addEventListener('change', event => {
+    const key = event.currentTarget.dataset.key
+    state[key] = key === 'storage' ? event.currentTarget.selectedIndex - 1 : Number(event.currentTarget.value)
+    if (key === 'storage') storageName = event.currentTarget.selectedOptions[0]?.text || ''
+    update()
+  }))
+  document.querySelectorAll('.part-price').forEach(input => input.addEventListener('input', event => {
+    const key = event.currentTarget.dataset.key, raw = event.currentTarget.value, value = Number(raw)
+    if (raw !== '' && (!Number.isFinite(value) || value < 0)) { event.currentTarget.value = '0'; priceState[key] = '0' } else priceState[key] = raw
+    update()
+  }))
   const storageSelect = document.querySelector('[data-key="storage"]')
-  const storageIndex = saved?.storageText ? [...storageSelect.options].findIndex(option => option.text === saved.storageText) : -1
+  const storageIndex = storageName ? [...storageSelect.options].findIndex(option => option.text === storageName) : -1
   if (storageIndex > 0) {
     storageSelect.selectedIndex = storageIndex
     state.storage = storageIndex - 1
+  } else if (state.storage >= 0 && state.storage < storageSelect.options.length - 1) {
+    storageSelect.selectedIndex = state.storage + 1
+    storageName = storageSelect.selectedOptions[0]?.text || ''
   }
 }
 function update() {
-  const total = Object.values(priceState).reduce((sum, price) => sum + (Number(price) || 0), 0)
+  const total = priceTotal()
   const cpu = selection('cpu'), board = selection('board'), memory = selection('memory'), gpu = selection('gpu'), psu = selection('psu'), casing = selection('case')
   const draw = (cpu?.watts || 0) + (gpu?.watts || 0) + (cpu || gpu ? 100 : 0)
   const recommended = Math.ceil(draw * 1.3 / 50) * 50
@@ -104,7 +120,7 @@ function update() {
   $('headroom').textContent = recommended ? `~${recommended} W` : '—'
   $('compatibility').textContent = issues.length ? `Review: ${issues.join(' ')}` : cpu || board || memory || gpu || psu || casing ? 'No mismatch found in the selected compatibility fields.' : 'Choose components to check the selected combination.'
   $('compatibility').className = issues.length ? 'notice error' : 'notice'
-  localStorage.setItem('censoris-pc-build', JSON.stringify({ ...state, prices: priceState, storageText: document.querySelector('[data-key="storage"]')?.selectedOptions[0]?.text || '' }))
+  try { localStorage.setItem('censoris-pc-build', JSON.stringify({ ...state, prices: priceState, storageText: storageName })) } catch {}
 }
 renderList(); update(); renderLibrary()
 $('save-build').addEventListener('click', () => {
@@ -116,10 +132,10 @@ $('save-build').addEventListener('click', () => {
   $('save-status').textContent = `Saved “${name}” on this device.`
 })
 $('export-build').addEventListener('click', async () => {
-  const lines = categories.map(([key, label]) => `${label}: ${selection(key)?.name || 'not selected'}${priceState[key] ? ` — ₹${Number(priceState[key]).toLocaleString('en-IN')}` : ''}`)
-  lines.push(`Estimated total: ${money(Object.values(priceState).reduce((sum, price) => sum + (Number(price) || 0), 0))}`)
+  const lines = categories.map(([key, label]) => `${label}: ${selection(key)?.name || 'not selected'}${selection(key) && Number(priceState[key]) > 0 ? ` — ₹${Number(priceState[key]).toLocaleString('en-IN')}` : ''}`)
+  lines.push(`Estimated total: ${money(priceTotal())}`)
   const text = lines.join(String.fromCharCode(10))
   try { await navigator.clipboard.writeText(text); $('save-status').textContent = 'Parts list copied to the clipboard.' }
   catch { $('save-status').textContent = text }
 })
-$('reset').addEventListener('click', () => { localStorage.removeItem('censoris-pc-build'); location.reload() })
+$('reset').addEventListener('click', () => { if (!window.confirm('Clear this build from this device?')) return; try { localStorage.removeItem('censoris-pc-build') } catch {}; location.reload() })

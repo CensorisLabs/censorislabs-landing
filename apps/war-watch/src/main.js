@@ -19,7 +19,7 @@ const queries = {
 let timer = null, controller = null, lastKeys = new Set(), isLoading = false, savedView = false
 const SAVED_KEY = 'censoris-war-saved'
 const TOPIC_KEY = 'censoris-war-topic'
-const readSaved = () => { try { const value = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(value) ? value : [] } catch { return [] } }
+const readSaved = () => { try { const value = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(value) ? value.filter(entry => entry && typeof entry.title === 'string' && typeof entry.url === 'string' && /^https?:\/\//i.test(entry.url)).slice(0, 100) : [] } catch { return [] } }
 let saved = readSaved()
 try { const topic = localStorage.getItem(TOPIC_KEY); if (topic && ['conflicts','humanitarian','regional'].includes(topic)) $('topic').value = topic } catch {}
 function toggleSaved(item) {
@@ -42,7 +42,7 @@ function seenDate(value) {
 }
 function render(articles) {
   const visible = articles.filter(item => item.url && /^https?:\/\//i.test(item.url))
-  const markup = visible.map(item => {
+  const markup = visible.map((item, index) => {
     const title = escape(item.title || 'Open publisher report')
     const domain = escape(item.domain || (() => { try { return new URL(item.url).hostname } catch { return 'Original source' } })())
     const region = escape(item.sourcecountry || 'Worldwide source')
@@ -50,7 +50,7 @@ function render(articles) {
     const key = item.url
     const fresh = !lastKeys.has(key)
     lastKeys.add(key)
-    return `<article class="news-item war-story"><div class="section-heading"><span class="eyebrow">${region}</span>${fresh ? '<span class="pill">NEW</span>' : ''}</div><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a><div class="news-meta"><span>${domain}</span><span>${date}</span><button class="btn btn--quiet" data-save="${escape(item.url)}" data-index="${visible.indexOf(item)}">${saved.some(entry => entry.url === item.url) ? '★ Saved' : '☆ Save'}</button></div></article>`
+    return `<article class="news-item war-story"><div class="section-heading"><span class="eyebrow">${region}</span>${fresh ? '<span class="pill">NEW</span>' : ''}</div><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a><div class="news-meta"><span>${domain}</span><span>${date}</span><button class="btn btn--quiet" data-save="${escape(item.url)}" data-index="${index}">${saved.some(entry => entry.url === item.url) ? '★ Saved' : '☆ Save'}</button></div></article>`
   }).join('')
   $('results').innerHTML = markup || '<div class="empty">No stories matched this filter in the current index window.</div>'
   $('results').querySelectorAll('[data-save]').forEach(button => button.addEventListener('click', () => {
@@ -60,7 +60,7 @@ function render(articles) {
   }))
 }
 async function refresh() {
-  if (isLoading || document.hidden) return
+  if (isLoading || document.hidden || savedView) return
   isLoading = true; controller?.abort(); controller = new AbortController()
   $('status').textContent = 'Checking the global news index…'
   try {
@@ -75,9 +75,16 @@ async function refresh() {
       payload = await response.json()
     }
     const articles = payload?.articles || []
+    if (savedView) return
     render(articles); $('status').textContent = `${articles.length} stories · last checked ${new Date().toLocaleTimeString()}`
   } catch (error) {
-    if (error.name !== 'AbortError') { $('status').textContent = 'Refresh failed · check your connection.'; const detail = error instanceof TypeError ? 'Could not reach the news index. A browser build can be blocked by the service’s cross-origin policy, and the index limits how often it can be queried — the desktop and mobile builds fetch it directly. Wait a minute, then refresh.' : error.message || 'Could not reach the news index. The previous headlines may have been replaced.'; $('results').innerHTML = `<div class="empty error">${escape(detail)}</div>` }
+    if (error.name !== 'AbortError') {
+      const detail = error instanceof TypeError ? 'Could not reach the news index. A browser build can be blocked by the service’s cross-origin policy, and the index limits how often it can be queried — the desktop and mobile builds fetch it directly. Wait a minute, then refresh.' : error.message || 'Could not reach the news index.'
+      const hasStories = Boolean($('results').querySelector('.war-story'))
+      $('status').textContent = hasStories ? 'Refresh failed · showing the last loaded headlines.' : 'Refresh failed · check your connection.'
+      $('results').title = detail
+      if (!hasStories) $('results').innerHTML = `<div class="empty error">${escape(detail)}</div>`
+    }
   } finally { isLoading = false }
 }
 function schedule() { if (timer) clearInterval(timer); timer = setInterval(() => { if (!document.hidden) void refresh() }, 120_000) }

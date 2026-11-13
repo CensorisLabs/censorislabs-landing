@@ -4,10 +4,11 @@ import { APP_VERSION } from './version.js'
 
 const safeRead = () => { try { return JSON.parse(localStorage.getItem('censoris-energy-data') || 'null') } catch { return null } }
 const saved = safeRead() || {}
-let appliances = Array.isArray(saved.appliances) ? saved.appliances : []
-let days = Number(saved.days) || 30
-let tariff = Number(saved.tariff) || 8
-let fixed = Number(saved.fixed) || 0
+const safeNumber = (value, fallback = 0) => { const number = Number(value); return Number.isFinite(number) && number >= 0 ? number : fallback }
+let appliances = Array.isArray(saved.appliances) ? saved.appliances.filter(item => item && typeof item === 'object').map(item => ({ name: typeof item.name === 'string' ? item.name : '', watts: safeNumber(item.watts), hours: Math.min(24, safeNumber(item.hours)), quantity: Math.max(1, safeNumber(item.quantity, 1)) })) : []
+let days = Math.min(62, Math.max(1, safeNumber(saved.days, 30)))
+let tariff = safeNumber(saved.tariff, 8)
+let fixed = safeNumber(saved.fixed, 0)
 
 mountApp({
   appId: 'home-energy-estimator',
@@ -19,14 +20,14 @@ mountApp({
 })
 
 const $ = (id) => document.getElementById(id)
-const money = (value) => `₹${Math.round(value).toLocaleString('en-IN')}`
+const money = (value) => `₹${Math.round(Number.isFinite(Number(value)) ? Number(value) : 0).toLocaleString('en-IN')}`
 const number = (value, decimals = 1) => Number(value.toFixed(decimals)).toLocaleString('en-IN')
-function save() { localStorage.setItem('censoris-energy-data', JSON.stringify({ appliances, days, tariff, fixed })) }
+function save() { try { localStorage.setItem('censoris-energy-data', JSON.stringify({ appliances, days, tariff, fixed })) } catch {} }
 function calculate() {
   days = Math.max(1, Math.min(62, Number($('days').value) || 30))
   tariff = Math.max(0, Number($('tariff').value) || 0)
   fixed = Math.max(0, Number($('fixed').value) || 0)
-  const daily = appliances.reduce((sum, item) => sum + item.watts * item.hours * item.quantity / 1000, 0)
+  const daily = appliances.reduce((sum, item) => sum + safeNumber(item.watts) * Math.min(24, safeNumber(item.hours)) * Math.max(1, safeNumber(item.quantity, 1)) / 1000, 0)
   const period = daily * days
   const charge = period * tariff
   $('daily').textContent = `${number(daily)} kWh`
@@ -39,7 +40,7 @@ function calculate() {
 }
 function renderRows() {
   $('rows').innerHTML = appliances.map((item, index) => `<tr><td><input aria-label="Appliance name" data-field="name" data-index="${index}" value="${escapeHtml(item.name)}" placeholder="e.g. Ceiling fan"></td><td><input aria-label="Watts" type="number" min="0" data-field="watts" data-index="${index}" value="${item.watts}"></td><td><input aria-label="Hours per day" type="number" min="0" max="24" step=".25" data-field="hours" data-index="${index}" value="${item.hours}"></td><td><input aria-label="Quantity" type="number" min="1" data-field="quantity" data-index="${index}" value="${item.quantity}"></td><td><button class="btn btn--quiet" data-remove="${index}" aria-label="Remove ${escapeHtml(item.name)}">×</button></td></tr>`).join('')
-  document.querySelectorAll('[data-field]').forEach(input => input.addEventListener('input', event => { const index = Number(event.currentTarget.dataset.index), field = event.currentTarget.dataset.field; appliances[index][field] = field === 'name' ? event.currentTarget.value : Math.max(0, Number(event.currentTarget.value) || 0); calculate() }))
+  document.querySelectorAll('[data-field]').forEach(input => input.addEventListener('input', event => { const index = Number(event.currentTarget.dataset.index), field = event.currentTarget.dataset.field; const minimum = field === 'quantity' ? 1 : 0, maximum = field === 'hours' ? 24 : Infinity; appliances[index][field] = field === 'name' ? event.currentTarget.value : Math.min(maximum, Math.max(minimum, Number(event.currentTarget.value) || 0)); calculate() }))
   document.querySelectorAll('[data-remove]').forEach(button => button.addEventListener('click', event => { appliances.splice(Number(event.currentTarget.dataset.remove), 1); renderRows(); calculate() }))
 }
 function escapeHtml(value) { return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]) }

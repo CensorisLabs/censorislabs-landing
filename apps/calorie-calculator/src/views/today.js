@@ -237,7 +237,7 @@ export function renderToday(root) {
         <button type="button" class="kc-quick" data-action="today:exercise">${icon('activity')}<span>Exercise</span></button>
         <button type="button" class="kc-quick" data-action="today:exercise-suggest">${icon('sparkles')}<span>Suggest move</span></button>
       </div>
-      ${(profile.recents || []).length ? `<div class="kc-quick-row kc-recent-row"><span class="kc-recent-label">${icon('clock')} Again</span>${(profile.recents || []).slice(0, 4).map(id => findFood(id)).filter(Boolean).map(food => `<button type="button" class="kc-chip kc-chip--recent" data-recent-food="${esc(food.id)}">${esc(food.name)}</button>`).join('')}</div>` : ''}
+      ${Array.isArray(profile.recents) && profile.recents.length ? `<div class="kc-quick-row kc-recent-row"><span class="kc-recent-label">${icon('clock')} Again</span>${profile.recents.slice(0, 4).map(id => findFood(id)).filter(Boolean).map(food => `<button type="button" class="kc-chip kc-chip--recent" data-recent-food="${esc(food.id)}">${esc(food.name)}</button>`).join('')}</div>` : ''}
       <p class="kc-insight">${icon('sparkles')} ${esc(dailyInsight(targets, totals, day, score, isToday))}</p>
     </section>
 

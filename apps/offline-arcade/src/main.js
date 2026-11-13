@@ -26,7 +26,7 @@ function restore2048() {
   } catch {}
   return false
 }
-function updateScore(value) { score = value; $('score').textContent = value; const old = Number(bests[game] || 0); if (value > old) { bests[game] = value; localStorage.setItem(bestKey, JSON.stringify(bests)) }; $('best').textContent = bests[game] || 0 }
+function updateScore(value) { score = value; $('score').textContent = value; const old = Number(bests[game] || 0); if (value > old) { bests[game] = value; try { localStorage.setItem(bestKey, JSON.stringify(bests)) } catch {} }; $('best').textContent = bests[game] || 0 }
 function paint2048() { $('game-title').textContent = '2048'; $('board').className = 'game-board game-board--2048'; $('board').innerHTML = grid.map((n) => `<div class="game-card" style="background:${n ? `hsl(${35 + Math.log2(n) * 11} 46% ${Math.max(27, 64 - Math.log2(n) * 5)}%)` : '#22242a'};color:${n > 4 ? '#fff' : '#f2d9b7'}" aria-label="${n || 'empty'}">${n || ''}</div>`).join(''); $('direction-controls').hidden = false; $('score').textContent = score; $('best').textContent = bests[game] || 0 }
 function slide(direction) {
   if (game !== '2048') return
@@ -48,7 +48,7 @@ function newTtt() { cells = Array(9).fill(''); turn = 'X'; updateScore(0); paint
 function paintTtt() { $('game-title').textContent = 'Tic-tac-toe'; $('board').className = 'game-board game-board--ttt'; $('board').innerHTML = cells.map((mark, index) => `<button class="game-card" data-ttt="${index}" aria-label="Cell ${index + 1}${mark ? ` ${mark}` : ''}">${mark}</button>`).join(''); $('direction-controls').hidden = true; $('best').textContent = bests[game] || 0; $('board').querySelectorAll('[data-ttt]').forEach(button => button.addEventListener('click', () => { const i = Number(button.dataset.ttt); if (cells[i] || $('game-status').dataset.over === 'true') return; cells[i] = turn; const line = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; if (line.some(([a,b,c]) => cells[a] && cells[a] === cells[b] && cells[a] === cells[c])) { $('game-status').textContent = `${turn} wins!`; $('game-status').dataset.over = 'true'; updateScore(score + 1) } else if (cells.every(Boolean)) { $('game-status').textContent = 'It’s a draw.'; $('game-status').dataset.over = 'true' } else { turn = turn === 'X' ? 'O' : 'X'; $('game-status').textContent = `${turn}’s turn` }; paintTtt() })) }
 function start(next) { game = next; $('game-status').dataset.over = 'false'; if (game === '2048') { if (!restore2048()) new2048() } else if (game === 'memory') { $('game-status').textContent = 'Find all eight pairs.'; newMemory() } else { $('game-status').textContent = 'X goes first.'; newTtt() } }
 document.querySelectorAll('[data-game]').forEach(button => button.addEventListener('click', () => start(button.dataset.game)))
-$('restart').addEventListener('click', () => { if (game === '2048') { localStorage.removeItem('censorislabs-arcade-2048'); history = [] } start(game) })
+$('restart').addEventListener('click', () => { if (game === '2048' && !window.confirm('Start a new 2048 game? Your saved board will be cleared.')) return; if (game === '2048') { try { localStorage.removeItem('censorislabs-arcade-2048') } catch {}; history = [] } start(game) })
 $('undo').addEventListener('click', () => {
   if (game !== '2048' || !history.length) { $('game-status').textContent = 'Nothing to undo yet.'; return }
   const previous = history.pop(); grid = [...previous.grid]; updateScore(previous.score); save2048(); paint2048(); $('game-status').textContent = 'Move undone.'

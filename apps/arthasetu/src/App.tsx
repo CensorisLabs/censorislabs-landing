@@ -66,7 +66,7 @@ export default function App() {
     if (!await verifyPin(pin)) return false
     const data = await readFinanceData(pin)
     if (!data || !Array.isArray(data.transactions) || !data.transactions.every(isTransaction) || !Array.isArray(data.accounts) || !data.accounts.every(isAccount) || !Array.isArray(data.mandates) || !data.mandates.every(isMandate)) return false
-    setTx(data.transactions as Tx[]); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning)); setSessionSecret(pin)
+    setTx(materializeRecurring(data.transactions as Tx[])); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning)); setSessionSecret(pin)
     const savedHash = localStorage.getItem(PIN_KEY) || ''
     try { if ((JSON.parse(savedHash) as { version?: number }).version !== 2) localStorage.setItem(PIN_KEY, await hashPin(pin)) } catch { localStorage.setItem(PIN_KEY, await hashPin(pin)) }
     if (localStorage.getItem('arthasetu-finance-vault')) await saveFinanceData(data, pin)
@@ -94,7 +94,7 @@ export default function App() {
 
   function restoreFinanceData(data: FinanceData) {
     if (!data.transactions.every(isTransaction) || !data.accounts.every(isAccount) || !data.mandates.every(isMandate)) { notify('Backup contains unsupported or invalid finance data'); return }
-    setTx(data.transactions as Tx[]); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning))
+    setTx(materializeRecurring(data.transactions as Tx[])); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning))
   }
 
   function duplicateTransaction(item: Tx) { update([{ ...item, id: nextId() }, ...tx]); notify(`${item.merchant} duplicated`) }

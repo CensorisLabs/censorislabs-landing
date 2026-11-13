@@ -40,7 +40,7 @@ const CATALOG = [
   { title: 'Better Call Saul', year: 2015, type: 'series', genres: ['Crime', 'Drama'], note: 'A small-time lawyer talks himself toward a larger, worse life.' },
 ]
 const STORE = 'censoris-watchlist'
-const readList = () => { try { const value = JSON.parse(localStorage.getItem(STORE) || '[]'); return Array.isArray(value) ? value : [] } catch { return [] } }
+const readList = () => { try { const value = JSON.parse(localStorage.getItem(STORE) || '[]'); return Array.isArray(value) ? value.filter(item => item && typeof item.title === 'string' && Number.isFinite(Number(item.year)) && (item.type === 'movie' || item.type === 'series')).slice(0, 200) : [] } catch { return [] } }
 let watchlist = readList()
 let filterType = 'all'
 let filterGenre = 'all'
@@ -118,6 +118,6 @@ $('surprise').addEventListener('click', () => {
   $('status').textContent = `Try ${pick.title} (${pick.year}).`
   renderResults([pick])
 })
-$('clear-list').addEventListener('click', () => { watchlist = []; saveWatchlist(); renderResults() })
+$('clear-list').addEventListener('click', () => { if (!watchlist.length || !window.confirm('Remove every title from your watchlist?')) return; watchlist = []; saveWatchlist(); renderResults() })
 renderResults()
 renderWatchlist()

@@ -24,7 +24,8 @@ let sources = [...defaultSources, ...customSources]
 const storedArticles = readJson('censoris-bank-headlines', [])
 let articles = Array.isArray(storedArticles) ? storedArticles.filter(article => article && typeof article === 'object' && article.title) : []
 let lastRefresh = Number(localStorage.getItem('censoris-bank-last-refresh') || 0)
-let savedIds = new Set(readJson('censoris-bank-saved', []))
+const storedSaved = readJson('censoris-bank-saved', [])
+let savedIds = new Set(Array.isArray(storedSaved) ? storedSaved.filter(id => typeof id === 'string') : [])
 let savedOnly = false
 let filterText = ''
 let isRefreshing = false
@@ -105,11 +106,12 @@ async function refresh() {
       writeCache('censoris-bank-headlines', JSON.stringify(articles))
       renderHeadlines()
     }
+    if (!updated.length && errors === sources.length) throw new Error('No source could be reached')
     lastRefresh = Date.now()
     writeCache('censoris-bank-last-refresh', String(lastRefresh))
     $('refresh-state').textContent = errors ? `${updated.length} new or recent headlines · ${errors} source${errors === 1 ? '' : 's'} unavailable · checked ${new Date(lastRefresh).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : `${updated.length} headlines available · refreshed ${new Date(lastRefresh).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
   } catch {
-    $('refresh-state').textContent = 'Could not refresh the feeds. Check your connection and try again. Browser builds can be blocked by publisher cross-origin policies; the desktop and mobile builds fetch the feeds directly.'
+    $('refresh-state').textContent = 'Could not refresh any feed. Check your connection and try again. Browser builds can be blocked by publisher cross-origin policies; the desktop and mobile builds fetch the feeds directly.'
   } finally {
     isRefreshing = false
   }

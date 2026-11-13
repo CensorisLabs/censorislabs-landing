@@ -15,8 +15,9 @@ let page = 1, currentQuery = '', busy = false, savedOnly = false
 const SAVED_KEY = 'censoris-archive-saved'
 const RECENT_KEY = 'censoris-archive-recent'
 const readStore = (key, fallback) => { try { const value = JSON.parse(localStorage.getItem(key) || 'null'); return value ?? fallback } catch { return fallback } }
-let saved = readStore(SAVED_KEY, [])
-let recent = readStore(RECENT_KEY, [])
+const asArray = value => Array.isArray(value) ? value : []
+let saved = asArray(readStore(SAVED_KEY, [])).filter(item => item && typeof item.id === 'string' && typeof item.title === 'string' && typeof item.url === 'string' && /^https:\/\/archive\.org\/details\//.test(item.url)).slice(0, 200)
+let recent = asArray(readStore(RECENT_KEY, [])).filter(item => typeof item === 'string' && item.trim()).slice(0, 6)
 const saveStores = () => { try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)); localStorage.setItem(RECENT_KEY, JSON.stringify(recent)) } catch {} }
 function renderRecent() {
   $('recent').innerHTML = recent.length ? `<span class="eyebrow">RECENT</span>${recent.map(query => `<button class="btn btn--quiet" data-recent="${escape(query)}">${escape(query)}</button>`).join('')}` : ''
@@ -65,7 +66,11 @@ async function search(append = false) {
     const data = await response.json(); const docs = data.response?.docs || []
     render(docs, append); $('more').hidden = !docs.length || docs.length < 24
     $('status').textContent = `${data.response?.numFound?.toLocaleString() || 0} matching catalog records`
-  } catch (error) { if (!append) $('results').innerHTML = `<div class="empty error" style="grid-column:1/-1">${escape(error.message || 'Could not reach the Archive. Check your connection.')}</div>`; $('status').textContent = 'Search unavailable.' }
+  } catch (error) {
+    if (append) page = Math.max(1, page - 1)
+    else $('results').innerHTML = `<div class="empty error" style="grid-column:1/-1">${escape(error.message || 'Could not reach the Archive. Check your connection.')}</div>`
+    $('status').textContent = append ? 'Could not load more · your page position was kept.' : 'Search unavailable.'
+  }
   finally { busy = false }
 }
 $('search-form').addEventListener('submit', (event) => { event.preventDefault(); void search() })

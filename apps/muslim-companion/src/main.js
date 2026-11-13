@@ -11,11 +11,12 @@ const sources = [
   { name: 'Quran Foundation API', label: 'Official Quran.com developer documentation', url: 'https://api-docs.quran.com/' },
 ]
 const readJson = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback } catch { return fallback } }
-const writeJson = (key, value) => localStorage.setItem(key, JSON.stringify(value))
+const writeJson = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true } catch { return false } }
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character])
 const formatNumber = value => new Intl.NumberFormat('en-IN').format(value)
 const coordKey = 'censoris-nur-location'
-let location = readJson(coordKey, null)
+const storedLocation = readJson(coordKey, null)
+let location = storedLocation && Number.isFinite(Number(storedLocation.latitude)) && Number.isFinite(Number(storedLocation.longitude)) && Math.abs(Number(storedLocation.latitude)) <= 90 && Math.abs(Number(storedLocation.longitude)) <= 180 ? storedLocation : null
 let chapters = []
 let currentChapter = 1
 let currentEdition = 'en.sahih'
@@ -197,7 +198,7 @@ async function loadChapterList() {
   await loadChapter(currentChapter, currentEdition)
 }
 
-function getBookmarks() { return readJson('censoris-nur-bookmarks', []) }
+function getBookmarks() { const value = readJson('censoris-nur-bookmarks', []); return Array.isArray(value) ? value.filter(item => item && typeof item.reference === 'string' && /^\d+:\d+$/.test(item.reference)).slice(0, 200) : [] }
 
 function renderBookmarks() {
   const items = getBookmarks()
@@ -222,8 +223,8 @@ function toggleBookmark(reference, button) {
 }
 
 function selectedDhikr() { return $('dhikr-type').value }
-function dhikrTarget() { return Number(localStorage.getItem('censoris-nur-dhikr-target') || $('dhikr-target').value || 33) }
-function dhikrCounts() { return readJson('censoris-nur-dhikr', {}) }
+function dhikrTarget() { let stored = 0; try { stored = Number(localStorage.getItem('censoris-nur-dhikr-target') || 0) } catch {} const value = stored || Number($('dhikr-target').value) || 33; return Number.isFinite(value) && value > 0 ? Math.min(100000, Math.round(value)) : 33 }
+function dhikrCounts() { const value = readJson('censoris-nur-dhikr', {}); if (!value || typeof value !== 'object' || Array.isArray(value)) return {}; const cleaned = {}; for (const [key, count] of Object.entries(value)) { const number = Number(count); if (Number.isFinite(number) && number >= 0) cleaned[key] = Math.floor(number) } return cleaned }
 function renderDhikr() {
   const phrase = selectedDhikr()
   const count = dhikrCounts()[phrase] || 0
@@ -276,7 +277,7 @@ $('load-prayers').addEventListener('click', () => { if (location) void loadPraye
 $('method').addEventListener('change', () => { if (location) void loadPrayerTimes() })
 $('school').addEventListener('change', () => { if (location) void loadPrayerTimes() })
 $('dhikr-type').addEventListener('change', renderDhikr)
-$('dhikr-target').addEventListener('change', event => { localStorage.setItem('censoris-nur-dhikr-target', event.currentTarget.value); renderDhikr() })
+$('dhikr-target').addEventListener('change', event => { const value = Math.min(100000, Math.max(1, Math.round(Number(event.currentTarget.value) || 33))); event.currentTarget.value = String(value); writeJson('censoris-nur-dhikr-target', String(value)); renderDhikr() })
 $('dhikr-add').addEventListener('click', () => {
   const counts = dhikrCounts()
   counts[selectedDhikr()] = (counts[selectedDhikr()] || 0) + 1

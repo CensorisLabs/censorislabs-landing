@@ -6,12 +6,12 @@ mountApp({
   appId: 'archive-explorer', eyebrow: 'PUBLIC DIGITAL COLLECTIONS', title: 'Find something worth keeping.',
   version: APP_VERSION,
   description: 'Search public Internet Archive item metadata and open the original collection page. Access and reuse rights vary by item; check its rights statement before using it.',
-  content: `<section class="panel"><p class="eyebrow">INTERNET ARCHIVE SEARCH</p><h2>Explore the catalog</h2><form id="search-form" class="search-row"><input id="query" required placeholder="Title, creator, topic, or phrase" aria-label="Search the Internet Archive"><select id="media"><option value="">All formats</option><option value="texts">Texts</option><option value="movies">Movies</option><option value="audio">Audio</option><option value="software">Software</option><option value="image">Images</option></select><button class="btn">Search</button></form><div class="actions"><span class="status" id="status" aria-live="polite">Searches are sent to archive.org.</span><button class="btn btn--quiet" id="saved-only">Saved only</button><button class="btn btn--quiet" id="export-saved" hidden>Copy saved</button></div><div class="actions" id="recent" aria-label="Recent searches"></div></section><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">CATALOG RESULTS</p><h2 id="heading">Recent finds</h2></div><a class="btn btn--outline" href="https://archive.org" target="_blank" rel="noopener noreferrer">Visit Archive.org ↗</a></div><div id="results" class="result-grid" aria-live="polite"><div class="empty" style="grid-column:1/-1">Search for a title or subject to explore items.</div></div><div class="actions"><button class="btn btn--quiet" id="more" hidden>Load more</button></div><p class="source-credit">Search metadata provided by the Internet Archive Advanced Search API. Item availability, rights, and download options are determined by the item page.</p></section>`
+  content: `<section class="panel"><p class="eyebrow">INTERNET ARCHIVE SEARCH</p><h2>Explore the catalog</h2><form id="search-form" class="search-row"><input id="query" required placeholder="Title, creator, topic, or phrase" aria-label="Search the Internet Archive"><select id="media"><option value="">All formats</option><option value="texts">Texts</option><option value="movies">Movies</option><option value="audio">Audio</option><option value="software">Software</option><option value="image">Images</option></select><button class="btn">Search</button></form><div class="actions"><span class="status" id="status" aria-live="polite">Searches are sent to archive.org.</span><select id="sort" aria-label="Sort results"><option value="relevance">Relevance</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select><button class="btn btn--quiet" id="saved-only">Saved only</button><button class="btn btn--quiet" id="export-saved" hidden>Copy saved</button></div><div class="actions" id="recent" aria-label="Recent searches"></div></section><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">CATALOG RESULTS</p><h2 id="heading">Recent finds</h2></div><a class="btn btn--outline" href="https://archive.org" target="_blank" rel="noopener noreferrer">Visit Archive.org ↗</a></div><div id="results" class="result-grid" aria-live="polite"><div class="empty" style="grid-column:1/-1">Search for a title or subject to explore items.</div></div><div class="actions"><button class="btn btn--quiet" id="more" hidden>Load more</button></div><p class="source-credit">Search metadata provided by the Internet Archive Advanced Search API. Item availability, rights, and download options are determined by the item page.</p></section>`
 })
 
 const $ = (id) => document.getElementById(id)
 const escape = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
-let page = 1, currentQuery = '', busy = false, savedOnly = false
+let page = 1, currentQuery = '', busy = false, savedOnly = false, sortOrder = 'relevance'
 const SAVED_KEY = 'censoris-archive-saved'
 const RECENT_KEY = 'censoris-archive-recent'
 const readStore = (key, fallback) => { try { const value = JSON.parse(localStorage.getItem(key) || 'null'); return value ?? fallback } catch { return fallback } }
@@ -61,6 +61,8 @@ async function search(append = false) {
     const params = new URLSearchParams({ q: currentQuery, 'fl[]': 'identifier,title,creator,year,mediatype', rows: '24', page: String(page), output: 'json' })
     const type = $('media').value
     if (type) params.set('q', `(${currentQuery}) AND mediatype:${type}`)
+    if (sortOrder === 'newest') params.set('sort[]', 'addeddate desc')
+    else if (sortOrder === 'oldest') params.set('sort[]', 'addeddate asc')
     const response = await fetch(`https://archive.org/advancedsearch.php?${params}`)
     if (!response.ok) throw new Error(`Archive search returned ${response.status}.`)
     const data = await response.json(); const docs = data.response?.docs || []
@@ -75,6 +77,7 @@ async function search(append = false) {
 }
 $('search-form').addEventListener('submit', (event) => { event.preventDefault(); void search() })
 $('more').addEventListener('click', () => { page += 1; void search(true) })
+$('sort').addEventListener('change', () => { sortOrder = $('sort').value; if (currentQuery) void search() })
 $('export-saved').addEventListener('click', async () => {
   const text = saved.map(item => `${item.title} — ${item.url}`).join(String.fromCharCode(10))
   try { await navigator.clipboard.writeText(text); $('status').textContent = 'Saved list copied to the clipboard.' }

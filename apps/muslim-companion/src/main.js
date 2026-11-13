@@ -99,14 +99,27 @@ async function loadPrayerTimes() {
 
 function verseCacheKey(chapter, edition) { return `censoris-nur-verses-${chapter}-${edition}` }
 
+async function copyToClipboard(value) {
+  if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(value); return }
+  const area = document.createElement('textarea'); area.value = value; area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove()
+}
 function renderVerses(arabic, translation, edition) {
   const arabicVerses = arabic.ayahs || []
   const translatedVerses = translation.ayahs || []
   const translationName = edition === 'en.asad' ? 'Muhammad Asad' : edition === 'en.pickthall' ? 'Marmaduke Pickthall' : 'Sahih International'
   const translatedByNumber = new Map(translatedVerses.map(item => [item.numberInSurah, item.text]))
-  $('verses').innerHTML = arabicVerses.map(ayah => `<article class="verse-card"><div class="verse-topline"><span>${escapeHtml(arabic.englishName)} · ${ayah.numberInSurah}</span><button class="verse-bookmark" data-reference="${arabic.number}:${ayah.numberInSurah}" aria-label="Save ${arabic.number}:${ayah.numberInSurah}">♡</button></div><p class="arabic-text" lang="ar" dir="rtl">${escapeHtml(ayah.text)}</p><p class="translation-text">${escapeHtml(translatedByNumber.get(ayah.numberInSurah) || 'Translation unavailable for this verse.')}</p><div class="verse-credit">Translation: ${escapeHtml(translationName)} · <a href="https://quran.com/${arabic.number}/${ayah.numberInSurah}" target="_blank" rel="noopener noreferrer">Quran.com ${arabic.number}:${ayah.numberInSurah} ↗</a></div></article>`).join('')
+  $('verses').innerHTML = arabicVerses.map(ayah => `<article class="verse-card"><div class="verse-topline"><span>${escapeHtml(arabic.englishName)} · ${ayah.numberInSurah}</span><button class="verse-bookmark" data-reference="${arabic.number}:${ayah.numberInSurah}" aria-label="Save ${arabic.number}:${ayah.numberInSurah}">♡</button><button class="verse-copy" data-copy-verse aria-label="Copy verse ${arabic.number}:${ayah.numberInSurah}">⧉ Copy</button></div><p class="arabic-text" lang="ar" dir="rtl">${escapeHtml(ayah.text)}</p><p class="translation-text">${escapeHtml(translatedByNumber.get(ayah.numberInSurah) || 'Translation unavailable for this verse.')}</p><div class="verse-credit">Translation: ${escapeHtml(translationName)} · <a href="https://quran.com/${arabic.number}/${ayah.numberInSurah}" target="_blank" rel="noopener noreferrer">Quran.com ${arabic.number}:${ayah.numberInSurah} ↗</a></div></article>`).join('')
   $('chapter-source').textContent = `Arabic text and ${translationName} translation provided by AlQuran Cloud · source linked to Quran.com.`
   $('verses').querySelectorAll('.verse-bookmark').forEach(button => button.addEventListener('click', () => toggleBookmark(button.dataset.reference, button)))
+  $('verses').querySelectorAll('[data-copy-verse]').forEach(button => button.addEventListener('click', async () => {
+    const cardElement = button.closest('.verse-card')
+    const text = `${cardElement?.querySelector('.arabic-text')?.textContent || ''}
+
+${cardElement?.querySelector('.translation-text')?.textContent || ''}
+
+${cardElement?.querySelector('.verse-credit')?.textContent || ''}`
+    try { await copyToClipboard(text); button.textContent = '✓ Copied'; setTimeout(() => { button.textContent = '⧉ Copy' }, 1600) } catch { $('reader-state').textContent = 'Copy is unavailable in this browser.' }
+  }))
 }
 
 function markSession(chapter) {

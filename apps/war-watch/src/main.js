@@ -6,7 +6,7 @@ mountApp({
   appId: 'war-watch', eyebrow: 'WORLD NEWS · CONFLICT MONITOR', title: 'The world, with sources attached.',
   version: APP_VERSION,
   description: 'A global conflict-news brief from monitored online reporting. Headlines update every two minutes while this app is open, with links to the original publishers.',
-  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">LIVE MONITOR</p><h2>Conflict and security headlines</h2></div><span class="live-badge">AUTO-REFRESH · 2 MIN</span></div><div class="actions"><button class="btn" id="refresh">Refresh now</button><button class="btn btn--quiet" id="saved-view">Saved</button><select id="topic" class="feed-input" style="max-width:260px"><option value="conflicts">Armed conflicts and ceasefires</option><option value="humanitarian">Conflict and humanitarian response</option><option value="regional">Wars, attacks and military operations</option></select></div><p class="status" id="status" aria-live="polite">Waiting for the first refresh.</p><div id="results" class="news-list" aria-live="polite"><div class="empty">Connecting to global news indexes…</div></div><p class="source-credit">Search index: GDELT DOC 2.0. GDELT monitors online sources worldwide, but no news index includes every outlet or guarantees immediate publication. Headlines and reporting belong to their publishers; check multiple sources for developing events.</p></section>`
+  content: `<section class="panel"><div class="section-heading"><div><p class="eyebrow">LIVE MONITOR</p><h2>Conflict and security headlines</h2></div><span class="live-badge">AUTO-REFRESH · 2 MIN</span></div><div class="actions"><button class="btn" id="refresh">Refresh now</button><button class="btn btn--quiet" id="saved-view">Saved</button><input id="filter" type="search" class="feed-input" placeholder="Filter headlines" aria-label="Filter headlines" style="max-width:220px"><select id="topic" class="feed-input" style="max-width:260px"><option value="conflicts">Armed conflicts and ceasefires</option><option value="humanitarian">Conflict and humanitarian response</option><option value="regional">Wars, attacks and military operations</option></select></div><p class="status" id="status" aria-live="polite">Waiting for the first refresh.</p><div id="results" class="news-list" aria-live="polite"><div class="empty">Connecting to global news indexes…</div></div><p class="source-credit">Search index: GDELT DOC 2.0. GDELT monitors online sources worldwide, but no news index includes every outlet or guarantees immediate publication. Headlines and reporting belong to their publishers; check multiple sources for developing events.</p></section>`
 })
 
 const $ = (id) => document.getElementById(id)
@@ -16,7 +16,7 @@ const queries = {
   humanitarian: '(conflict OR war) AND (humanitarian OR displacement OR aid OR civilian OR refugee)',
   regional: '(airstrike OR "drone strike" OR artillery OR missile OR invasion OR hostilities OR battlefield)',
 }
-let timer = null, controller = null, lastKeys = new Set(), isLoading = false, savedView = false
+let timer = null, controller = null, lastKeys = new Set(), isLoading = false, savedView = false, filterText = '', lastArticles = []
 const SAVED_KEY = 'censoris-war-saved'
 const TOPIC_KEY = 'censoris-war-topic'
 const readSaved = () => { try { const value = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(value) ? value.filter(entry => entry && typeof entry.title === 'string' && typeof entry.url === 'string' && /^https?:\/\//i.test(entry.url)).slice(0, 100) : [] } catch { return [] } }
@@ -33,7 +33,9 @@ function renderSaved() {
   savedView = true
   $('saved-view').textContent = 'Show live'
   $('status').textContent = `${saved.length} saved stor${saved.length === 1 ? 'y' : 'ies'} on this device`
-  $('results').innerHTML = saved.length ? saved.map(item => `<article class="news-item war-story"><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">${escape(item.title)} ↗</a><div class="news-meta"><span>${escape(item.domain || 'Original source')}</span><span>${escape(seenDate(item.seendate))}</span><button class="btn btn--quiet" data-unsave="${escape(item.url)}">Remove</button></div></article>`).join('') : '<div class="empty">No saved stories yet. Tap ☆ Save on a live headline.</div>'
+  const query = filterText.toLowerCase()
+  const visible = saved.filter(item => !query || `${item.title || ''} ${item.domain || ''}`.toLowerCase().includes(query))
+  $('results').innerHTML = visible.length ? visible.map(item => `<article class="news-item war-story"><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">${escape(item.title)} ↗</a><div class="news-meta"><span>${escape(item.domain || 'Original source')}</span><span>${escape(seenDate(item.seendate))}</span><button class="btn btn--quiet" data-unsave="${escape(item.url)}">Remove</button></div></article>`).join('') : `<div class="empty">${query ? 'No saved stories match that filter.' : 'No saved stories yet. Tap ☆ Save on a live headline.'}</div>`
   $('results').querySelectorAll('[data-unsave]').forEach(button => button.addEventListener('click', () => { saved = saved.filter(entry => entry.url !== button.dataset.unsave); try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)) } catch {}; renderSaved() }))
 }
 function seenDate(value) {
@@ -41,7 +43,9 @@ function seenDate(value) {
   return new Date(`${value.slice(0,4)}-${value.slice(4,6)}-${value.slice(6,8)}T${value.slice(8,10)}:${value.slice(10,12)}:${value.slice(12,14)}Z`).toLocaleString()
 }
 function render(articles) {
-  const visible = articles.filter(item => item.url && /^https?:\/\//i.test(item.url))
+  lastArticles = articles
+  const query = filterText.toLowerCase()
+  const visible = articles.filter(item => item.url && /^https?:\/\//i.test(item.url) && (!query || `${item.title || ''} ${item.domain || ''} ${item.sourcecountry || ''}`.toLowerCase().includes(query)))
   const markup = visible.map((item, index) => {
     const title = escape(item.title || 'Open publisher report')
     const domain = escape(item.domain || (() => { try { return new URL(item.url).hostname } catch { return 'Original source' } })())
@@ -94,6 +98,7 @@ $('topic').addEventListener('change', () => {
   try { localStorage.setItem(TOPIC_KEY, $('topic').value) } catch {}
   savedView = false; $('saved-view').textContent = 'Saved'; void refresh()
 })
+$('filter').addEventListener('input', event => { filterText = event.currentTarget.value.trim(); if (savedView) renderSaved(); else render(lastArticles) })
 $('saved-view').addEventListener('click', () => { if (savedView) { savedView = false; $('saved-view').textContent = 'Saved'; void refresh() } else renderSaved() })
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void refresh() })
 schedule(); void refresh()

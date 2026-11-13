@@ -40,10 +40,13 @@ const CATALOG = [
   { title: 'Better Call Saul', year: 2015, type: 'series', genres: ['Crime', 'Drama'], note: 'A small-time lawyer talks himself toward a larger, worse life.' },
 ]
 const STORE = 'censoris-watchlist'
+const WATCHED = 'censoris-watched'
 const readList = () => { try { const value = JSON.parse(localStorage.getItem(STORE) || '[]'); return Array.isArray(value) ? value.filter(item => item && typeof item.title === 'string' && Number.isFinite(Number(item.year)) && (item.type === 'movie' || item.type === 'series')).slice(0, 200) : [] } catch { return [] } }
 let watchlist = readList()
+let watched = (() => { try { const value = JSON.parse(localStorage.getItem(WATCHED) || '[]'); return Array.isArray(value) ? value.filter(item => item && typeof item.title === 'string' && Number.isFinite(Number(item.year))).slice(0, 300) : [] } catch { return [] } })()
 let filterType = 'all'
 let filterGenre = 'all'
+let filterStatus = 'all'
 
 mountApp({
   appId: 'movie-guide',
@@ -51,7 +54,7 @@ mountApp({
   title: 'Find where the story is streaming.',
   version: APP_VERSION,
   description: 'Search a curated catalogue on this device, keep a watchlist, and open a country-specific JustWatch search for current streaming, rent or buy options. No account or API key needed.',
-  content: `<section class="panel"><p class="eyebrow">SEARCH TITLES</p><h2>What do you want to watch?</h2><form class="search-row" id="search-form"><input id="query" type="search" placeholder="Movie, show, genre or mood" aria-label="Search the catalogue"><select id="type" aria-label="Type"><option value="all">Films and series</option><option value="movie">Films</option><option value="series">Series</option></select><select id="genre" aria-label="Genre"><option value="all">Any genre</option></select><button class="btn">Search</button></form><div class="actions"><button class="btn btn--quiet" id="surprise">Surprise me</button><select id="region" aria-label="Country for availability links"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="DE">Germany</option></select><span class="status" id="status" aria-live="polite">Search runs on this device.</span></div><p class="source-credit">Availability is not stored here. Every “Where to watch” link opens JustWatch for the selected country, where the current provider list lives.</p></section><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">CATALOGUE</p><h2 id="heading">All titles</h2></div><span class="pill" id="count">0 titles</span></div><div id="results" class="result-grid" aria-live="polite"></div></section><section class="panel" style="margin-top:18px" id="watchlist-panel" hidden><div class="section-heading"><div><p class="eyebrow">YOUR LIST</p><h2>Watchlist</h2></div><button class="btn btn--quiet" id="clear-list">Clear list</button></div><div id="watchlist" class="news-list"></div></section>`
+  content: `<section class="panel"><p class="eyebrow">SEARCH TITLES</p><h2>What do you want to watch?</h2><form class="search-row" id="search-form"><input id="query" type="search" placeholder="Movie, show, genre or mood" aria-label="Search the catalogue"><select id="type" aria-label="Type"><option value="all">Films and series</option><option value="movie">Films</option><option value="series">Series</option></select><select id="genre" aria-label="Genre"><option value="all">Any genre</option></select><select id="status-filter" aria-label="Watch status"><option value="all">Any status</option><option value="watchlist">On watchlist</option><option value="watched">Watched</option><option value="unwatched">Not watched</option></select><button class="btn">Search</button></form><div class="actions"><button class="btn btn--quiet" id="surprise">Surprise me</button><select id="region" aria-label="Country for availability links"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="DE">Germany</option></select><span class="status" id="status" aria-live="polite">Search runs on this device.</span></div><p class="source-credit">Availability is not stored here. Every “Where to watch” link opens JustWatch for the selected country, where the current provider list lives.</p></section><section class="panel" style="margin-top:18px"><div class="section-heading"><div><p class="eyebrow">CATALOGUE</p><h2 id="heading">All titles</h2></div><span class="pill" id="count">0 titles</span></div><div id="results" class="result-grid" aria-live="polite"></div></section><section class="panel" style="margin-top:18px" id="watchlist-panel" hidden><div class="section-heading"><div><p class="eyebrow">YOUR LIST</p><h2>Watchlist</h2></div><button class="btn btn--quiet" id="clear-list">Clear list</button></div><div id="watchlist" class="news-list"></div></section>`
 })
 
 const $ = id => document.getElementById(id)
@@ -79,14 +82,16 @@ function renderWatchlist() {
   }))
 }
 
+function saveWatched() { try { localStorage.setItem(WATCHED, JSON.stringify(watched.slice(0, 300))) } catch {} }
 function card(item, region) {
   const saved = watchlist.some(entry => keyOf(entry) === keyOf(item))
-  return `<article class="result-item"><span class="eyebrow">${escape(item.type)} · ${item.year} · ${escape(item.genres.join(' / '))}</span><h3>${escape(item.title)}</h3><p>${escape(item.note)}</p><div class="actions"><a class="btn btn--outline" href="${justwatch(item.title, region)}" target="_blank" rel="noopener noreferrer">Where to watch ↗</a><button class="btn btn--quiet" data-save="${escape(keyOf(item))}" aria-label="${saved ? 'Remove from watchlist' : 'Add to watchlist'}">${saved ? '★ Saved' : '☆ Watchlist'}</button></div></article>`
+  const seen = watched.some(entry => keyOf(entry) === keyOf(item))
+  return `<article class="result-item"><span class="eyebrow">${escape(item.type)} · ${item.year} · ${escape(item.genres.join(' / '))}</span><h3>${escape(item.title)}</h3><p>${escape(item.note)}</p><div class="actions"><a class="btn btn--outline" href="${justwatch(item.title, region)}" target="_blank" rel="noopener noreferrer">Where to watch ↗</a><button class="btn btn--quiet" data-save="${escape(keyOf(item))}" aria-label="${saved ? 'Remove from watchlist' : 'Add to watchlist'}">${saved ? '★ Saved' : '☆ Watchlist'}</button><button class="btn btn--quiet" data-watched="${escape(keyOf(item))}" aria-label="${seen ? 'Mark as not watched' : 'Mark as watched'}">${seen ? '✓ Watched' : 'Mark watched'}</button></div></article>`
 }
 
 function currentResults() {
   const query = $('query').value.trim().toLowerCase()
-  return CATALOG.filter(item => (filterType === 'all' || item.type === filterType) && (filterGenre === 'all' || item.genres.includes(filterGenre)) && (!query || `${item.title} ${item.note} ${item.genres.join(' ')}`.toLowerCase().includes(query)))
+  return CATALOG.filter(item => (filterType === 'all' || item.type === filterType) && (filterGenre === 'all' || item.genres.includes(filterGenre)) && (filterStatus === 'all' || (filterStatus === 'watchlist' ? watchlist.some(entry => keyOf(entry) === keyOf(item)) : filterStatus === 'watched' ? watched.some(entry => keyOf(entry) === keyOf(item)) : !watched.some(entry => keyOf(entry) === keyOf(item)))) && (!query || `${item.title} ${item.note} ${item.genres.join(' ')}`.toLowerCase().includes(query)))
 }
 
 function renderResults(items = currentResults()) {
@@ -94,6 +99,14 @@ function renderResults(items = currentResults()) {
   $('count').textContent = `${items.length} title${items.length === 1 ? '' : 's'}`
   $('heading').textContent = $('query').value.trim() ? `Results for “${$('query').value.trim()}”` : 'All titles'
   $('results').innerHTML = items.length ? items.map(item => card(item, region)).join('') : '<div class="empty" style="grid-column:1/-1">No title matched. Try a shorter search, or switch genre and type.</div>'
+  $('results').querySelectorAll('[data-watched]').forEach(button => button.addEventListener('click', () => {
+    const item = CATALOG.find(entry => keyOf(entry) === button.dataset.watched)
+    if (!item) return
+    if (watched.some(entry => keyOf(entry) === keyOf(item))) watched = watched.filter(entry => keyOf(entry) !== keyOf(item))
+    else { watched = [item, ...watched]; watchlist = watchlist.filter(entry => keyOf(entry) !== keyOf(item)) }
+    saveWatched(); saveWatchlist(); renderResults()
+    $('status').textContent = watched.some(entry => keyOf(entry) === keyOf(item)) ? `${item.title} marked watched.` : `${item.title} no longer marked watched.`
+  }))
   $('results').querySelectorAll('[data-save]').forEach(button => button.addEventListener('click', () => {
     const item = CATALOG.find(entry => keyOf(entry) === button.dataset.save)
     if (!item) return
@@ -109,6 +122,7 @@ genreOptions()
 $('search-form').addEventListener('submit', event => { event.preventDefault(); filterType = $('type').value; filterGenre = $('genre').value; renderResults() })
 $('type').addEventListener('change', () => { filterType = $('type').value; renderResults() })
 $('genre').addEventListener('change', () => { filterGenre = $('genre').value; renderResults() })
+$('status-filter').addEventListener('change', () => { filterStatus = $('status-filter').value; renderResults() })
 $('query').addEventListener('input', () => renderResults())
 $('region').addEventListener('change', () => { renderResults(); renderWatchlist() })
 $('surprise').addEventListener('click', () => {

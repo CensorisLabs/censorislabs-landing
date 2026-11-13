@@ -35,6 +35,10 @@ async function failureMessage(response) {
   if (detail) return `${detail.replace(/\.$/, '')} (${response.status}). Try another instance or add a session-only token.`
   return `Server returned ${response.status}. Try another instance or add a session-only token.`
 }
+async function copyToClipboard(value) {
+  if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(value); return }
+  const area = document.createElement('textarea'); area.value = value; area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove()
+}
 function render(statuses) {
   $('results').innerHTML = statuses.length ? statuses.map((item) => {
     const text = safeText(item.content)
@@ -42,8 +46,13 @@ function render(statuses) {
     const author = escape(item.account?.display_name || item.account?.acct || 'Community member')
     const url = /^https:\/\//.test(item.url || '') ? item.url : '#'
     const date = item.created_at ? new Date(item.created_at).toLocaleString() : ''
-    return `<article class="news-item social-card"><div class="social-account"><b>${author}</b><span>${escape(date)}</span></div><div class="social-content">${body || '<i>Post contains media or no text.</i>'}</div><div class="actions"><button class="btn btn--quiet" data-status="${escape(item.id)}" data-action="favourite">♡ Like</button><button class="btn btn--quiet" data-status="${escape(item.id)}" data-action="reblog">↗ Boost</button><a class="btn btn--quiet" href="${escape(url)}" target="_blank" rel="noopener noreferrer">Open on server ↗</a></div></article>`
+    return `<article class="news-item social-card"><div class="social-account"><b>${author}</b><span>${escape(date)}</span></div><div class="social-content">${body || '<i>Post contains media or no text.</i>'}</div><div class="actions"><button class="btn btn--quiet" data-status="${escape(item.id)}" data-action="favourite">♡ Like</button><button class="btn btn--quiet" data-status="${escape(item.id)}" data-action="reblog">↗ Boost</button>${text ? '<button class="btn btn--quiet" data-copy-post>⧉ Copy</button>' : ''}<a class="btn btn--quiet" href="${escape(url)}" target="_blank" rel="noopener noreferrer">Open on server ↗</a></div></article>`
   }).join('') : '<div class="empty">No public posts found for this request.</div>'
+  $('results').querySelectorAll('[data-copy-post]').forEach(button => button.addEventListener('click', async () => {
+    const text = button.closest('.social-card')?.querySelector('.social-content')?.textContent?.trim() || ''
+    if (!text) return
+    try { await copyToClipboard(text); button.textContent = '✓ Copied'; setTimeout(() => { button.textContent = '⧉ Copy' }, 1600) } catch { $('status').textContent = 'Copy is unavailable in this browser.' }
+  }))
 }
 let loadToken = 0
 async function loadTimeline() {

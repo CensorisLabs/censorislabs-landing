@@ -237,7 +237,8 @@ export function renderToday(root) {
         <button type="button" class="kc-quick" data-action="today:exercise">${icon('activity')}<span>Exercise</span></button>
         <button type="button" class="kc-quick" data-action="today:exercise-suggest">${icon('sparkles')}<span>Suggest move</span></button>
       </div>
-      ${Array.isArray(profile.recents) && profile.recents.length ? `<div class="kc-quick-row kc-recent-row"><span class="kc-recent-label">${icon('clock')} Again</span>${profile.recents.slice(0, 4).map(id => findFood(id)).filter(Boolean).map(food => `<button type="button" class="kc-chip kc-chip--recent" data-recent-food="${esc(food.id)}">${esc(food.name)}</button>`).join('')}</div>` : ''}
+      ${Array.isArray(profile.recents) && profile.recents.length ? `<div class="kc-quick-row kc-recent-row"><span class="kc-recent-label">${icon('clock')} Again</span>${profile.recents.slice(0, 4).map(id => findFood(id)).filter(Boolean).map(food => `<button type="button" class="kc-chip kc-chip--recent" data-action="today:recent-food" data-recent-food="${esc(food.id)}">${esc(food.name)}</button>`).join('')}</div>` : ''}
+      ${Array.isArray(profile.favorites) && profile.favorites.length ? `<div class="kc-quick-row kc-recent-row"><span class="kc-recent-label">${icon('star')} Favourites</span>${profile.favorites.map(id => findFood(id)).filter(Boolean).filter(food => foodAllowed(food, profile)).slice(0, 4).map(food => `<button type="button" class="kc-chip kc-chip--recent" data-action="today:favorite-food" data-favorite-food="${esc(food.id)}">${esc(food.name)}</button>`).join('')}</div>` : ''}
       <p class="kc-insight">${icon('sparkles')} ${esc(dailyInsight(targets, totals, day, score, isToday))}</p>
     </section>
 
@@ -399,6 +400,10 @@ export function renderToday(root) {
 on('today:add', element => openFoodPicker({ date: ui.date, meal: element.dataset.meal }))
 on('today:recent-food', element => {
   const food = findFood(element.dataset.recentFood)
+  if (food) openPortion(food, { date: ui.date, meal: mealForNow() })
+})
+on('today:favorite-food', element => {
+  const food = findFood(element.dataset.favoriteFood)
   if (food) openPortion(food, { date: ui.date, meal: mealForNow() })
 })
 on('today:quick', () => openQuickAdd({ date: ui.date, meal: mealForNow() }))

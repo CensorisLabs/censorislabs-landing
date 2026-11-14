@@ -51,7 +51,7 @@ export default function Footer({ onOpenLegal }: FooterProps) {
                   <a href="#/request">Request software</a>
                 </li>
                 <li>
-                  <a href="#/donate">Donate</a>
+                  <a href="/donate">Donate</a>
                 </li>
                 <li>
                   <a href="#sovereignty">Sovereignty</a>

@@ -18,6 +18,11 @@ import { initReveals, initScrollDrift, initTilt } from './lib/effects'
 const Hero = lazy(() => import('./components/Hero'))
 const Atlas = lazy(() => import('./components/Atlas'))
 
+function routeFromLocation() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  return window.location.hash || (path === '/donate' ? '#/donate' : '')
+}
+
 const TITLES: Record<string, string> = {
   '#/game': 'Chronicle Frontier',
   '#/atlas': 'World Atlas',
@@ -30,17 +35,27 @@ const TITLES: Record<string, string> = {
 
 export default function App() {
   const [legalDoc, setLegalDoc] = useState<LegalDocId | null>(null)
-  const [route, setRoute] = useState(() => window.location.hash)
+  const [route, setRoute] = useState(routeFromLocation)
 
   useEffect(() => {
     const syncRoute = () => {
-      const next = window.location.hash
+      const next = routeFromLocation()
       setRoute(next)
       if (next === '' || next.startsWith('#/')) window.scrollTo(0, 0)
     }
     window.addEventListener('hashchange', syncRoute)
-    return () => window.removeEventListener('hashchange', syncRoute)
+    window.addEventListener('popstate', syncRoute)
+    return () => {
+      window.removeEventListener('hashchange', syncRoute)
+      window.removeEventListener('popstate', syncRoute)
+    }
   }, [])
+
+  useEffect(() => {
+    if (route === '#/donate' && window.location.pathname.replace(/\/+$/, '') !== '/donate') {
+      window.history.replaceState(null, '', '/donate')
+    }
+  }, [route])
 
   useEffect(() => {
     const title = route.startsWith('#/apps/') ? 'App details' : TITLES[route]

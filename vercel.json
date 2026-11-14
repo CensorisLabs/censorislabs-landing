@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/donate",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/donate/",
+      "destination": "/index.html"
+    }
+  ]
+}

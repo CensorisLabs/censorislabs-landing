@@ -24,6 +24,24 @@ export function isTransfer(transaction: { category?: string; merchant?: string; 
   return isTransferCategory(transaction.category) || TRANSFER_DESCRIPTION.test(String(transaction.merchant || ''))
 }
 
+export type TransferMigratableTx = { category: string; merchant?: string; splits?: Array<{ category: string; amount: number }> }
+
+/** Older ledgers stored some internal movements under Income/Dining/etc. even
+ * when the merchant description made them transfers. Retag those rows so the
+ * visible category, CSV export, and totals all describe the same transaction. */
+export function migrateLegacyTransfers<T extends TransferMigratableTx>(transactions: T[]): { transactions: T[]; retagged: number } {
+  let retagged = 0
+  const migrated = transactions.map(item => {
+    if (!isTransfer(item)) return item
+    const splits = item.splits?.map(part => isTransferCategory(part.category) && part.category !== TRANSFER_CATEGORY ? { ...part, category: TRANSFER_CATEGORY } : part)
+    const splitsChanged = Boolean(splits && item.splits && splits.some((part, index) => part !== item.splits![index]))
+    if (item.category === TRANSFER_CATEGORY && !splitsChanged) return item
+    retagged += 1
+    return { ...item, category: TRANSFER_CATEGORY, ...(splits ? { splits } : {}) }
+  })
+  return { transactions: migrated, retagged }
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const RULES_KEY = 'arthasetu-category-rules'
 

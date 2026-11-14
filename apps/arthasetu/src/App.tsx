@@ -5,7 +5,7 @@ import { HealthPage, type Account, type Mandate } from './features/health/Health
 import { estimateTax } from './domain/finance.ts'
 import type { ParsedTransaction } from './domain/statement.ts'
 import { CATEGORY_OPTIONS, suggestCategory } from './domain/statement.ts'
-import { applyRule, categoryTotals, detectSubscriptions, formatDate, ledgerCsv, materializeRecurring, recurringCommitment, monthKey, monthLabel, monthTotals, nextId, saveRule, spendChange, toIsoDate, todayIso } from './domain/ledger.ts'
+import { applyRule, categoryTotals, detectSubscriptions, formatDate, ledgerCsv, materializeRecurring, migrateLegacyTransfers, recurringCommitment, monthKey, monthLabel, monthTotals, nextId, saveRule, spendChange, toIsoDate, todayIso } from './domain/ledger.ts'
 import StatementImport from './features/statement/StatementImport.tsx'
 import { hashPin, PIN_KEY, readFinanceData, readFinanceDataSync, saveFinanceData, verifyPin, type FinanceData } from './domain/vault.ts'
 import { DEFAULT_PLANNING, readPlanningState, type PlanningState } from './domain/planning.ts'
@@ -14,7 +14,13 @@ type Page = 'Overview' | 'Transactions' | 'Budgets' | 'Investments' | 'Financial
 type Tx = { id: number; merchant: string; category: string; date: string; amount: number; type: 'income' | 'expense'; account: string; recurring?: 'monthly'; recurrenceOf?: number; splits?: Array<{ category: string; amount: number }> }
 const money = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`
 function isTransaction(value: unknown): value is Tx { if (!value || typeof value !== 'object') return false; const item = value as Record<string, unknown>; return Number.isFinite(item.id) && typeof item.merchant === 'string' && typeof item.category === 'string' && typeof item.date === 'string' && Number.isFinite(item.amount) && (item.type === 'income' || item.type === 'expense') && typeof item.account === 'string' }
-function readInitialTransactions(): Tx[] { const values = readFinanceDataSync()?.transactions; return Array.isArray(values) && values.every(isTransaction) ? (values as Tx[]).map(item => ({ ...item, date: toIsoDate(item.date) })) : [] }
+type LedgerMigration = { transactions: Tx[]; retagged: number }
+function migrateLedgerTransactions(values: unknown): LedgerMigration {
+  if (!Array.isArray(values) || !values.every(isTransaction)) return { transactions: [], retagged: 0 }
+  const dated = (values as Tx[]).map(item => ({ ...item, date: toIsoDate(item.date) }))
+  return migrateLegacyTransfers(dated)
+}
+function readInitialTransactions(): LedgerMigration { return migrateLedgerTransactions(readFinanceDataSync()?.transactions) }
 function isAccount(value: unknown): value is Account { if (!value || typeof value !== 'object') return false; const item = value as Record<string, unknown>; return typeof item.id === 'string' && typeof item.name === 'string' && typeof item.kind === 'string' && Number.isFinite(item.balance) && typeof item.lastFour === 'string' && (item.tone === 'green' || item.tone === 'blue') }
 function isMandate(value: unknown): value is Mandate { if (!value || typeof value !== 'object') return false; const item = value as Record<string, unknown>; return typeof item.id === 'string' && typeof item.name === 'string' && Number.isFinite(item.amount) && typeof item.nextRenewal === 'string' }
 function getInitialAccounts(): Account[] { const values = readFinanceDataSync()?.accounts; return Array.isArray(values) && values.every(isAccount) ? values : [] }
@@ -25,10 +31,12 @@ const categoryColor: Record<string, string> = { Home: '#526b5e', Groceries: '#d1
 function Icon({ name }: { name: string }) { const icons: Record<string, string> = { grid: '▦', tx: '≡', budget: '◒', invest: '↗', health: '✦', tax: '◇', analytics: '⌁', debt: '↘', security: '▣', search: '⌕', bell: '◌', plus: '+', lock: '▣', upload: '↥', download: '↧' }; return <span className="icon" aria-hidden="true">{icons[name] || '•'}</span> }
 
 export default function App() {
+  const initialLedger = useMemo(readInitialTransactions, [])
   const [page, setPage] = useState<Page>('Overview')
   const [isLocked, setIsLocked] = useState(() => Boolean(localStorage.getItem(PIN_KEY)))
   const [sessionSecret, setSessionSecret] = useState('')
-  const [tx, setTx] = useState<Tx[]>(() => materializeRecurring(readInitialTransactions()))
+  const [tx, setTx] = useState<Tx[]>(() => materializeRecurring(initialLedger.transactions))
+  const [transferMigrationCount, setTransferMigrationCount] = useState(initialLedger.retagged)
   const [accounts, setAccounts] = useState<Account[]>(getInitialAccounts)
   const [mandates, setMandates] = useState<Mandate[]>(getInitialMandates)
   const [planning, setPlanning] = useState<PlanningState>(getInitialPlanning)
@@ -67,10 +75,11 @@ export default function App() {
     if (!await verifyPin(pin)) return false
     const data = await readFinanceData(pin)
     if (!data || !Array.isArray(data.transactions) || !data.transactions.every(isTransaction) || !Array.isArray(data.accounts) || !data.accounts.every(isAccount) || !Array.isArray(data.mandates) || !data.mandates.every(isMandate)) return false
-    setTx(materializeRecurring(data.transactions as Tx[])); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning)); setSessionSecret(pin)
+    const migrated = migrateLedgerTransactions(data.transactions)
+    setTx(materializeRecurring(migrated.transactions)); setTransferMigrationCount(migrated.retagged); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning)); setSessionSecret(pin)
     const savedHash = localStorage.getItem(PIN_KEY) || ''
     try { if ((JSON.parse(savedHash) as { version?: number }).version !== 2) localStorage.setItem(PIN_KEY, await hashPin(pin)) } catch { localStorage.setItem(PIN_KEY, await hashPin(pin)) }
-    if (localStorage.getItem('arthasetu-finance-vault')) await saveFinanceData(data, pin)
+    if (localStorage.getItem('arthasetu-finance-vault')) await saveFinanceData({ ...data, transactions: migrated.transactions }, pin)
     setIsLocked(false)
     return true
   }
@@ -95,7 +104,8 @@ export default function App() {
 
   function restoreFinanceData(data: FinanceData) {
     if (!data.transactions.every(isTransaction) || !data.accounts.every(isAccount) || !data.mandates.every(isMandate)) { notify('Backup contains unsupported or invalid finance data'); return }
-    setTx(materializeRecurring(data.transactions as Tx[])); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning))
+    const migrated = migrateLedgerTransactions(data.transactions)
+    setTx(materializeRecurring(migrated.transactions)); setTransferMigrationCount(migrated.retagged); setAccounts(data.accounts as Account[]); setMandates(data.mandates as Mandate[]); setPlanning(readPlanningState(data.planning))
   }
 
   function duplicateTransaction(item: Tx) { update([{ ...item, id: nextId() }, ...tx]); notify(`${item.merchant} duplicated`) }
@@ -114,6 +124,7 @@ export default function App() {
   return <div className="app-shell" data-theme={appTheme} data-performance={lowEndMode ? 'low' : 'full'}>
     <aside className="sidebar"><div className="brand"><div className="brand-mark">A</div><div><strong>ArthaSetu</strong><span>PRIVATE FINANCE</span></div></div><div className="vault"><Icon name="lock" /><div><b>Local vault</b><small>Only on this device</small></div><i /></div><nav>{nav.map(item => <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => setPage(item.id)}><Icon name={item.icon} />{item.label}</button>)}</nav><div className="sidebar-bottom"><button onClick={() => notify('Settings are ready for your PIN and language')}><span className="avatar">AR</span> Ananya R. <span className="chev">⌄</span></button><small>v1.1 · Offline-first</small></div></aside>
     <main className="main"><header><div><div className="eyebrow">PERSONAL FINANCE / {monthLabel(month).toUpperCase()}</div><h1>{page === 'Overview' ? 'Your money, mapped.' : page}</h1><p className="subtitle">{page === 'Overview' ? 'A private view of your financial life.' : 'A calm view of your financial life.'}</p></div><div className="header-actions"><label className="appearance-control">Theme<select value={appTheme} onChange={event => setAppTheme(event.target.value)}><option value="fern">Fern</option><option value="ocean">Ocean</option><option value="violet">Violet</option><option value="ember">Ember</option></select></label><label className="performance-control"><input type="checkbox" checked={lowEndMode} onChange={event => setLowEndMode(event.target.checked)} /> Low-end</label><button className="circle" onClick={() => notify('No new alerts')}><Icon name="bell" /></button><label className="date-picker">Month<input type="month" value={month} onChange={event => setMonth(event.target.value)} aria-label="Ledger month" /></label></div></header>
+      {transferMigrationCount > 0 && <div className="migration-banner" role="status"><div><div className="eyebrow">LEDGER MIGRATION</div><b>{transferMigrationCount} legacy transfer-like transaction{transferMigrationCount === 1 ? '' : 's'} retagged as Transfers.</b><p>They remain in your ledger and are now excluded from income, spending and budget totals, so your rows and totals agree.</p></div><button className="text-button" onClick={() => setTransferMigrationCount(0)}>Dismiss</button></div>}
       
       {page === 'Overview' && <Overview income={income} expenses={expenses} tx={monthTx} accounts={accounts} monthName={monthLabel(month)} spend={spend} subscriptions={subscriptions} commitment={commitment} onAdd={() => setShowAdd(true)} onPage={setPage} />}
       {page === 'Transactions' && <Transactions tx={visible} query={query} setQuery={setQuery} onAdd={() => setShowAdd(true)} onParse={() => setShowParser(true)} onImport={() => setShowStatement(true)} onExport={exportCsv} onDuplicate={duplicateTransaction} onDelete={deleteTransaction} />}

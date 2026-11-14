@@ -8,6 +8,7 @@ import {
   isTransfer,
   ledgerCsv,
   materializeRecurring,
+  migrateLegacyTransfers,
   monthKey,
   monthLabel,
   monthTotals,
@@ -139,4 +140,20 @@ test('internal transfers stay out of income, spending and monthly budgets', () =
   assert.equal(isTransfer({ category: 'Transfers' }), true)
   assert.equal(isTransfer({ category: 'Income', merchant: 'Self transfer from current' }), true)
   assert.equal(isTransfer({ category: 'Groceries', splits: [{ category: 'Transfers' }, { category: 'Groceries' }] }), false)
+})
+
+test('legacy transfer-like rows are retagged without changing totals', () => {
+  const tx = [
+    { date: '2026-10-01', amount: 50000, type: 'income' as const, category: 'Income', merchant: 'Salary' },
+    { date: '2026-10-02', amount: 20000, type: 'expense' as const, category: 'Dining', merchant: 'Self transfer to savings' },
+    { date: '2026-10-03', amount: 20000, type: 'income' as const, category: 'Income', merchant: 'Self transfer from current' },
+    { date: '2026-10-04', amount: 900, type: 'expense' as const, category: 'transfer', merchant: 'Card payment' },
+    { date: '2026-10-05', amount: 500, type: 'expense' as const, category: 'Groceries', splits: [{ category: 'Transfers', amount: 100 }, { category: 'Groceries', amount: 400 }] },
+  ]
+  const before = monthTotals(tx, '2026-10')
+  const migrated = migrateLegacyTransfers(tx)
+  assert.equal(migrated.retagged, 3)
+  assert.deepEqual(migrated.transactions.map(item => item.category), ['Income', 'Transfers', 'Transfers', 'Transfers', 'Groceries'])
+  assert.deepEqual(monthTotals(migrated.transactions, '2026-10'), before)
+  assert.equal(migrateLegacyTransfers(migrated.transactions).retagged, 0)
 })

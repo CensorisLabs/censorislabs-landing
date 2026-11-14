@@ -35,3 +35,6 @@ apps/arthasetu/vite.config.js
 apps/arthasetu/vite.config.d.ts
 apps/*/tsconfig*.tsbuildinfo
 *.tsbuildinfo
+
+# Local source archives used to generate atlas assets
+.work/

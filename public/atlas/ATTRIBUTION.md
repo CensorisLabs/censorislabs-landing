@@ -39,4 +39,20 @@ Historical polygon coverage and dates vary across regions. These are scholarly r
 
 The selected period may be earlier than these sources' coverage. The historical battle catalog starts in 1468 BCE, and the UCDP war-event layer starts in 1989. Blank time ranges mean this combined catalog has no displayed records for that slice; they are not evidence that no conflicts occurred. The UCDP points are georeferenced incident locations, not front lines or complete territorial control. Both sources have selection and reporting limits, and this atlas does not claim to contain every documented war or battle.
 
-The assets were generated with `tools/build-atlas-assets.py` from the corresponding source archives stored outside the published site. The user-provided GeaCron offline page folder is used as a visual reference only; its third-party map tiles are not copied into this atlas.
+## Close-zoom city and landmark labels
+
+`gazetteer-cities.json.gz` is derived from the **GeoNames** `cities15000` gazetteer. It contains places with populations of 50,000 or more, plus national capitals, with name, coordinates, population, country code, and GeoNames identifier. GeoNames data is licensed under [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/).
+
+- Gazetteer downloads: <https://download.geonames.org/export/dump/>
+- GeoNames: <https://www.geonames.org/>
+- Changes: filtered to the atlas's close-zoom city set, selected the required fields, rounded coordinates to five decimal places, and compressed the result as gzipped JSON.
+
+`gazetteer-landmarks.json.gz` is derived from **Wikidata** items that are UNESCO World Heritage Sites or architectural landmarks. The extract keeps places classified as archaeological sites, monuments, museums, palaces, fortresses, religious sites, bridges, and other cultural landmarks, with their English label, coordinates, landmark type, and Wikidata identifier. Wikidata's structured data is released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+
+- Wikidata query service: <https://query.wikidata.org/>
+- UNESCO World Heritage designation: <https://www.wikidata.org/wiki/Q9259>
+- Changes: removed settlements, natural features, duplicate items, and duplicate names; selected one coordinate per item; compressed the result as gzipped JSON.
+
+Both label layers load only when the viewer reaches the closest zoom band. They are modern reference labels and do not change with the historical year selected in the atlas. The landmark selection is representative rather than exhaustive, and coordinates are cartographic reference points rather than surveyed boundaries.
+
+The map assets were generated with `tools/build-atlas-assets.py`, and the close-zoom label assets with `tools/build-atlas-labels.py`, from source archives stored outside the published site. The user-provided GeaCron offline page folder is used as a visual reference only; its third-party map tiles are not copied into this atlas.

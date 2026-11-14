@@ -25,7 +25,12 @@ type AtlasWarData = { type: 'FeatureCollection'; features: WarFeature[] }
 type MapPoint = { lat: number; lon: number }
 type WarRegion = { lat: number; lon: number; count: number; source: string; name: string; representative: WarFeature }
 type DatedRuler = { id: string; name: string; role: string; from: number; to: number; polity: string }
-type GlobeLabel = { name: string; lat: number; lon: number; href: string; area: number }
+type LabelKind = 'country' | 'city' | 'landmark'
+type GlobeLabel = { name: string; lat: number; lon: number; href: string; area: number; kind?: LabelKind }
+type GazetteerCity = { name: string; lat: number; lon: number; population: number; country: string; geonameid: number }
+type GazetteerLandmark = { name: string; lat: number; lon: number; kind: string; wikidata: string; sitelinks: number }
+type GazetteerCities = { cities: GazetteerCity[] }
+type GazetteerLandmarks = { landmarks: GazetteerLandmark[] }
 type WikidataClaim = { rank?: string; references?: unknown[]; mainsnak?: { datavalue?: { value?: { id?: string } } }; qualifiers?: Record<string, Array<{ datavalue?: { value?: { time?: string; precision?: number } } }>> }
 type WikidataEntity = { labels?: { en?: { value?: string } }; claims?: Record<string, WikidataClaim[]> }
 const EMPTY_COUNTRIES: AtlasFeature<CountryProperties>[] = []
@@ -35,6 +40,9 @@ const CENTURY_YEARS = [...Array.from({ length: 30 }, (_, index) => -3000 + index
 const MIN_GLOBE_DISTANCE = 2.05
 const MAX_GLOBE_DISTANCE = 8.4
 const DEFAULT_GLOBE_DISTANCE = 5.4
+const DOUBLE_TAP_DELAY_MS = 320
+const DOUBLE_TAP_DISTANCE_PX = 28
+const DOUBLE_TAP_ZOOM_STEP = 1.1
 type ZoomCommand = { nonce: number; kind: 'in' | 'out' | 'reset' }
 function zoomBandForDistance(distance: number) {
   return distance < 2.85 ? 2 : distance < 4.2 ? 1 : 0
@@ -125,16 +133,17 @@ function ringArea(ring: GeoRing) {
 function spacedLabels(candidates: GlobeLabel[], maxLabels: number, separationDegrees: number) {
   const result: GlobeLabel[] = []
   for (const label of candidates.sort((a, b) => b.area - a.area)) {
-    const nearby = result.some(other => {
-      const meanLatitude = (label.lat + other.lat) * Math.PI / 360
-      const longitudeDelta = ((label.lon - other.lon + 540) % 360) - 180
-      const dx = longitudeDelta * Math.cos(meanLatitude)
-      return Math.hypot(dx, label.lat - other.lat) < separationDegrees
-    })
+    const nearby = result.some(other => labelsWithin(label, other, separationDegrees))
     if (!nearby) result.push(label)
     if (result.length >= maxLabels) break
   }
   return result
+}
+function labelsWithin(a: MapPoint, b: MapPoint, separationDegrees: number) {
+  const meanLatitude = (a.lat + b.lat) * Math.PI / 360
+  const longitudeDelta = ((a.lon - b.lon + 540) % 360) - 180
+  const dx = longitudeDelta * Math.cos(meanLatitude)
+  return Math.hypot(dx, a.lat - b.lat) < separationDegrees
 }
 
 function polityColor(name: string, alpha: number, lightness = 49) {
@@ -309,9 +318,13 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   const rotationVelocity = useRef({ x: 0, y: 0 })
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const pinch = useRef<{ distance: number; zoom: number } | null>(null)
+  const lastTap = useRef<{ time: number; x: number; y: number } | null>(null)
+  const doubleTapPointer = useRef<number | null>(null)
   const suppressClickUntil = useRef(0)
   const distance = useRef(DEFAULT_GLOBE_DISTANCE)
   const [zoomBand, setZoomBand] = useState(zoomBandForDistance(DEFAULT_GLOBE_DISTANCE))
+  const [gazetteer, setGazetteer] = useState<{ cities: GazetteerCity[]; landmarks: GazetteerLandmark[] }>({ cities: [], landmarks: [] })
+  const [gazetteerLoaded, setGazetteerLoaded] = useState(false)
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#d29aff', transparent: true, opacity: 0.75 }), [])
   // Keep the grouped war footprints during playback, but suspend tens of
   // thousands of individual clickable dots until the viewer pauses.
@@ -352,6 +365,39 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     const separation = zoomBand === 2 ? 1.8 : zoomBand === 1 ? 3.6 : 7
     return spacedLabels([...largestByName.values()], maxLabels, separation)
   }, [countries, historical, year, zoomBand])
+  // The gazetteer is intentionally lazy: city and landmark labels only enter
+  // the scene once the viewer reaches the closest zoom band.
+  useEffect(() => {
+    if (zoomBand !== 2 || gazetteerLoaded) return
+    const controller = new AbortController()
+    Promise.all([
+      loadCompressedAtlasData<GazetteerCities>('/atlas/gazetteer-cities.json.gz', controller.signal),
+      loadCompressedAtlasData<GazetteerLandmarks>('/atlas/gazetteer-landmarks.json.gz', controller.signal),
+    ]).then(([cities, landmarks]) => {
+      if (controller.signal.aborted) return
+      setGazetteer({ cities: cities.cities, landmarks: landmarks.landmarks })
+      setGazetteerLoaded(true)
+    }).catch(error => {
+      if (error.name !== 'AbortError') console.warn('Close-zoom place labels could not be loaded.', error)
+    })
+    return () => controller.abort()
+  }, [gazetteerLoaded, zoomBand])
+  const closeZoomLabels = useMemo(() => {
+    if (zoomBand !== 2 || !labels) return { cities: [] as GlobeLabel[], landmarks: [] as GlobeLabel[] }
+    const landmarks = spacedLabels(gazetteer.landmarks.map(landmark => ({
+      name: landmark.name, lat: landmark.lat, lon: landmark.lon,
+      href: `https://www.wikidata.org/wiki/${encodeURIComponent(landmark.wikidata)}`,
+      area: landmark.sitelinks, kind: 'landmark' as const,
+    })), 52, 3.1)
+    // A landmark and its host city often share a point. Landmarks win that
+    // collision because they are the more specific close-zoom label.
+    const cities = spacedLabels(gazetteer.cities.map(city => ({
+      name: city.name, lat: city.lat, lon: city.lon,
+      href: `https://www.geonames.org/${city.geonameid}`,
+      area: city.population, kind: 'city' as const,
+    })), 112, 2.15).filter(city => !landmarks.some(landmark => labelsWithin(city, landmark, 1.35)))
+    return { cities, landmarks }
+  }, [gazetteer, labels, zoomBand])
   const warRegionMesh = useMemo(() => {
     const geometry = new THREE.CircleGeometry(1, 24)
     const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
@@ -391,17 +437,34 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     const canvas = gl.domElement
     const onDown = (event: PointerEvent) => {
       if (event.button !== 0) return
-      canvas.setPointerCapture(event.pointerId)
+      try { canvas.setPointerCapture(event.pointerId) } catch { /* Synthetic or already-released pointer. */ }
       pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
       if (pointers.current.size === 2) {
         const [first, second] = [...pointers.current.values()]
         pinch.current = { distance: Math.max(1, Math.hypot(first.x - second.x, first.y - second.y)), zoom: distance.current }
+        lastTap.current = null
         drag.current = null
         rotationVelocity.current = { x: 0, y: 0 }
         suppressClickUntil.current = performance.now() + 400
         return
       }
       if (pointers.current.size > 1 || drag.current) return
+      if (event.pointerType !== 'mouse') {
+        const now = performance.now()
+        const previous = lastTap.current
+        if (previous && now - previous.time <= DOUBLE_TAP_DELAY_MS && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) <= DOUBLE_TAP_DISTANCE_PX) {
+          lastTap.current = null
+          doubleTapPointer.current = event.pointerId
+          distance.current = THREE.MathUtils.clamp(distance.current - DOUBLE_TAP_ZOOM_STEP, MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
+          setZoomBand(zoomBandForDistance(distance.current))
+          // The first tap may select a place; suppress the second tap's click
+          // so a zoom gesture does not also move the detail panel.
+          suppressClickUntil.current = now + 450
+          rotationVelocity.current = { x: 0, y: 0 }
+          drag.current = null
+          return
+        }
+      }
       suppressClickUntil.current = 0
       rotationVelocity.current = { x: 0, y: 0 }
       drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, lastTime: event.timeStamp, moved: false }
@@ -431,12 +494,29 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       drag.current.lastTime = event.timeStamp
     }
     const onUp = (event: PointerEvent) => {
+      const finishedDrag = drag.current?.id === event.pointerId ? drag.current : null
       pointers.current.delete(event.pointerId)
       if (pointers.current.size < 2) pinch.current = null
-      if (drag.current?.id === event.pointerId) {
-        if (drag.current.moved) suppressClickUntil.current = performance.now() + 350
+      if (doubleTapPointer.current === event.pointerId) {
+        doubleTapPointer.current = null
+        lastTap.current = null
+        drag.current = null
+        return
+      }
+      if (finishedDrag) {
+        if (finishedDrag.moved) suppressClickUntil.current = performance.now() + 350
         drag.current = null
       }
+      if (event.pointerType === 'mouse' || pointers.current.size > 0 || finishedDrag?.moved) {
+        if (finishedDrag?.moved) lastTap.current = null
+        return
+      }
+      const now = performance.now()
+      if (now < suppressClickUntil.current) {
+        lastTap.current = null
+        return
+      }
+      lastTap.current = { time: now, x: event.clientX, y: event.clientY }
     }
     const onWheel = (event: WheelEvent) => {
       distance.current = THREE.MathUtils.clamp(distance.current + event.deltaY * 0.003, MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
@@ -455,6 +535,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       canvas.removeEventListener('wheel', onWheel)
       pointers.current.clear()
       pinch.current = null
+      lastTap.current = null
+      doubleTapPointer.current = null
     }
   }, [gl])
 
@@ -564,6 +646,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
         if (feature) onSelectWar(feature)
       }} />}
       {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} scale={zoomBand === 2 ? 0.62 : zoomBand === 1 ? 0.8 : 1} />)}
+      {closeZoomLabels.cities.map(label => <GlobeTextLabel key={`city-${label.name}-${label.href}`} label={label} scale={0.62} kind="city" />)}
+      {closeZoomLabels.landmarks.map(label => <GlobeTextLabel key={`landmark-${label.name}-${label.href}`} label={label} scale={0.62} kind="landmark" />)}
       {routes && routeObjects.map((line, index) => <primitive object={line} key={`route-${index}`} />)}
       {labels && events.filter(event => event.year <= year).map(event => <mesh key={event.id} position={latLon(event.lat, event.lon, 1.625)}>
         <sphereGeometry args={[event.id === 'present' ? 0.026 : 0.018, 12, 10]} />
@@ -600,28 +684,31 @@ function largestFeatureArea(feature: AtlasFeature<CountryProperties>) {
   return Math.max(0, ...polygonsOf(feature.geometry).map(polygon => Math.abs(ringArea(unwrapRing(polygon[0] ?? [])))))
 }
 
-function GlobeTextLabel({ label, scale }: { label: GlobeLabel; scale: number }) {
+function GlobeTextLabel({ label, scale, kind = 'country' }: { label: GlobeLabel; scale: number; kind?: LabelKind }) {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas')
-    canvas.width = 768
-    canvas.height = 96
+    const isCountry = kind === 'country'
+    canvas.width = isCountry ? 768 : 512
+    canvas.height = isCountry ? 96 : 72
     const context = canvas.getContext('2d')!
-    context.font = '700 52px Inter, Arial, sans-serif'
+    const text = kind === 'landmark' ? `◆ ${label.name}` : label.name
+    context.font = isCountry ? '700 52px Inter, Arial, sans-serif' : kind === 'landmark' ? 'italic 600 38px Georgia, serif' : '700 40px Inter, Arial, sans-serif'
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.lineWidth = 10
+    context.lineWidth = isCountry ? 10 : 8
     context.strokeStyle = 'rgba(255,255,255,.98)'
-    context.strokeText(label.name, 384, 48, 744)
-    context.fillStyle = '#5c3378'
-    context.fillText(label.name, 384, 48, 744)
+    context.strokeText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
+    context.fillStyle = isCountry ? '#5c3378' : kind === 'landmark' ? '#80500f' : '#9a2e68'
+    context.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
     const map = new THREE.CanvasTexture(canvas)
     map.colorSpace = THREE.SRGBColorSpace
     return map
-  }, [label.name])
+  }, [kind, label.name])
   const material = useMemo(() => new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: true, depthWrite: false, toneMapped: false }), [texture])
   useEffect(() => () => { texture.dispose(); material.dispose() }, [material, texture])
-  const width = Math.min(0.82, Math.max(0.2, label.name.length * 0.018)) * scale
-  return <sprite position={latLon(label.lat, label.lon, 1.635)} scale={[width, 0.08 * scale, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
+  const maxWidth = kind === 'country' ? 0.82 : 0.6
+  const width = Math.min(maxWidth, Math.max(0.2, label.name.length * (kind === 'country' ? 0.018 : 0.016))) * scale
+  return <sprite position={latLon(label.lat, label.lon, kind === 'country' ? 1.635 : 1.64)} scale={[width, (kind === 'country' ? 0.08 : 0.058) * scale, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
 }
 
 function formatYear(year: number) { return year < 0 ? `${Math.abs(year).toLocaleString()} BC` : year === 0 ? '1 BC / 1 AD' : `${year.toLocaleString()} AD` }
@@ -933,8 +1020,8 @@ export default function Atlas() {
           {rulers.length > 0 && <div className="atlas-authority-list">{rulers.map((ruler, index) => <article className="atlas-authority" key={`${ruler.id}-${ruler.role}-${ruler.polity}-${index}`}><strong>{ruler.name}</strong><small>{ruler.role} · {ruler.polity}</small><small>Recorded tenure: {formatYear(ruler.from)} — {formatYear(ruler.to)}</small><a href={`https://www.wikidata.org/wiki/${encodeURIComponent(ruler.id)}`} target="_blank" rel="noreferrer">View sourced Wikidata record ↗</a></article>)}</div>}
           <p className="atlas-data-note">{rulersStatus || 'The border source identifies polities, not rulers. Only dated and referenced leader claims are listed; missing names are a source-coverage gap, not a claim that no ruler existed.'} Wikidata records can be incomplete or disputed; compare the linked record with specialist sources.</p>
         </div> : <div className="atlas-detail"><div className="atlas-detail-tag"><span>{focus.category.toUpperCase()}</span><span>◦  STORY</span></div><h2>{focus.title}</h2><p className="atlas-place">⌖ &nbsp;{focus.place}</p><p className="atlas-detail-copy">{focus.detail}</p><button className="atlas-follow" onClick={() => setYear(focus.year)}>Explore this moment <span>↗</span></button></div>}
-        <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place markers</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label></div>
-        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL OR +/− TO ZOOM · TAP A PLACE</span></div>
+        <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place labels</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label><div className="atlas-close-zoom"><span><i className="layer-dot layer-dot--city" />Cities</span><span><i className="layer-dot layer-dot--landmark" />Landmarks</span><small>Close zoom · <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">GeoNames</a> + <a href="https://www.wikidata.org/" target="_blank" rel="noreferrer">Wikidata</a></small></div></div>
+        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span></div>
       </>}
     </aside>
 

@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import * as THREE from 'three'
 import './Atlas.css'
 
@@ -43,6 +43,7 @@ const DEFAULT_GLOBE_DISTANCE = 5.4
 const DOUBLE_TAP_DELAY_MS = 320
 const DOUBLE_TAP_DISTANCE_PX = 28
 const DOUBLE_TAP_ZOOM_STEP = 1.1
+const CLOSE_ZOOM_HINT_KEY = 'censorislabs-atlas-close-zoom-hint'
 type ZoomCommand = { nonce: number; kind: 'in' | 'out' | 'reset' }
 function zoomBandForDistance(distance: number) {
   return distance < 2.85 ? 2 : distance < 4.2 ? 1 : 0
@@ -286,7 +287,7 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, zoomCommand, onSelectLocation, onSelectWar }: {
+function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, zoomCommand, onSelectLocation,   onSelectWar, onGestureLearned, onCloseZoom }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
   routes: boolean
@@ -304,6 +305,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   zoomCommand: ZoomCommand | null
   onSelectLocation: (point: MapPoint) => void
   onSelectWar: (war: WarFeature) => void
+  onGestureLearned: () => void
+  onCloseZoom: () => void
 }) {
   const world = useRef<THREE.Group>(null)
   const { gl, camera } = useThree()
@@ -455,6 +458,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
         if (previous && now - previous.time <= DOUBLE_TAP_DELAY_MS && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) <= DOUBLE_TAP_DISTANCE_PX) {
           lastTap.current = null
           doubleTapPointer.current = event.pointerId
+          onGestureLearned()
           distance.current = THREE.MathUtils.clamp(distance.current - DOUBLE_TAP_ZOOM_STEP, MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
           setZoomBand(zoomBandForDistance(distance.current))
           // The first tap may select a place; suppress the second tap's click
@@ -475,6 +479,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       if (pointers.current.size === 2 && pinch.current) {
         const [first, second] = [...pointers.current.values()]
         const nextDistance = Math.max(1, Math.hypot(first.x - second.x, first.y - second.y))
+        if (Math.abs(nextDistance - pinch.current.distance) > 14) onGestureLearned()
         distance.current = THREE.MathUtils.clamp(pinch.current.zoom * pinch.current.distance / nextDistance, MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
         setZoomBand(zoomBandForDistance(distance.current))
         suppressClickUntil.current = performance.now() + 400
@@ -538,7 +543,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       lastTap.current = null
       doubleTapPointer.current = null
     }
-  }, [gl])
+  }, [gl, onGestureLearned])
 
   useEffect(() => {
     if (!zoomCommand) return
@@ -551,6 +556,16 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     }
     setZoomBand(zoomBandForDistance(distance.current))
   }, [zoomCommand])
+
+  const closeZoomReached = useRef(false)
+  useEffect(() => {
+    if (zoomBand === 2 && labels && !closeZoomReached.current) {
+      closeZoomReached.current = true
+      onCloseZoom()
+    } else if (zoomBand < 2) {
+      closeZoomReached.current = false
+    }
+  }, [labels, onCloseZoom, zoomBand])
 
   useEffect(() => {
     if (!selectedPoint) return
@@ -765,10 +780,30 @@ export default function Atlas() {
   const [conflictFilter, setConflictFilter] = useState('All')
   const [lowMotion, setLowMotion] = useState(() => document.documentElement.dataset.performance === 'low' || window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [expanded, setExpanded] = useState(false)
+  const [gestureHintLearned, setGestureHintLearned] = useState(false)
+  const [closeZoomHintVisible, setCloseZoomHintVisible] = useState(false)
   const [zoomCommand, setZoomCommand] = useState<ZoomCommand>({ nonce: 0, kind: 'reset' })
+  const dismissGestureHint = useCallback(() => setGestureHintLearned(true), [])
   const page = useRef<HTMLElement>(null)
   const searchInput = useRef<HTMLInputElement>(null)
   const rulerCache = useRef(new Map<string, DatedRuler[]>())
+  const closeZoomHintSeen = useRef(false)
+  const closeZoomHintTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    try { closeZoomHintSeen.current = window.localStorage.getItem(CLOSE_ZOOM_HINT_KEY) === 'seen' } catch { /* Storage can be unavailable in private modes. */ }
+    return () => { if (closeZoomHintTimer.current !== null) window.clearTimeout(closeZoomHintTimer.current) }
+  }, [])
+
+  const showCloseZoomHint = useCallback(() => {
+    if (closeZoomHintSeen.current) return
+    closeZoomHintSeen.current = true
+    try { window.localStorage.setItem(CLOSE_ZOOM_HINT_KEY, 'seen') } catch { /* Keep the hint working for this visit. */ }
+    setGestureHintLearned(true)
+    setCloseZoomHintVisible(true)
+    if (closeZoomHintTimer.current !== null) window.clearTimeout(closeZoomHintTimer.current)
+    closeZoomHintTimer.current = window.setTimeout(() => setCloseZoomHintVisible(false), 5600)
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -961,12 +996,22 @@ export default function Atlas() {
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
     <Canvas className="atlas-canvas" dpr={[1, 2]} style={{ touchAction: 'none' }} camera={{ position: [0, 0, DEFAULT_GLOBE_DISTANCE], fov: 39 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} />
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} />
     </Canvas>
+
+    <div className={`atlas-gesture-hint${gestureHintLearned ? ' is-dismissed' : ''}`} role="status" aria-hidden={gestureHintLearned}>
+      <span aria-hidden="true">◎</span>
+      <span><b>Pinch or double-tap</b><small>to zoom the globe</small></span>
+    </div>
+
+    <div className={`atlas-close-zoom-hint${closeZoomHintVisible ? '' : ' is-dismissed'}`} role="status" aria-hidden={!closeZoomHintVisible}>
+      <span aria-hidden="true">⌖</span>
+      <span><b>City + landmark labels</b><small>now visible at this close zoom</small></span>
+    </div>
 
     <header className="atlas-topbar">
       <a href="#top" className="atlas-brand" aria-label="Back to CensorisLabs home"><span>◈</span><b>CENSORISLABS</b></a>
-      <div className="atlas-title"><span>THE LIVING ATLAS</span><small>TIME · PLACE · PEOPLE</small></div>
+      <h1 className="atlas-title"><span>THE LIVING ATLAS</span><small>TIME · PLACE · PEOPLE</small></h1>
       <div className="atlas-top-actions"><span className="atlas-live"><i /> INTERACTIVE GLOBE</span><button className="atlas-icon-button" onClick={() => setLowMotion(value => !value)} aria-pressed={lowMotion} title="Toggle gentle motion">{lowMotion ? '◌' : '✧'}<span>Motion</span></button><button className="atlas-fullscreen" onClick={toggleFullscreen}><span aria-hidden="true">{expanded ? '⤢' : '⛶'}</span>{expanded ? 'Exit full screen' : 'Full screen'}</button></div>
     </header>
 
@@ -974,7 +1019,7 @@ export default function Atlas() {
       <button className="atlas-collapse" onClick={() => setLeftCollapsed(value => !value)} aria-expanded={!leftCollapsed} aria-label={leftCollapsed ? 'Open stories and wars panel' : 'Collapse story panel'}>{leftCollapsed ? 'STORIES + WARS ＋' : '−'}</button>
       {!leftCollapsed && <>
         <div className="atlas-kicker">A WORLD IN MOTION <span>STORIES + WARS</span></div>
-        <h1>History has<br /><em>many centers.</em></h1>
+        <h2 className="atlas-panel-title">History has<br /><em>many centers.</em></h2>
         <p className="atlas-intro">Travel across centuries, follow old routes and meet the people who connected the world.</p>
         <label className="atlas-search"><span aria-hidden="true">⌕</span><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={layer === 'Wars' ? 'Search a war, side or place' : 'Search a place or story'} aria-label="Search atlas events" /><kbd>Ctrl K</kbd></label>
         <div className="atlas-filter-label">EXPLORE BY LENS</div>

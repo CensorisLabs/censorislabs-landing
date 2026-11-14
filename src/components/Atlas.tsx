@@ -204,7 +204,10 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
   canvas.width = textureWidth
   canvas.height = textureWidth / 2
   const lineScale = canvas.width / 2048
+  const highDetail = textureWidth >= 4096
   const ctx = canvas.getContext('2d')!
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
   const ocean = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
   ocean.addColorStop(0, '#fbf8fd')
   ocean.addColorStop(0.5, '#f4eff8')
@@ -214,7 +217,8 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
 
   const xy = ([lon, lat]: [number, number]): [number, number] => [(lon + 180) / 360 * canvas.width, (90 - lat) / 180 * canvas.height]
   ctx.lineWidth = lineScale
-  for (let lat = -75; lat <= 75; lat += 15) {
+  const gridStep = highDetail ? 10 : 15
+  for (let lat = -75; lat <= 75; lat += gridStep) {
     ctx.beginPath()
     for (let lon = -180; lon <= 180; lon += 2) {
       const [x, y] = xy([lon, lat])
@@ -223,7 +227,7 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
     ctx.strokeStyle = lat === 0 ? 'rgba(121, 82, 146, .2)' : 'rgba(121, 82, 146, .08)'
     ctx.stroke()
   }
-  for (let lon = -165; lon <= 180; lon += 15) {
+  for (let lon = -165; lon <= 180; lon += gridStep) {
     ctx.beginPath()
     for (let lat = -89; lat <= 89; lat += 2) {
       const [x, y] = xy([lon, lat])
@@ -236,7 +240,14 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
   // Keep present-day land outlines subtle and global; stronger land/ocean
   // contrast makes coasts readable without leaking current borders into past eras.
   countries.forEach(feature => drawFeature(ctx, feature, '#d7c9e1', 'transparent', 0, canvas.width, canvas.height))
-  historical.forEach(feature => drawFeature(ctx, feature, polityColor(feature.properties.name, .86, 55), polityColor(feature.properties.name, .92, 36), 1.2 * lineScale, canvas.width, canvas.height))
+  // High-detail views keep a faint modern geography reference in unmapped
+  // areas. Historical polities are painted over this layer, so their borders
+  // remain authoritative wherever the source has coverage.
+  if (highDetail && year < 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(83, 52, 104, .30)', .55 * lineScale, canvas.width, canvas.height))
+  historical.forEach(feature => {
+    drawFeature(ctx, feature, polityColor(feature.properties.name, .86, 55), polityColor(feature.properties.name, .92, 36), 1.2 * lineScale, canvas.width, canvas.height)
+    if (highDetail) drawFeature(ctx, feature, 'transparent', 'rgba(255, 255, 255, .16)', .55 * lineScale, canvas.width, canvas.height)
+  })
   if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(107, 77, 123, .68)', .8 * lineScale, canvas.width, canvas.height))
   selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(255, 92, 138, .25)', 'rgba(206, 47, 108, .98)', 3 * lineScale, canvas.width, canvas.height))
   if (selectedCountry && year >= 2022) {
@@ -311,9 +322,17 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   const world = useRef<THREE.Group>(null)
   const { gl, camera } = useThree()
   const maxAnisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy())
-  // Playback favours a fast 2K redraw; the paused view keeps the full 4K detail.
-  const textureWidth = isPlaying ? 2048 : 4096
+  const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8
+  // Playback favours a fast 2K redraw; the paused view uses the largest
+  // practical texture the GPU supports, up to 8K, for close-up coastlines and
+  // small polity borders. Lower-memory devices stay at 4K.
+  const detailTextureWidth = Math.min(8192, gl.capabilities.maxTextureSize, deviceMemory >= 8 ? 8192 : 4096)
+  const textureWidth = isPlaying ? 2048 : detailTextureWidth
   const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year, maxAnisotropy, textureWidth), [countries, historical, selectedAuthorities, selectedCountry, year, maxAnisotropy, textureWidth])
+  useEffect(() => {
+    gl.domElement.dataset.atlasTextureWidth = String(textureWidth)
+    gl.domElement.dataset.atlasDetail = textureWidth >= 4096 ? 'high' : 'playback'
+  }, [gl, textureWidth])
   // Start on Europe, Africa and western Asia, where the historical coverage is
   // densest, instead of hiding most recorded polities around the far side.
   const spin = useRef({ x: 0.12, y: -Math.PI / 2 })
@@ -364,8 +383,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     source.forEach(label => { const current = largestByName.get(label.name); if (!current || label.area > current.area) largestByName.set(label.name, label) })
     // Close views get a denser label field so small countries and polities
     // become readable instead of remaining hidden behind a fixed world-view set.
-    const maxLabels = zoomBand === 2 ? (year >= 2022 ? 260 : 240) : zoomBand === 1 ? (year >= 2022 ? 210 : 175) : (year >= 2022 ? 170 : 110)
-    const separation = zoomBand === 2 ? 1.8 : zoomBand === 1 ? 3.6 : 7
+    const maxLabels = zoomBand === 2 ? (year >= 2022 ? 300 : 280) : zoomBand === 1 ? (year >= 2022 ? 240 : 200) : (year >= 2022 ? 190 : 130)
+    const separation = zoomBand === 2 ? 1.55 : zoomBand === 1 ? 3.2 : 6.4
     return spacedLabels([...largestByName.values()], maxLabels, separation)
   }, [countries, historical, year, zoomBand])
   // The gazetteer is intentionally lazy: city and landmark labels only enter
@@ -637,7 +656,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
         const rawLon = Math.atan2(localPoint.z, -localPoint.x) * 180 / Math.PI - 180
         onSelectLocation({ lat, lon: ((rawLon + 540) % 360) - 180 })
       }}>
-        <sphereGeometry args={[1.6, 192, 128]} />
+        <sphereGeometry args={[1.6, 256, 192]} />
         <meshStandardMaterial map={texture} roughness={0.91} metalness={0.02} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
@@ -710,7 +729,7 @@ function GlobeTextLabel({ label, scale, kind = 'country' }: { label: GlobeLabel;
     context.font = isCountry ? '700 52px Inter, Arial, sans-serif' : kind === 'landmark' ? 'italic 600 38px Georgia, serif' : '700 40px Inter, Arial, sans-serif'
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.lineWidth = isCountry ? 10 : 8
+    context.lineWidth = isCountry ? 7 : 6
     context.strokeStyle = 'rgba(255,255,255,.98)'
     context.strokeText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
     context.fillStyle = isCountry ? '#5c3378' : kind === 'landmark' ? '#80500f' : '#9a2e68'
@@ -1012,7 +1031,7 @@ export default function Atlas() {
     <header className="atlas-topbar">
       <a href="#top" className="atlas-brand" aria-label="Back to CensorisLabs home"><span>◈</span><b>CENSORISLABS</b></a>
       <h1 className="atlas-title"><span>THE LIVING ATLAS</span><small>TIME · PLACE · PEOPLE</small></h1>
-      <div className="atlas-top-actions"><span className="atlas-live"><i /> INTERACTIVE GLOBE</span><button className="atlas-icon-button" onClick={() => setLowMotion(value => !value)} aria-pressed={lowMotion} title="Toggle gentle motion">{lowMotion ? '◌' : '✧'}<span>Motion</span></button><button className="atlas-fullscreen" onClick={toggleFullscreen}><span aria-hidden="true">{expanded ? '⤢' : '⛶'}</span>{expanded ? 'Exit full screen' : 'Full screen'}</button></div>
+      <div className="atlas-top-actions"><span className="atlas-live"><i /> HIGH-DETAIL GLOBE</span><button className="atlas-icon-button" onClick={() => setLowMotion(value => !value)} aria-pressed={lowMotion} title="Toggle gentle motion">{lowMotion ? '◌' : '✧'}<span>Motion</span></button><button className="atlas-fullscreen" onClick={toggleFullscreen}><span aria-hidden="true">{expanded ? '⤢' : '⛶'}</span>{expanded ? 'Exit full screen' : 'Full screen'}</button></div>
     </header>
 
     <aside className={`atlas-panel atlas-panel--left${leftCollapsed ? ' is-collapsed' : ''}`}>
@@ -1070,7 +1089,7 @@ export default function Atlas() {
       </>}
     </aside>
 
-    <div className="atlas-globe-caption"><span>RECORDED POLITIES COLOURED · UNMAPPED LAND LEFT NEUTRAL</span><span>{selectedWar?.properties.title ?? selectedCountry?.properties.name ?? 'TIME · PLACE · PEOPLE'}</span></div>
+    <div className="atlas-globe-caption"><span>HIGH-DETAIL COASTLINES WHEN PAUSED · 10° GRATICULE · RECORDED POLITIES COLOURED · UNMAPPED LAND NEUTRAL</span><span>{selectedWar?.properties.title ?? selectedCountry?.properties.name ?? 'TIME · PLACE · PEOPLE'}</span></div>
     <div className="atlas-zoom-controls" role="group" aria-label="Map zoom controls">
       <button type="button" onClick={() => requestZoom('out')} aria-label="Zoom out" title="Zoom out">−</button>
       <button type="button" onClick={() => requestZoom('in')} aria-label="Zoom in" title="Zoom in">＋</button>

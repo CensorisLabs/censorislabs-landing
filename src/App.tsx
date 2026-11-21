@@ -17,6 +17,7 @@ import { initReveals, initScrollDrift, initTilt } from './lib/effects'
 
 const Hero = lazy(() => import('./components/Hero'))
 const Atlas = lazy(() => import('./components/Atlas'))
+const Puffwork = lazy(() => import('./components/Puffwork'))
 
 function routeFromLocation() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -26,6 +27,7 @@ function routeFromLocation() {
 const TITLES: Record<string, string> = {
   '#/game': 'Chronicle Frontier',
   '#/atlas': 'World Atlas',
+  '#/puffwork': 'Puffwork — inflatable 3D illustrations',
   '#/about': 'About me',
   '#/apps': 'Apps',
   '#/reviews': 'Reviews & comments',
@@ -58,7 +60,11 @@ export default function App() {
   }, [route])
 
   useEffect(() => {
-    const title = route.startsWith('#/apps/') ? 'App details' : TITLES[route]
+    const title = route.startsWith('#/apps/')
+      ? 'App details'
+      : route.startsWith('#/puffwork/')
+        ? 'Puffwork pack'
+        : TITLES[route]
     document.title = title ? `${title} · CensorisLabs` : 'CensorisLabs — Independent Software House'
   }, [route])
 
@@ -87,6 +93,8 @@ export default function App() {
   const isDonatePage = route === '#/donate'
   const isAppPage = route === '#/apps' || route.startsWith('#/apps/')
   const appId = isAppPage ? route.split('/')[2] : undefined
+  const isPuffworkPage = route === '#/puffwork' || route.startsWith('#/puffwork/')
+  const puffworkPath = route.startsWith('#/puffwork/') ? decodeURIComponent(route.slice('#/puffwork/'.length)) : undefined
 
   return (
     <>
@@ -98,7 +106,7 @@ export default function App() {
       {!isGamePage && !isAtlasPage && <Nav />}
 
       <main id="main">
-        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isDonatePage ? <Donate /> : isAppPage ? <Apps appId={appId} /> : <>
+        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isDonatePage ? <Donate /> : isPuffworkPage ? <div className="puff"><Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Puffwork path={puffworkPath} /></Suspense></div> : isAppPage ? <Apps appId={appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>

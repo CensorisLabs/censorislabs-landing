@@ -3,6 +3,7 @@
 const LINKS = [
   { href: '#ecosystem', label: 'Ecosystem' },
   { href: '#/apps', label: 'Apps' },
+  { href: '#/puffwork', label: 'Puffwork' },
   { href: '#/game', label: 'Play' },
   { href: '#/atlas', label: 'Atlas' },
   { href: '#/reviews', label: 'Reviews' },
@@ -56,7 +57,7 @@ export default function Nav() {
         </nav>
 
         <a className="btn btn--outline nav__cta" href="#/apps">
-          Explore the app suite
+          Explore apps
         </a>
 
         <details className="nav__appearance">
@@ -92,7 +93,7 @@ export default function Nav() {
             ))}
           </ul>
           <a className="btn btn--primary" href="#/apps" onClick={() => setOpen(false)}>
-            Explore the app suite
+            Explore apps
           </a>
         </nav>
         <details className="nav__mobile-appearance">

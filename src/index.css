@@ -1627,3 +1627,15 @@ p {
 .suite-release-notes h2 { margin: 6px 0 4px; }
 .suite-release-date { margin: 0 0 14px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.65; }
 .suite-release-body { margin: 0 0 16px; white-space: pre-wrap; line-height: 1.65; max-width: 72ch; }
+
+/* Puffwork adds a destination, so tighten the desktop navigation before it
+   collides with the call to action. The mobile menu still takes over at 980px. */
+@media (max-width: 1440px) {
+  .nav__links { gap: 18px; }
+  .nav__link { font-size: 11.5px; }
+}
+
+@media (max-width: 1320px) {
+  .nav__links { gap: 14px; }
+  .nav__cta { display: none; }
+}

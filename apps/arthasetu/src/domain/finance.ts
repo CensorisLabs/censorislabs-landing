@@ -54,6 +54,18 @@ export function cagr(startValue: number, endValue: number, years: number): numbe
   return Math.pow(endValue / startValue, 1 / years) - 1
 }
 
+/**
+ * Share of income kept after spending.
+ *
+ * Negative when a month spends more than it earns, because a floor of zero
+ * would report an overspent month as "0% saved" and hide the shortfall.
+ * Returns null when there is no income to divide by.
+ */
+export function savingsRate(income: number, expenses: number): number | null {
+  if (!Number.isFinite(income) || !Number.isFinite(expenses) || income <= 0) return null
+  return (income - expenses) / income
+}
+
 export type AmortizationRow = { month: number; payment: number; principal: number; interest: number; balance: number }
 export function amortization(principal: number, annualRate: number, months: number, extraMonthly = 0): AmortizationRow[] {
   if (![principal, annualRate, months, extraMonthly].every(Number.isFinite) || principal <= 0 || months <= 0 || annualRate < 0) return []

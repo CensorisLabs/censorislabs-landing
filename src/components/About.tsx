@@ -31,7 +31,7 @@ export default function About() {
             <p>One shared suite, with useful tools for different parts of daily life.</p>
             <ul>
               <li>Android and Windows releases</li>
-              <li>Four site themes and a low-end mode</li>
+              <li>One paper-and-ink theme and a low-end mode</li>
               <li>Local-first features where they fit</li>
             </ul>
           </aside>
@@ -45,7 +45,7 @@ export default function About() {
           <div className="about-values__grid">
             <article><span>01</span><h3>Your information stays yours</h3><p>Personal entries are stored on the device in apps designed for local use. Export and restore options help you keep a copy you control.</p></article>
             <article><span>02</span><h3>Clear about the connection</h3><p>Some tools search news, public archives, streaming availability, or social servers. Those features need the internet and link back to their sources.</p></article>
-            <article><span>03</span><h3>Designed for real devices</h3><p>Choose from Obsidian, Ocean, Amethyst, and Ember themes. Low-end mode reduces motion, blur, and decorative effects.</p></article>
+            <article><span>03</span><h3>Designed for real devices</h3><p>The site is monochrome on every page — paper, ink and nothing in between. Low-end mode reduces motion, blur, and decorative effects.</p></article>
           </div>
         </section>
 
@@ -67,7 +67,7 @@ export default function About() {
                 <h3>{product.name}</h3>
                 <p className="about-app-card__description">{product.description}</p>
                 <div className={`about-app-card__features${product.freeOnly ? ' about-app-card__features--free-only' : ''}`}>
-                  <div><h4>Everything is free</h4><ul>{[...product.free, ...product.pro].map(feature => <li key={feature}>{feature}</li>)}</ul></div>
+                  <div><h4>Everything is free</h4><ul>{[...product.free, ...(product.pro ?? [])].map(feature => <li key={feature}>{feature}</li>)}</ul></div>
                   
                 </div>
                 <a className="about-app-card__link" href={`#/apps/${product.id}`}>View app details <span aria-hidden="true">↗</span></a>

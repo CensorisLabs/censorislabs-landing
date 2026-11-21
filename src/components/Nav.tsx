@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const LINKS = [
   { href: '#ecosystem', label: 'Ecosystem' },
@@ -8,31 +8,20 @@ const LINKS = [
   { href: '#/atlas', label: 'Atlas' },
   { href: '#/reviews', label: 'Reviews' },
   { href: '#/request', label: 'Request code' },
-  { href: '/donate', label: 'Donate' },
   { href: '#/about', label: 'About me' },
   { href: '#products', label: 'Products' },
   { href: '#sovereignty', label: 'Sovereignty' },
   { href: '#legal', label: 'Legal' },
 ]
 
-function getSavedTheme() {
-  const saved = localStorage.getItem('censorislabs-site-theme')
-  if (saved === 'imperial') return 'obsidian'
-  if (saved === 'violet') return 'amethyst'
-  return saved || 'obsidian'
-}
-
 export default function Nav() {
   const [open, setOpen] = useState(false)
-  const [theme, setTheme] = useState(getSavedTheme)
   const [lowPerformance, setLowPerformance] = useState(() => localStorage.getItem('censorislabs-site-performance') === 'low')
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
     document.documentElement.dataset.performance = lowPerformance ? 'low' : 'full'
-    localStorage.setItem('censorislabs-site-theme', theme)
     localStorage.setItem('censorislabs-site-performance', lowPerformance ? 'low' : 'full')
-  }, [theme, lowPerformance])
+  }, [lowPerformance])
 
   return (
     <header className="nav">
@@ -61,11 +50,12 @@ export default function Nav() {
         </a>
 
         <details className="nav__appearance">
-          <summary>Appearance</summary>
+          <summary>Display</summary>
           <div className="nav__appearance-panel">
-            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Neon</option><option value="amethyst">Violet</option><option value="ocean">Cyan</option><option value="ember">Ember</option></select></label>
-            <label className="nav__performance"><input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode</label>
-            <small>Reduces 3D, blur, shadows and motion.</small>
+            <label className="nav__performance">
+              <input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode
+            </label>
+            <small>Reduces 3D, blur, shadows and motion. The site is always monochrome.</small>
           </div>
         </details>
 
@@ -97,11 +87,12 @@ export default function Nav() {
           </a>
         </nav>
         <details className="nav__mobile-appearance">
-          <summary>Appearance</summary>
+          <summary>Display</summary>
           <div className="nav__appearance-panel nav__appearance-panel--mobile">
-            <label>Theme<select value={theme} onChange={event => setTheme(event.target.value)}><option value="obsidian">Neon</option><option value="amethyst">Violet</option><option value="ocean">Cyan</option><option value="ember">Ember</option></select></label>
-            <label className="nav__performance"><input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode</label>
-            <small>Reduces 3D, blur, shadows and motion.</small>
+            <label className="nav__performance">
+              <input type="checkbox" checked={lowPerformance} onChange={event => setLowPerformance(event.target.checked)} /> Low-end mode
+            </label>
+            <small>Reduces 3D, blur, shadows and motion. The site is always monochrome.</small>
           </div>
         </details>
       </div>

@@ -1,0 +1,610 @@
+/* ============================================================
+   Monochrome skin — paper and ink, in the spirit of Puffwork.
+   Loaded last so it re-points the existing design tokens instead of
+   duplicating every component. Colour names stay (gold, bronze,
+   marble) because the markup uses them, but every one resolves to a
+   neutral: #f7f4ee paper, #ffffff cards, #17130f ink.
+   ============================================================ */
+
+:root,
+html[data-theme='obsidian'],
+html[data-theme='amethyst'],
+html[data-theme='ocean'],
+html[data-theme='ember'] {
+  --void: #f7f4ee;
+  --void-raised: #ffffff;
+  --surface: #ffffff;
+  --marble-dark: #e8e2d6;
+
+  --gold: #17130f;
+  --bronze: #5b544a;
+  --marble: #17130f;
+  --palladium: #4f483f;
+  --muted: #7c7367;
+
+  --line: rgba(23, 19, 15, 0.24);
+  --line-soft: rgba(23, 19, 15, 0.1);
+  --gold-soft: rgba(23, 19, 15, 0.06);
+
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-line: rgba(23, 19, 15, 0.13);
+
+  --glow: 0 10px 30px rgba(38, 28, 18, 0.08);
+  --glow-violet: 0 10px 30px rgba(38, 28, 18, 0.08);
+  --shadow-panel: 0 18px 46px rgba(38, 28, 18, 0.07), inset 0 1px 0 #ffffff;
+  --gradient-accent: linear-gradient(120deg, #17130f 0%, #3c352c 100%);
+
+  color-scheme: light;
+}
+
+html {
+  scrollbar-color: #c6bdb0 #f7f4ee;
+}
+
+body {
+  background: var(--void);
+  color: var(--marble);
+}
+
+::selection {
+  background: #17130f;
+  color: #fbf9f5;
+}
+
+/* ---------- navigation ---------- */
+
+.nav {
+  background: rgba(250, 247, 241, 0.86);
+  border-bottom: 1px solid rgba(23, 19, 15, 0.12);
+  box-shadow: 0 10px 34px rgba(38, 28, 18, 0.07);
+}
+
+.brand__mark {
+  background: #17130f;
+  color: #fbf9f5;
+  border-color: #17130f;
+  box-shadow: none;
+}
+
+.brand__name {
+  color: #17130f;
+}
+
+.nav__link {
+  color: #4f483f;
+}
+
+.nav__link:hover,
+.nav__link:focus-visible {
+  color: #17130f;
+}
+
+.nav__cta {
+  color: #17130f;
+}
+
+.nav__menu-btn {
+  color: #17130f;
+  border-color: rgba(23, 19, 15, 0.2);
+}
+
+.nav__mobile {
+  background: #fffdf9;
+  border-color: rgba(23, 19, 15, 0.12);
+}
+
+.nav__mobile a {
+  color: #17130f;
+}
+
+.nav__appearance summary,
+.nav__mobile-appearance summary {
+  background: #fff;
+  border-color: rgba(23, 19, 15, 0.16);
+  color: #4f483f;
+}
+
+.nav__appearance-panel {
+  background: #fff;
+  border-color: rgba(23, 19, 15, 0.14);
+  box-shadow: 0 24px 50px rgba(38, 28, 18, 0.14);
+}
+
+.nav__appearance-panel label,
+.nav__appearance-panel small {
+  color: #4f483f;
+}
+
+.nav__appearance-panel select {
+  background: #fff;
+  border-color: rgba(23, 19, 15, 0.18);
+  color: #17130f;
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  --btn-ink: #17130f;
+}
+
+.btn--primary {
+  background: var(--btn-ink);
+  border-color: var(--btn-ink);
+  color: #fbf9f5;
+  box-shadow: 0 12px 28px rgba(23, 19, 15, 0.18);
+}
+
+.btn--primary:hover:not(:disabled) {
+  color: #fbf9f5;
+  background: #2b241d;
+  box-shadow: 0 18px 36px rgba(23, 19, 15, 0.24);
+}
+
+.btn--outline {
+  background: #fff;
+  border-color: rgba(23, 19, 15, 0.24);
+  color: #17130f;
+  box-shadow: 0 8px 22px rgba(38, 28, 18, 0.06);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: #fffdf9;
+  border-color: rgba(23, 19, 15, 0.55);
+  box-shadow: 0 14px 32px rgba(38, 28, 18, 0.1);
+}
+
+.btn--ghost {
+  color: #4f483f;
+}
+
+.btn::after {
+  background: linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, 0.42) 48%, transparent 74%);
+}
+
+.btn--outline::after {
+  background: linear-gradient(115deg, transparent 18%, rgba(23, 19, 15, 0.12) 48%, transparent 74%);
+}
+
+.btn:focus-visible {
+  outline: 2px solid #17130f;
+  outline-offset: 3px;
+}
+
+/* ---------- type and surfaces ---------- */
+
+.eyebrow {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(23, 19, 15, 0.16);
+  color: #4f483f;
+}
+
+.eyebrow::before {
+  background: #17130f;
+  box-shadow: none;
+}
+
+.section {
+  border-top-color: rgba(23, 19, 15, 0.1);
+}
+
+.section-lede {
+  color: #4f483f;
+}
+
+.suite-card,
+.suite-plan,
+.suite-feature-card,
+.suite-download-card,
+.review-card,
+.legal__panel,
+.about-snapshot,
+.about-app-card {
+  background: #ffffff;
+  border-color: rgba(23, 19, 15, 0.12);
+  box-shadow: 0 18px 46px rgba(38, 28, 18, 0.06);
+}
+
+.suite-card:hover,
+.suite-plan:hover,
+.about-app-card:hover {
+  border-color: rgba(23, 19, 15, 0.32);
+  box-shadow: 0 24px 54px rgba(38, 28, 18, 0.1);
+}
+
+.suite-card__badge {
+  background: rgba(23, 19, 15, 0.05);
+  border-color: rgba(23, 19, 15, 0.14);
+  color: #4f483f;
+}
+
+.suite-card p,
+.suite-card__kind,
+.suite-checkout-note,
+.suite-lede {
+  color: #4f483f;
+}
+
+.suite-offer-note {
+  background: rgba(23, 19, 15, 0.04);
+  border-color: rgba(23, 19, 15, 0.14);
+  color: #17130f;
+}
+
+.suite-offer-note b {
+  color: #17130f;
+}
+
+.suite-offer-note span {
+  color: #4f483f;
+}
+
+.suite-plan strong {
+  color: #17130f;
+}
+
+.suite-back {
+  color: #5b544a;
+}
+
+/* forms */
+input,
+select,
+textarea {
+  color: #17130f;
+  border-color: rgba(23, 19, 15, 0.18);
+  background: #fff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8d8477;
+}
+
+/* decorative layers */
+.grain {
+  opacity: 0.03;
+  mix-blend-mode: multiply;
+}
+
+.page-frame {
+  background: linear-gradient(
+    150deg,
+    rgba(23, 19, 15, 0.28),
+    rgba(23, 19, 15, 0.08) 32%,
+    rgba(23, 19, 15, 0.04) 62%,
+    rgba(23, 19, 15, 0.22) 100%
+  );
+  opacity: 0.5;
+}
+
+.cursor {
+  opacity: 0.9;
+}
+
+/* ---------- hero ---------- */
+
+.hero__stage {
+  background: linear-gradient(158deg, #fffdf8 0%, #f5f1e8 52%, #eae4d7 100%);
+  box-shadow:
+    0 40px 100px rgba(38, 28, 18, 0.12),
+    inset 0 1px 0 #ffffff;
+}
+
+.hero__stage::before {
+  background: linear-gradient(
+    140deg,
+    rgba(23, 19, 15, 0.34),
+    rgba(23, 19, 15, 0.1) 38%,
+    rgba(23, 19, 15, 0.05) 62%,
+    rgba(23, 19, 15, 0.22) 100%
+  );
+}
+
+/* The illustrated room becomes a pale ink sketch behind the monochrome type. */
+.room__art {
+  filter: grayscale(1) invert(1) contrast(0.9) brightness(1.02);
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+}
+
+.room__scene {
+  mix-blend-mode: multiply;
+  opacity: 0.18;
+  filter: grayscale(1);
+}
+
+.room__scrim {
+  background: linear-gradient(90deg, rgba(247, 244, 238, 0.94) 0%, rgba(247, 244, 238, 0.6) 42%, rgba(247, 244, 238, 0.05) 72%);
+}
+
+.hero__title {
+  color: #17130f;
+  text-shadow: none;
+}
+
+.hero__sub {
+  color: #4f483f;
+}
+
+.hero__tag {
+  border-color: rgba(23, 19, 15, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  color: #4f483f;
+}
+
+.hero__tag--live {
+  border-color: rgba(23, 19, 15, 0.3);
+  background: rgba(23, 19, 15, 0.06);
+  color: #17130f;
+}
+
+.hero__tag--live i {
+  background: #17130f;
+  box-shadow: none;
+}
+
+.spark {
+  background: rgba(23, 19, 15, 0.35);
+}
+
+/* ---------- imagery ---------- */
+
+#main img,
+.footer img {
+  filter: grayscale(1);
+}
+
+/* The globe and the game are immersive canvases: keep their own layouts,
+   but strip colour so they belong to the same black-and-white world. */
+.atlas-page,
+.frontier-page {
+  filter: grayscale(1);
+}
+
+/* ---------- footer ---------- */
+
+.footer {
+  background: linear-gradient(180deg, #f4f0e8 0%, #ede7db 100%);
+  border-top-color: rgba(23, 19, 15, 0.12);
+}
+
+.footer__brand p,
+.footer__col a,
+.footer__col button {
+  color: #4f483f;
+}
+
+.footer__col a:hover,
+.footer__col button:hover {
+  color: #17130f;
+}
+
+.footer__col h4 {
+  color: #5b544a;
+}
+
+.footer__base {
+  color: #7c7367;
+}
+
+/* Panels that hard-code the old aubergine glass instead of a token. */
+.product,
+.ledger-wrap,
+.reviews-score,
+.review-form,
+.review-card,
+.request-panel,
+.hero-loading {
+  background: #ffffff;
+  border-color: rgba(23, 19, 15, 0.12);
+  box-shadow: 0 18px 46px rgba(38, 28, 18, 0.06);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.hero-loading {
+  border: 1px solid rgba(23, 19, 15, 0.1);
+  border-radius: 30px;
+}
+
+.product:hover {
+  border-color: rgba(23, 19, 15, 0.3);
+  box-shadow: 0 26px 58px rgba(38, 28, 18, 0.11);
+}
+
+.product::before {
+  background: linear-gradient(90deg, #17130f, rgba(23, 19, 15, 0.35) 45%, transparent 78%);
+  opacity: 0.4;
+}
+
+.product::after,
+.suite-card::after {
+  background: radial-gradient(
+    340px circle at var(--spot-x, 50%) var(--spot-y, 0%),
+    rgba(23, 19, 15, 0.06),
+    transparent 60%
+  );
+}
+
+.product__badge {
+  border-color: rgba(23, 19, 15, 0.25);
+  background: rgba(23, 19, 15, 0.05);
+  color: #17130f;
+}
+
+.product__open,
+.product__actions a,
+.product__actions button {
+  border-color: rgba(23, 19, 15, 0.24);
+  color: #17130f;
+}
+
+.product__suite-copy {
+  border-color: rgba(23, 19, 15, 0.14);
+  border-left-color: #17130f;
+  background: rgba(23, 19, 15, 0.04);
+  color: #17130f;
+}
+
+.product__suite-link {
+  border-color: rgba(23, 19, 15, 0.28);
+  background: rgba(23, 19, 15, 0.05);
+  color: #17130f;
+}
+
+.product__suite-link:hover {
+  border-color: #17130f;
+  background: rgba(23, 19, 15, 0.1);
+  box-shadow: none;
+}
+
+.product--apps .product__open:focus-visible {
+  outline-color: #17130f;
+}
+
+/* ---------- details that carry their own colour ---------- */
+
+.hero__base {
+  border-top-color: rgba(23, 19, 15, 0.14);
+  color: #7c7367;
+}
+
+.hero__url {
+  color: #17130f;
+}
+
+.hero__stage .spark,
+.spark--one,
+.spark--two,
+.spark--three,
+.spark--four,
+.spark--five {
+  background: rgba(23, 19, 15, 0.3);
+  box-shadow: none;
+}
+
+.suite-grid .suite-card:nth-child(5n + 1) { --card-tab: #17130f; }
+.suite-grid .suite-card:nth-child(5n + 2) { --card-tab: #3d372f; }
+.suite-grid .suite-card:nth-child(5n + 3) { --card-tab: #6b6357; }
+.suite-grid .suite-card:nth-child(5n + 4) { --card-tab: #9a9183; }
+.suite-grid .suite-card:nth-child(5n + 5) { --card-tab: #c9c0b2; }
+
+.about-app-grid .about-app-card:nth-child(4n + 1) { --card-tab: #17130f; }
+.about-app-grid .about-app-card:nth-child(4n + 2) { --card-tab: #4c4539; }
+.about-app-grid .about-app-card:nth-child(4n + 3) { --card-tab: #857c6e; }
+.about-app-grid .about-app-card:nth-child(4n + 4) { --card-tab: #c2b8a8; }
+
+.suite-card::before,
+.about-app-card::before {
+  box-shadow: none;
+}
+
+.review-card::before {
+  background: linear-gradient(180deg, #17130f, #8d8477);
+}
+
+.review-card:hover,
+.suite-card:hover,
+.about-app-card:hover {
+  border-color: rgba(23, 19, 15, 0.3);
+  box-shadow: 0 22px 50px rgba(38, 28, 18, 0.1);
+}
+
+.stars__star {
+  color: #b3a999;
+}
+
+.stars__star--on {
+  color: #17130f;
+  text-shadow: none;
+}
+
+button.stars__star:hover {
+  color: #17130f;
+}
+
+.review-card__delete {
+  border-color: rgba(23, 19, 15, 0.18);
+}
+
+/* The custom reticle is drawn in light ink so it survives on paper. */
+.cursor__dot,
+.cursor__ring,
+.cursor__reticle {
+  border-color: rgba(23, 19, 15, 0.65);
+  background-color: transparent;
+}
+
+.cursor__dot {
+  background-color: #17130f;
+}
+
+/* Legal dialog and the donation panel */
+.dialog-backdrop {
+  background: rgba(23, 19, 15, 0.44);
+}
+
+.dialog {
+  background: #ffffff;
+  border-color: rgba(23, 19, 15, 0.14);
+  box-shadow: 0 40px 110px rgba(38, 28, 18, 0.28);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dialog__title,
+.dialog__body h3 {
+  color: #17130f;
+}
+
+.dialog__sub,
+.dialog__body p,
+.dialog__body li {
+  color: #4f483f;
+}
+
+.dialog__close {
+  color: #4f483f;
+  border-color: rgba(23, 19, 15, 0.18);
+  background: #fff;
+}
+
+.dialog__close:hover {
+  color: #17130f;
+  border-color: #17130f;
+}
+
+.draft-banner {
+  background: rgba(23, 19, 15, 0.05);
+  border-color: rgba(23, 19, 15, 0.18);
+  color: #17130f;
+}
+
+.donate-upi {
+  background: #ffffff;
+  border-color: rgba(23, 19, 15, 0.16);
+}
+
+.donate-upi span,
+.donate-lede,
+.donate-note {
+  color: #5b544a;
+}
+
+/* ---------- Puffwork keeps its own palette ---------- */
+
+.puff {
+  color-scheme: light;
+}
+
+.puff img {
+  filter: none;
+}
+
+/* ---------- responsive safety for the light nav ---------- */
+
+@media (max-width: 980px) {
+  .nav__mobile {
+    box-shadow: 0 24px 50px rgba(38, 28, 18, 0.14);
+  }
+}

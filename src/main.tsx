@@ -7,10 +7,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './site-polish.css'
 import './motion.css'
+// Loaded last: re-points the tokens above at a paper-and-ink palette.
+import './monochrome.css'
 import App from './App.tsx'
 
-const savedSiteTheme = localStorage.getItem('censorislabs-site-theme')
-document.documentElement.dataset.theme = savedSiteTheme === 'imperial' ? 'obsidian' : savedSiteTheme === 'violet' ? 'amethyst' : savedSiteTheme || 'obsidian'
 document.documentElement.dataset.performance = localStorage.getItem('censorislabs-site-performance') === 'low' ? 'low' : 'full'
 
 createRoot(document.getElementById('root')!).render(

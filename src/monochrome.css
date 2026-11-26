@@ -93,8 +93,15 @@ body {
   border-color: rgba(23, 19, 15, 0.12);
 }
 
-.nav__mobile a {
+.nav__mobile a:not(.btn) {
   color: #17130f;
+}
+
+/* The button keeps ink-on-ink out: its own label colour wins over the list. */
+.nav__mobile a.btn--primary,
+.nav__mobile a.btn--primary:hover,
+.nav__mobile a.btn--primary:focus-visible {
+  color: #fbf9f5;
 }
 
 .nav__appearance summary,

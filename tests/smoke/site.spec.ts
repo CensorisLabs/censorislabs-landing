@@ -102,6 +102,37 @@ test('an app page carries its own title and canonical', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('ArthaSetu')
 })
 
+test('every catalogue page points at its own share card', async ({ page, request }) => {
+  const cards = [
+    ['/apps/arthasetu', '/og/apps/arthasetu.jpg'],
+    ['/puffwork/velvet-orb', '/og/puffwork/velvet-orb.jpg'],
+    ['/puffwork/bundle/soft-start', '/og/puffwork/bundles/soft-start.jpg'],
+  ]
+
+  for (const [path, image] of cards) {
+    const html = await (await request.get(path)).text()
+    expect(html, `prerendered og:image on ${path}`).toContain(
+      `content="https://www.censorislabs.online${image}"`,
+    )
+    const card = await request.get(image)
+    expect(card.status(), `status for ${image}`).toBe(200)
+    expect(card.headers()['content-type'], `type for ${image}`).toContain('image/jpeg')
+  }
+
+  const home = await (await request.get('/')).text()
+  expect(home).toContain('/og-cover.jpg')
+
+  // The running app swaps the card on client-side navigation, not just the
+  // prerendered HTML a crawler reads.
+  await page.goto('/')
+  await page.locator('a[href="/apps/arthasetu"]').first().click()
+  await expect(page).toHaveURL(/\/apps\/arthasetu$/)
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    'content',
+    'https://www.censorislabs.online/og/apps/arthasetu.jpg',
+  )
+})
+
 test('the suite size the copy claims matches the catalogue', async ({ page }) => {
   await openAndAudit(page, '/')
   const ecosystem = await page.locator('#ecosystem').innerText()

@@ -12,6 +12,7 @@ import { DESCRIPTIONS, TITLES } from '../src/data/meta.ts'
 import { PRODUCTS } from '../src/data/products.ts'
 import { ASSETS, BUNDLES } from '../src/data/puffwork.ts'
 import { SITE_ORIGIN, humaniseSlug } from '../src/lib/routes.ts'
+import { shareImageAlt, shareImageUrl } from '../src/lib/share.ts'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const template = readFileSync(join(root, 'dist/index.html'), 'utf8')
@@ -73,6 +74,9 @@ function render(page) {
   html = setTag(html, 'meta name="description"', 'content', page.description)
   html = setTag(html, 'meta property="og:description"', 'content', page.description)
   html = setTag(html, 'meta name="twitter:description"', 'content', page.description)
+  html = setTag(html, 'meta property="og:image"', 'content', shareImageUrl(page.path))
+  html = setTag(html, 'meta name="twitter:image"', 'content', shareImageUrl(page.path))
+  html = setTag(html, 'meta property="og:image:alt"', 'content', shareImageAlt(page.path))
   return html
 }
 

@@ -16,6 +16,7 @@ import TechnicalLedger from './components/TechnicalLedger'
 import { LegalDialog, LegalSection, type LegalDocId } from './components/Legal'
 import { initReveals, initScrollDrift, initTilt } from './lib/effects'
 import { canonicalUrl, humaniseSlug, isPagePath, pathToRoute, routeToPath } from './lib/routes'
+import { shareImageAlt, shareImageUrl } from './lib/share'
 
 const Hero = lazy(() => import('./components/Hero'))
 const Atlas = lazy(() => import('./components/Atlas'))
@@ -130,6 +131,13 @@ export default function App() {
       setMeta('meta[property="og:title"]', `${title} · CensorisLabs`)
       setMeta('meta[name="twitter:title"]', `${title} · CensorisLabs`)
     }
+
+    // Client-side navigation keeps the URL, title and description in sync, so
+    // the share card follows the page too instead of staying on the cover.
+    const sharePath = route.startsWith('#/') ? route.slice(1) : '/'
+    setMeta('meta[property="og:image"]', shareImageUrl(sharePath))
+    setMeta('meta[name="twitter:image"]', shareImageUrl(sharePath))
+    setMeta('meta[property="og:image:alt"]', shareImageAlt(sharePath))
   }, [route])
 
   // A plain anchor such as #ecosystem is followed before React mounts the

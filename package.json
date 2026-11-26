@@ -9,6 +9,7 @@
     "lint": "oxlint --ignore-path .eslintignore",
     "test": "node --test \"tests/*.test.mjs\"",
     "sitemap": "node scripts/generate-sitemap.mjs",
+    "og:cards": "node scripts/og-cards.mjs",
     "preview": "vite preview",
     "test:smoke": "playwright test"
   },

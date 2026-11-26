@@ -20,7 +20,7 @@ export default function About() {
               that is calm to use and honest about what it can do.
             </p>
             <div className="about-actions">
-              <a className="btn btn--primary" href="#/apps">Explore all apps <span aria-hidden="true">↗</span></a>
+              <a className="btn btn--primary" href="/apps">Explore all apps <span aria-hidden="true">↗</span></a>
               <a className="btn btn--outline" href="mailto:hello@censorislabs.online">Get in touch</a>
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function About() {
                   <div><h4>Everything is free</h4><ul>{[...product.free, ...(product.pro ?? [])].map(feature => <li key={feature}>{feature}</li>)}</ul></div>
                   
                 </div>
-                <a className="about-app-card__link" href={`#/apps/${product.id}`}>View app details <span aria-hidden="true">↗</span></a>
+                <a className="about-app-card__link" href={`/apps/${product.id}`}>View app details <span aria-hidden="true">↗</span></a>
               </article>
             ))}
           </div>

@@ -15,14 +15,18 @@ import Sovereignty from './components/Sovereignty'
 import TechnicalLedger from './components/TechnicalLedger'
 import { LegalDialog, LegalSection, type LegalDocId } from './components/Legal'
 import { initReveals, initScrollDrift, initTilt } from './lib/effects'
+import { canonicalUrl, humaniseSlug, isPagePath, pathToRoute, routeToPath } from './lib/routes'
 
 const Hero = lazy(() => import('./components/Hero'))
 const Atlas = lazy(() => import('./components/Atlas'))
 const Puffwork = lazy(() => import('./components/Puffwork'))
 
 function routeFromLocation() {
-  const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  return window.location.hash || (path === '/donate' ? '#/donate' : '')
+  const fromPath = pathToRoute(window.location.pathname)
+  if (fromPath) return fromPath
+  // Old links (#/apps/arthasetu) still resolve; the effect below moves them to
+  // their real path so there is one address per page.
+  return window.location.hash || ''
 }
 
 const TITLES: Record<string, string> = {
@@ -35,6 +39,28 @@ const TITLES: Record<string, string> = {
   '#/reviews/moderation': 'Review moderation',
   '#/request': 'Request software',
   '#/donate': 'Donate',
+}
+
+const DESCRIPTIONS: Record<string, string> = {
+  '#/apps':
+    'Every app in the CensorisLabs suite — money, health, reading, media and everyday tools that keep their data on your device. Free, with every feature included.',
+  '#/about':
+    'The builder behind CensorisLabs on local-first software, honest privacy and tools that keep working with the network off.',
+  '#/reviews':
+    'Published notes from people using CensorisLabs apps, and a form for saying what works and what should change next.',
+  '#/request':
+    'Ask CensorisLabs for the tool you actually need. Describe the problem and it is read directly by the builder.',
+  '#/donate':
+    'CensorisLabs apps are free with every feature included. An optional UPI donation keeps the work going.',
+  '#/puffwork':
+    'Puffwork: soft inflatable 3D illustration packs with commercial licence options, made by CensorisLabs.',
+  '#/atlas': 'The living world atlas — an interactive globe of places, conflicts and sources.',
+  '#/game': 'Chronicle Frontier, an original voxel first-person shooter playable in the browser.',
+}
+
+function setMeta(selector: string, value: string, attribute = 'content') {
+  const node = document.head.querySelector<HTMLMetaElement>(selector)
+  if (node) node.setAttribute(attribute, value)
 }
 
 export default function App() {
@@ -55,28 +81,82 @@ export default function App() {
     }
   }, [])
 
-  // Keep the address bar in step with the page: /donate is a real path so the
-  // URL can be shared, but leaving it otherwise strands later routes on it.
+  // One address per page: the path is the source of truth, old hash links are
+  // moved over, and the canonical plus og:url follow the visitor.
   useEffect(() => {
-    const path = window.location.pathname.replace(/\/+$/, '')
+    const isAnchor = Boolean(route) && !route.startsWith('#/')
+    const path = isAnchor || !route ? '/' : routeToPath(route)
+    const hash = isAnchor ? route : ''
+    const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
+
+    if (currentPath !== path || window.location.hash !== hash) {
+      window.history.replaceState(null, '', `${path}${hash}`)
+    }
+
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
-    if (canonical) {
-      canonical.href = `https://www.censorislabs.online${path === '/donate' ? '/donate' : '/'}`
-    }
-    if (route === '#/donate' && path !== '/donate') {
-      window.history.replaceState(null, '', '/donate')
-    } else if (route !== '#/donate' && path === '/donate') {
-      window.history.replaceState(null, '', `/${route}`)
-    }
+    if (canonical) canonical.href = canonicalUrl(path)
+    setMeta('meta[property="og:url"]', canonicalUrl(path))
   }, [route])
 
+  // Internal links stay real anchors so they can be crawled, then take over the
+  // click to avoid a full reload for pages this app already has.
   useEffect(() => {
-    const title = route.startsWith('#/apps/')
-      ? (PRODUCTS.find(product => product.id === route.split('/')[2])?.name ?? TITLES['#/apps'])
-      : route.startsWith('#/puffwork/')
-        ? 'Puffwork pack'
-        : TITLES[route]
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) return
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      const anchor = (event.target as Element | null)?.closest?.('a')
+      if (!anchor) return
+      if (anchor.target === '_blank' || anchor.hasAttribute('download')) return
+      const href = anchor.getAttribute('href')
+      if (!href) return
+
+      const onSubpage = window.location.pathname.replace(/\/+$/, '') !== ''
+      if (href.startsWith('#')) {
+        // A section anchor used from another page belongs to the home page.
+        if (onSubpage) {
+          event.preventDefault()
+          window.history.pushState(null, '', `/${href}`)
+          setRoute(href)
+        }
+        return
+      }
+      if (!href.startsWith('/') || anchor.host !== window.location.host) return
+      const url = new URL(href, window.location.origin)
+      if (!isPagePath(url.pathname)) return
+      event.preventDefault()
+      window.history.pushState(null, '', href)
+      setRoute(routeFromLocation())
+      window.scrollTo(0, 0)
+    }
+
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
+  }, [])
+
+  useEffect(() => {
+    const product = route.startsWith('#/apps/')
+      ? PRODUCTS.find(item => item.id === route.split('/')[2])
+      : undefined
+    const title = product
+      ? product.name
+      : route.startsWith('#/puffwork/bundle/')
+        ? `${humaniseSlug(route.slice('#/puffwork/bundle/'.length))} bundle`
+        : route.startsWith('#/puffwork/')
+          ? humaniseSlug(route.slice('#/puffwork/'.length))
+          : TITLES[route]
     document.title = title ? `${title} · CensorisLabs` : 'CensorisLabs — Independent Software House'
+
+    const description = product
+      ? `${product.name} — ${product.kind}. ${product.description}`
+      : DESCRIPTIONS[route]
+    if (description) {
+      setMeta('meta[name="description"]', description)
+      setMeta('meta[property="og:description"]', description)
+    }
+    if (title) {
+      setMeta('meta[property="og:title"]', `${title} · CensorisLabs`)
+      setMeta('meta[name="twitter:title"]', `${title} · CensorisLabs`)
+    }
   }, [route])
 
   // A plain anchor such as #ecosystem is followed before React mounts the

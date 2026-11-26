@@ -144,7 +144,7 @@ function OrderPanel({
         <button className="puff-btn puff-btn--solid" type="button" onClick={copy}>
           {status === 'copied' ? 'Summary copied' : 'Copy order summary'}
         </button>
-        <a className="puff-btn puff-btn--ghost" href="#/request">
+        <a className="puff-btn puff-btn--ghost" href="/request">
           Request this pack
         </a>
       </div>
@@ -160,7 +160,7 @@ function OrderPanel({
 
 function AssetCard({ asset }: { asset: PuffAsset }) {
   return (
-    <a className="puff-card" href={`#/puffwork/${asset.slug}`} style={{ '--puff-card-back': asset.colors.back } as CSSProperties}>
+    <a className="puff-card" href={`/puffwork/${asset.slug}`} style={{ '--puff-card-back': asset.colors.back } as CSSProperties}>
       <Art asset={asset} />
       <div className="puff-card__meta">
         <div>
@@ -179,7 +179,7 @@ function BundleCard({ bundle }: { bundle: PuffBundle }) {
   const [first, second, third] = bundleAssets(bundle)
   const value = bundleValue(bundle)
   return (
-    <a className="puff-bundle-card" href={`#/puffwork/bundle/${bundle.slug}`} style={{ '--puff-bundle-accent': bundle.accent } as CSSProperties}>
+    <a className="puff-bundle-card" href={`/puffwork/bundle/${bundle.slug}`} style={{ '--puff-bundle-accent': bundle.accent } as CSSProperties}>
       <div className="puff-bundle-card__stack" aria-hidden="true">
         {[first, second, third].filter((asset): asset is PuffAsset => Boolean(asset)).map(asset => (
           <Art key={asset.slug} asset={asset} variant="stack" />
@@ -245,7 +245,7 @@ function Hero() {
           >
             Browse the library
           </button>
-          <a className="puff-btn puff-btn--ghost" href="#/puffwork/bundle/everything">
+          <a className="puff-btn puff-btn--ghost" href="/puffwork/bundle/everything">
             Get the whole set — $189
           </a>
         </div>
@@ -448,10 +448,10 @@ function Store() {
           <h2>Need an object that does not exist yet?</h2>
           <p>Describe the shape, the material and where it has to sit. Custom objects start at $180 and join the library for free.</p>
           <div className="puff-actions">
-            <a className="puff-btn puff-btn--solid" href="#/request">
+            <a className="puff-btn puff-btn--solid" href="/request">
               Request a custom object
             </a>
-            <a className="puff-btn puff-btn--ghost" href="#/apps">
+            <a className="puff-btn puff-btn--ghost" href="/apps">
               See the software studio
             </a>
           </div>
@@ -475,7 +475,7 @@ function AssetPage({ slug }: { slug: string }) {
       <section className="puff-detail">
         <div className="puff-wrap">
           <nav className="puff-crumbs" aria-label="Breadcrumb">
-            <a href="#/puffwork">Puffwork</a>
+            <a href="/puffwork">Puffwork</a>
             <span aria-hidden="true">/</span>
             <span>{asset.category}</span>
             <span aria-hidden="true">/</span>
@@ -526,7 +526,7 @@ function AssetPage({ slug }: { slug: string }) {
                   <h2>Also in</h2>
                   <div className="puff-included__list">
                     {bundles.map(bundle => (
-                      <a key={bundle.slug} href={`#/puffwork/bundle/${bundle.slug}`}>
+                      <a key={bundle.slug} href={`/puffwork/bundle/${bundle.slug}`}>
                         <b>{bundle.name}</b>
                         <span>
                           {bundle.assetSlugs.length} objects · ${bundle.price}
@@ -576,7 +576,7 @@ function BundlePage({ slug }: { slug: string }) {
       <section className="puff-detail">
         <div className="puff-wrap">
           <nav className="puff-crumbs" aria-label="Breadcrumb">
-            <a href="#/puffwork">Puffwork</a>
+            <a href="/puffwork">Puffwork</a>
             <span aria-hidden="true">/</span>
             <span>Bundles</span>
             <span aria-hidden="true">/</span>
@@ -603,7 +603,7 @@ function BundlePage({ slug }: { slug: string }) {
 
               <div className="puff-bundle-includes">
                 {assets.map(asset => (
-                  <a key={asset.slug} href={`#/puffwork/${asset.slug}`}>
+                  <a key={asset.slug} href={`/puffwork/${asset.slug}`}>
                     <span>{asset.name}</span>
                     <span>${asset.price}</span>
                   </a>
@@ -631,7 +631,7 @@ function Missing({ title }: { title: string }) {
         <p className="puff-eyebrow">Puffwork</p>
         <h1>{title}</h1>
         <p>It may have been renamed. The library has every pack that is currently on sale.</p>
-        <a className="puff-btn puff-btn--solid" href="#/puffwork">
+        <a className="puff-btn puff-btn--solid" href="/puffwork">
           Back to the library
         </a>
       </div>

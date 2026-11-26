@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 
 const LINKS = [
   { href: '#ecosystem', label: 'Ecosystem' },
-  { href: '#/apps', label: 'Apps' },
-  { href: '#/puffwork', label: 'Puffwork' },
-  { href: '#/game', label: 'Play' },
-  { href: '#/atlas', label: 'Atlas' },
-  { href: '#/reviews', label: 'Reviews' },
-  { href: '#/request', label: 'Request code' },
-  { href: '#/about', label: 'About me' },
+  { href: '/apps', label: 'Apps' },
+  { href: '/puffwork', label: 'Puffwork' },
+  { href: '/game', label: 'Play' },
+  { href: '/atlas', label: 'Atlas' },
+  { href: '/reviews', label: 'Reviews' },
+  { href: '/request', label: 'Request code' },
+  { href: '/about', label: 'About me' },
   { href: '#products', label: 'Products' },
   { href: '#sovereignty', label: 'Sovereignty' },
   { href: '#legal', label: 'Legal' },
@@ -45,7 +45,7 @@ export default function Nav() {
           </ul>
         </nav>
 
-        <a className="btn btn--outline nav__cta" href="#/apps">
+        <a className="btn btn--outline nav__cta" href="/apps">
           Explore apps
         </a>
 
@@ -82,7 +82,7 @@ export default function Nav() {
               </li>
             ))}
           </ul>
-          <a className="btn btn--primary" href="#/apps" onClick={() => setOpen(false)}>
+          <a className="btn btn--primary" href="/apps" onClick={() => setOpen(false)}>
             Explore apps
           </a>
         </nav>

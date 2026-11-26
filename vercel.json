@@ -1,12 +1,15 @@
 {
   "rewrites": [
-    {
-      "source": "/donate",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/donate/",
-      "destination": "/index.html"
-    }
+    { "source": "/apps", "destination": "/index.html" },
+    { "source": "/apps/:path*", "destination": "/index.html" },
+    { "source": "/puffwork", "destination": "/index.html" },
+    { "source": "/puffwork/:path*", "destination": "/index.html" },
+    { "source": "/reviews", "destination": "/index.html" },
+    { "source": "/reviews/:path*", "destination": "/index.html" },
+    { "source": "/about", "destination": "/index.html" },
+    { "source": "/request", "destination": "/index.html" },
+    { "source": "/atlas", "destination": "/index.html" },
+    { "source": "/game", "destination": "/index.html" },
+    { "source": "/donate", "destination": "/index.html" }
   ]
 }

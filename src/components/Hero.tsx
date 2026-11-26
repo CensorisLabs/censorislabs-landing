@@ -415,7 +415,7 @@ export default function Hero() {
               Explore more
               <span className="arrow" aria-hidden="true">→</span>
             </a>
-            <a className="btn btn--outline" href="#/reviews">
+            <a className="btn btn--outline" href="/reviews">
               Reviews &amp; comments
             </a>
             <a

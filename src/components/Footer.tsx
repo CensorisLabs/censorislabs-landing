@@ -42,13 +42,13 @@ export default function Footer({ onOpenLegal }: FooterProps) {
               <h4>Studio</h4>
               <ul>
                 <li>
-                  <a href="#/about">About me</a>
+                  <a href="/about">About me</a>
                 </li>
                 <li>
-                  <a href="#/reviews">Reviews</a>
+                  <a href="/reviews">Reviews</a>
                 </li>
                 <li>
-                  <a href="#/request">Request software</a>
+                  <a href="/request">Request software</a>
                 </li>
                 <li>
                   <a href="/donate">Donate</a>

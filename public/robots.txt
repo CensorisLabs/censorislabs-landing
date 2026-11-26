@@ -6,5 +6,6 @@ Disallow: /api/
 Disallow: /games/
 Disallow: /reading-tracker/
 Disallow: /health-privacy.html
+Disallow: /reviews/moderation
 
 Sitemap: https://www.censorislabs.online/sitemap.xml

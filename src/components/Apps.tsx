@@ -21,7 +21,10 @@ function useRelease(appId?: string) {
     if (!appId) return
     let alive = true
     setState('loading')
-    fetch('https://api.github.com/repos/CensorisLabs/censorislabs-landing/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    // The build writes this snapshot from the latest GitHub release; visitors
+    // never touch api.github.com, so a shared network's anonymous quota cannot
+    // turn every download button into an error state.
+    fetch('/releases.json', { cache: 'no-cache' })
       .then(response => { if (!response.ok) throw new Error(`Release lookup returned ${response.status}`); return response.json() as Promise<Release> })
       .then(data => { if (alive) { setTag(data.tag_name || ''); setRelease(Array.isArray(data.assets) ? data.assets : []); setNotes({ body: data.body || '', published: data.published_at || '' }); setState(data.assets?.length ? 'ready' : 'empty') } })
       .catch(() => { if (alive) setState('error') })

@@ -41,16 +41,6 @@ async function openAndAudit(page: Page, path: string) {
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ reviews: [] }) }),
   )
 
-  // Download pages ask GitHub for the latest release. Stub it: an anonymous
-  // quota shared by CI runners turns that request into a 403, which is not a
-  // fault in the site and would make this suite flaky.
-  await page.route('https://api.github.com/**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ tag_name: 'smoke', assets: [], body: '', published_at: new Date().toISOString() }),
-    }),
-  )
 
   const response = await page.goto(path, { waitUntil: 'domcontentloaded' })
   expect(response?.status(), `HTTP status for ${path}`).toBe(200)
@@ -100,6 +90,30 @@ test('an app page carries its own title and canonical', async ({ page }) => {
     'https://www.censorislabs.online/apps/arthasetu',
   )
   await expect(page.getByRole('heading', { level: 1 })).toContainText('ArthaSetu')
+})
+
+test('downloads come from the site snapshot, not the visitor\'s GitHub quota', async ({ page, request }) => {
+  const snapshot = await request.get('/releases.json')
+  expect(snapshot.status(), 'release snapshot is served').toBe(200)
+  const data = await snapshot.json()
+  expect(Array.isArray(data.assets), 'snapshot has an assets array').toBe(true)
+  expect(data.assets.length, 'snapshot lists installers').toBeGreaterThan(0)
+
+  // If anything still reached GitHub from the browser, this counter would move.
+  let githubLookups = 0
+  await page.route('https://api.github.com/**', (route) => {
+    githubLookups += 1
+    return route.abort()
+  })
+
+  await openAndAudit(page, '/apps/arthasetu')
+  const links = page.locator('.suite-downloads a')
+  await expect(links.first(), 'a download link is rendered').toBeVisible()
+  await expect(links.first()).toHaveAttribute(
+    'href',
+    /^https:\/\/github\.com\/CensorisLabs\/censorislabs-landing\/releases\/download\//,
+  )
+  expect(githubLookups, 'no GitHub API calls from the browser').toBe(0)
 })
 
 test('every catalogue page points at its own share card', async ({ page, request }) => {

@@ -1,0 +1,123 @@
+{
+  "tag_name": "v1.18.0",
+  "published_at": "2026-11-14T08:20:47Z",
+  "body": "Windows EXE and signed Android APK downloads for the CensorisLabs app suite.",
+  "assets": [
+    {
+      "name": "archive-explorer-android.apk",
+      "size": 3100702,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/archive-explorer-android.apk"
+    },
+    {
+      "name": "archive-explorer-windows.exe",
+      "size": 92199979,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/archive-explorer-windows.exe"
+    },
+    {
+      "name": "arthasetu-android.apk",
+      "size": 3266369,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/arthasetu-android.apk"
+    },
+    {
+      "name": "arthasetu-windows.exe",
+      "size": 84234775,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/arthasetu-windows.exe"
+    },
+    {
+      "name": "calorie-calculator-android.apk",
+      "size": 3353968,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/calorie-calculator-android.apk"
+    },
+    {
+      "name": "calorie-calculator-windows.exe",
+      "size": 98139806,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/calorie-calculator-windows.exe"
+    },
+    {
+      "name": "home-energy-estimator-android.apk",
+      "size": 3100230,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/home-energy-estimator-android.apk"
+    },
+    {
+      "name": "home-energy-estimator-windows.exe",
+      "size": 92197053,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/home-energy-estimator-windows.exe"
+    },
+    {
+      "name": "indian-banking-brief-android.apk",
+      "size": 3101614,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/indian-banking-brief-android.apk"
+    },
+    {
+      "name": "indian-banking-brief-windows.exe",
+      "size": 92204262,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/indian-banking-brief-windows.exe"
+    },
+    {
+      "name": "movie-guide-android.apk",
+      "size": 3101974,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/movie-guide-android.apk"
+    },
+    {
+      "name": "movie-guide-windows.exe",
+      "size": 92306414,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/movie-guide-windows.exe"
+    },
+    {
+      "name": "muslim-companion-android.apk",
+      "size": 3104634,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/muslim-companion-android.apk"
+    },
+    {
+      "name": "muslim-companion-windows.exe",
+      "size": 92203467,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/muslim-companion-windows.exe"
+    },
+    {
+      "name": "offline-arcade-android.apk",
+      "size": 3100702,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/offline-arcade-android.apk"
+    },
+    {
+      "name": "offline-arcade-windows.exe",
+      "size": 92303098,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/offline-arcade-windows.exe"
+    },
+    {
+      "name": "pc-part-picker-android.apk",
+      "size": 3101310,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/pc-part-picker-android.apk"
+    },
+    {
+      "name": "pc-part-picker-windows.exe",
+      "size": 92202518,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/pc-part-picker-windows.exe"
+    },
+    {
+      "name": "reading-tracker-android.apk",
+      "size": 3511319,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/reading-tracker-android.apk"
+    },
+    {
+      "name": "social-feed-android.apk",
+      "size": 3100846,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/social-feed-android.apk"
+    },
+    {
+      "name": "social-feed-windows.exe",
+      "size": 92302098,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/social-feed-windows.exe"
+    },
+    {
+      "name": "war-watch-android.apk",
+      "size": 3100822,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/war-watch-android.apk"
+    },
+    {
+      "name": "war-watch-windows.exe",
+      "size": 92310046,
+      "browser_download_url": "https://github.com/CensorisLabs/censorislabs-landing/releases/download/v1.18.0/war-watch-windows.exe"
+    }
+  ],
+  "fetched_at": "2026-11-26T12:37:41.484Z"
+}

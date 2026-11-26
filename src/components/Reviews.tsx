@@ -261,8 +261,8 @@ export default function Reviews() {
             {state === 'unconfigured' && (
               <div className="reviews-empty">
                 <p>
-                  The review service is connected but not open yet. Notes can be written, and the
-                  archive will appear here as soon as the database is switched on.
+                  Reviews are not open yet — the archive is still being connected. Once the review
+                  service is live, notes written here are queued for a read before they appear.
                 </p>
               </div>
             )}

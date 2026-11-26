@@ -1,7 +1,7 @@
 ﻿import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react'
 
 import Ecosystem from './components/Ecosystem'
-import Apps from './components/Apps'
+import Apps, { PRODUCTS } from './components/Apps'
 import GamePage from './components/GamePage'
 import About from './components/About'
 import Donate from './components/Donate'
@@ -53,15 +53,20 @@ export default function App() {
     }
   }, [])
 
+  // Keep the address bar in step with the page: /donate is a real path so the
+  // URL can be shared, but leaving it otherwise strands later routes on it.
   useEffect(() => {
-    if (route === '#/donate' && window.location.pathname.replace(/\/+$/, '') !== '/donate') {
+    const path = window.location.pathname.replace(/\/+$/, '')
+    if (route === '#/donate' && path !== '/donate') {
       window.history.replaceState(null, '', '/donate')
+    } else if (route !== '#/donate' && path === '/donate') {
+      window.history.replaceState(null, '', `/${route}`)
     }
   }, [route])
 
   useEffect(() => {
     const title = route.startsWith('#/apps/')
-      ? 'App details'
+      ? (PRODUCTS.find(product => product.id === route.split('/')[2])?.name ?? TITLES['#/apps'])
       : route.startsWith('#/puffwork/')
         ? 'Puffwork pack'
         : TITLES[route]
@@ -106,7 +111,7 @@ export default function App() {
       {!isGamePage && !isAtlasPage && <Nav />}
 
       <main id="main">
-        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isDonatePage ? <Donate /> : isPuffworkPage ? <div className="puff"><Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Puffwork path={puffworkPath} /></Suspense></div> : isAppPage ? <Apps appId={appId} /> : <>
+        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isDonatePage ? <Donate /> : isPuffworkPage ? <div className="puff"><Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Puffwork path={puffworkPath} /></Suspense></div> : isAppPage ? <Apps appId={appId} asPage={!appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>

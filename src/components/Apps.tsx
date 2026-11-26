@@ -124,7 +124,7 @@ function InstallWarning({ androidOnly = false }: { androidOnly?: boolean }) {
   </aside>
 }
 
-export default function Apps({ appId }: { appId?: string }) {
+export default function Apps({ appId, asPage }: { appId?: string; asPage?: boolean }) {
   const selected = PRODUCTS.find(product => product.id === appId)
   if (appId && selected) {
     const readingTracker = selected.id === 'reading-tracker'
@@ -141,5 +141,5 @@ export default function Apps({ appId }: { appId?: string }) {
     </div></section>
   }
 
-  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p><h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2></div><p className="suite-lede">Every app is free, with every feature included. No subscriptions, upgrades, accounts, or trials. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><p className="suite-security-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Windows or Android may show an “unknown publisher” warning the first time you install; each app page explains why and how to continue.</p></div></section>
+  return <section className="section suite-directory" id="apps" aria-labelledby="suite-title"><div className="container"><div className="suite-directory__head"><div><p className="eyebrow">The CensorisLabs app suite</p>{asPage ? <h1 className="section-title" id="suite-title">Useful tools, built to stay yours</h1> : <h2 className="section-title" id="suite-title">Useful tools, built to stay yours</h2>}</div><p className="suite-lede">Every app is free, with every feature included. No subscriptions, upgrades, accounts, or trials. The site publishes verified Windows and Android installers from the release pipeline as soon as they are available.</p></div><div className="suite-grid">{PRODUCTS.map(product => <ProductCard key={product.id} product={product} />)}</div><p className="suite-security-note">Installers are published from versioned GitHub releases and only shown here when the asset exists and is under 100 MB. Windows or Android may show an “unknown publisher” warning the first time you install; each app page explains why and how to continue.</p></div></section>
 }

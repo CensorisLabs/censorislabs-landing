@@ -7,6 +7,8 @@
  */
 import type { MouseEvent } from 'react'
 
+import { PRODUCTS } from '../data/products'
+
 const GH = 'https://github.com/censorislabs'
 const VESPER_REPO = 'https://github.com/chudling445/vesper'
 
@@ -67,8 +69,8 @@ export default function Ecosystem() {
             <p className="product__suite-copy">
               Censoris is one window onto a larger suite: ArthaSetu for money, Nur
               Companion for daily practice, PC Part Picker for builds, Where to Watch,
-              Offline Arcade and more — ten apps sharing one offline engine and the same
-              refusal to profile you.
+              Offline Arcade and more — {PRODUCTS.length} apps sharing one offline engine and
+              the same refusal to profile you.
             </p>
 
             <a className="product__suite-link" href="#apps" data-cursor="APPS" onClick={openAppSuite}>
@@ -80,7 +82,7 @@ export default function Ecosystem() {
               <li>Zero cloud sync — your data never leaves the phone</li>
               <li>On-device OCR for receipt and GST invoice parsing</li>
               <li>Multi-currency aware, GST and tax-season ready</li>
-              <li>Eight Indian languages, cash reconciliation, group splitting</li>
+              <li>Eight languages including Hindi, Tamil and Bengali, plus cash reconciliation and group splitting</li>
             </ul>
 
             <div className="product__actions">

@@ -102,6 +102,17 @@ test('an app page carries its own title and canonical', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('ArthaSetu')
 })
 
+test('the suite size the copy claims matches the catalogue', async ({ page }) => {
+  await openAndAudit(page, '/')
+  const ecosystem = await page.locator('#ecosystem').innerText()
+  expect(ecosystem).toContain(`${PRODUCTS.length} apps`)
+
+  await openAndAudit(page, '/puffwork')
+  const puffwork = await page.locator('main').innerText()
+  expect(puffwork).toContain(`${ASSETS.length} packs`)
+  expect(puffwork).toContain(`${BUNDLES.length} bundles`)
+})
+
 test('old hash links land on the real path', async ({ page }) => {
   await openAndAudit(page, '/#/puffwork/velvet-orb')
 

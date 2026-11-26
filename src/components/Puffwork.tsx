@@ -235,7 +235,7 @@ function Hero() {
         </h1>
         <p className="puff-hero__lede">
           Inflatable abstract 3D objects — knit, foil, velvet and glass — that float next to your words instead of shouting over
-          them. Twelve packs, three bundles, one honest licence.
+          them. {ASSETS.length} packs, {BUNDLES.length} bundles, one honest licence.
         </p>
         <div className="puff-actions">
           <button

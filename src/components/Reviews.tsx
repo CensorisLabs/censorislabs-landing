@@ -7,36 +7,17 @@ type Review = {
   app: string
   rating: number
   body: string
-  createdAt: number
+  createdAt: string
 }
 
-const STORAGE_KEY = 'censorislabs-reviews'
+type LoadState = 'loading' | 'ready' | 'empty' | 'unconfigured' | 'error'
+
 const MAX_BODY = 600
 
-function readReviews(): Review[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed
-      .filter((item): item is Review =>
-        Boolean(item) &&
-        typeof item.id === 'string' &&
-        typeof item.name === 'string' &&
-        typeof item.app === 'string' &&
-        typeof item.rating === 'number' &&
-        typeof item.body === 'string' &&
-        typeof item.createdAt === 'number',
-      )
-      .slice(0, 200)
-  } catch {
-    return []
-  }
-}
-
-function formatDate(value: number) {
-  return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+function formatDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function Stars({ value, onSelect, label }: { value: number; onSelect?: (rating: number) => void; label: string }) {
@@ -66,21 +47,37 @@ function Stars({ value, onSelect, label }: { value: number; onSelect?: (rating: 
 }
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState<Review[]>(readReviews)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [state, setState] = useState<LoadState>('loading')
   const [name, setName] = useState('')
   const [app, setApp] = useState('General')
   const [rating, setRating] = useState(0)
   const [body, setBody] = useState('')
+  const [honeypot, setHoneypot] = useState('')
   const [error, setError] = useState('')
-  const [sent, setSent] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [sending, setSending] = useState(false)
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews))
-    } catch {
-      /* Private browsing can refuse writes; the page still renders. */
-    }
-  }, [reviews])
+    const controller = new AbortController()
+    fetch('/api/reviews', { signal: controller.signal, headers: { accept: 'application/json' } })
+      .then(async (response) => {
+        const data = await response.json().catch(() => null)
+        if (response.status === 503) {
+          setState('unconfigured')
+          return
+        }
+        if (!response.ok || !data) throw new Error('bad response')
+        const list: Review[] = Array.isArray(data.reviews) ? data.reviews : []
+        setReviews(list)
+        setState(list.length ? 'ready' : 'empty')
+      })
+      .catch((cause) => {
+        if (cause?.name === 'AbortError') return
+        setState('error')
+      })
+    return () => controller.abort()
+  }, [])
 
   const { average, distribution } = useMemo(() => {
     if (!reviews.length) return { average: 0, distribution: [0, 0, 0, 0, 0] }
@@ -93,8 +90,9 @@ export default function Reviews() {
     return { average: sum / reviews.length, distribution: totals }
   }, [reviews])
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setNotice('')
     const trimmedName = name.trim()
     const trimmedBody = body.trim()
 
@@ -103,25 +101,33 @@ export default function Reviews() {
     if (trimmedBody.length < 10) return setError('Write at least ten characters so the note is useful.')
     if (trimmedBody.length > MAX_BODY) return setError(`Keep the comment under ${MAX_BODY} characters.`)
 
-    const review: Review = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name: trimmedName.slice(0, 40),
-      app,
-      rating,
-      body: trimmedBody,
-      createdAt: Date.now(),
-    }
-
-    setReviews((current) => [review, ...current])
-    setName('')
-    setRating(0)
-    setBody('')
     setError('')
-    setSent(true)
-    window.setTimeout(() => setSent(false), 4000)
+    setSending(true)
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ name: trimmedName, app, rating, body: trimmedBody, website: honeypot }),
+      })
+      const data = await response.json().catch(() => null)
+      if (response.status === 503) {
+        setError('Reviews are not open yet — the review service is still being connected.')
+        return
+      }
+      if (!response.ok) {
+        setError(data?.error || 'That review could not be sent. Try again in a moment.')
+        return
+      }
+      setName('')
+      setRating(0)
+      setBody('')
+      setNotice('Thank you — your note is queued and appears here once it has been read.')
+    } catch {
+      setError('Could not reach the review service. Check your connection and try again.')
+    } finally {
+      setSending(false)
+    }
   }
-
-  const remove = (id: string) => setReviews((current) => current.filter((review) => review.id !== id))
 
   return (
     <section className="section reviews-page" aria-labelledby="reviews-title">
@@ -134,7 +140,8 @@ export default function Reviews() {
             </h1>
             <p className="reviews-lede">
               Notes from people using the CensorisLabs suite. Say what is useful, what is
-              confusing, and what should change next — every entry is stored on your own device.
+              confusing, and what should change next. Every note is read before it is published,
+              and nothing else about you is stored.
             </p>
           </div>
 
@@ -146,7 +153,7 @@ export default function Reviews() {
             </div>
             <Stars value={Math.round(average)} label={`${reviews.length} reviews`} />
             <p className="reviews-score__count">
-              {reviews.length} {reviews.length === 1 ? 'entry' : 'entries'} on this device
+              {reviews.length} published {reviews.length === 1 ? 'note' : 'notes'}
             </p>
             <div className="reviews-bars">
               {[5, 4, 3, 2, 1].map((star) => {
@@ -209,28 +216,71 @@ export default function Reviews() {
               />
             </label>
 
+            <div className="review-form__honeypot" aria-hidden="true">
+              <label>
+                Website
+                <input
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(event) => setHoneypot(event.target.value)}
+                />
+              </label>
+            </div>
+
             <div className="review-form__foot">
               <span className="review-form__count">{body.length}/{MAX_BODY}</span>
-              <button className="btn btn--primary" type="submit">Post review</button>
+              <button className="btn btn--primary" type="submit" disabled={sending}>
+                {sending ? 'Sending…' : 'Post review'}
+              </button>
             </div>
 
             <p className="review-form__status" role="status" aria-live="polite">
-              {error || (sent ? 'Saved on this device. Thank you.' : '')}
+              {error || notice}
+            </p>
+
+            <p className="review-form__privacy">
+              Your name, the app, the stars and the words are sent to CensorisLabs and read
+              before publishing. No account, no email, no IP address is kept.
             </p>
           </form>
 
           <div className="reviews-list" aria-live="polite">
             <div className="reviews-list__head">
               <h2>{reviews.length ? 'Recent notes' : 'No notes yet'}</h2>
-              <span className="reviews-list__meta">Local-only · no account</span>
+              <span className="reviews-list__meta">Public · moderated</span>
             </div>
 
-            {!reviews.length && (
+            {state === 'loading' && (
+              <div className="reviews-empty">
+                <p>Loading published notes…</p>
+              </div>
+            )}
+
+            {state === 'unconfigured' && (
               <div className="reviews-empty">
                 <p>
-                  Nothing has been posted here yet. Your review is written to this browser's
-                  storage only — it is not uploaded anywhere, so treat this as a private notebook
-                  until a review service is connected.
+                  The review service is connected but not open yet. Notes can be written, and the
+                  archive will appear here as soon as the database is switched on.
+                </p>
+              </div>
+            )}
+
+            {state === 'error' && (
+              <div className="reviews-empty">
+                <p>
+                  The review service could not be reached just now. The form still works when the
+                  connection comes back; nothing you have typed is lost.
+                </p>
+              </div>
+            )}
+
+            {(state === 'empty' || state === 'ready') && !reviews.length && (
+              <div className="reviews-empty">
+                <p>
+                  No published notes yet. If you have used any CensorisLabs app, the first note is
+                  yours — it appears here once it has been read.
                 </p>
                 <span className="reviews-empty__mark" aria-hidden="true">◆</span>
               </div>
@@ -248,17 +298,14 @@ export default function Reviews() {
                   <Stars value={review.rating} label={`${review.rating} out of 5`} />
                 </header>
                 <p className="review-card__body">{review.body}</p>
-                <button className="review-card__delete" type="button" onClick={() => remove(review.id)}>
-                  Remove
-                </button>
               </article>
             ))}
           </div>
         </div>
 
         <p className="reviews-note">
-          Reviews are kept in this browser only and never leave your device. Clearing site data
-          removes them. A shared review service is not connected yet, so nothing here is public.
+          Reviews are stored on CensorisLabs servers only after approval, with no account and no
+          tracking. To have a note removed, write to hello@censorislabs.online.
         </p>
       </div>
     </section>

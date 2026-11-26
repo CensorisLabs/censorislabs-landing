@@ -6,10 +6,11 @@ type Product = {
   kind: string
   description: string
   free: string[]
+  pro?: string[]
   freeOnly?: boolean
 }
 type ReleaseAsset = { name: string; size: number; browser_download_url: string }
-type Release = { tag_name: string; assets: ReleaseAsset[] }
+type Release = { tag_name: string; assets: ReleaseAsset[]; body?: string; published_at?: string }
 
 export const PRODUCTS: Product[] = [
   { id: 'arthasetu', name: 'ArthaSetu', kind: 'Personal finance · India', description: 'A private money workspace for Indian households: transactions, budgets, tax estimates, investments, and long-term plans.', free: ['Manual ledger with date, type and account pickers, plus month filtering', 'Duplicate transactions, split them across categories, repeat them monthly and export CSV', 'Bank statement CSV import with category suggestions and merchant rules', '50/30/20 budget', 'Unlimited local accounts', 'Basic tax estimate and JSON backup'] },

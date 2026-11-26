@@ -1,0 +1,73 @@
+/* Reviews submission and moderation additions. Ink on paper, like the rest. */
+
+.review-form__honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.review-form__privacy {
+  margin: 14px 0 0;
+  color: #6b6358;
+  font-size: 11px;
+  line-height: 1.65;
+  max-width: 46ch;
+}
+
+.moderation-page {
+  padding-top: clamp(48px, 7vw, 96px);
+}
+
+.moderation-token {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 26px 0 6px;
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid rgba(23, 19, 15, 0.14);
+}
+
+.moderation-token .field {
+  flex: 1 1 280px;
+  margin: 0;
+}
+
+.moderation-token__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.moderation-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: clamp(20px, 3vw, 36px);
+  margin-top: 30px;
+  align-items: start;
+}
+
+.review-card__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.btn--small {
+  padding: 9px 16px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.moderation-page .reviews-empty {
+  margin-top: 28px;
+}
+
+@media (max-width: 560px) {
+  .moderation-token {
+    padding: 16px;
+  }
+}

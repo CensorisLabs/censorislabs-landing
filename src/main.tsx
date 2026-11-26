@@ -9,6 +9,7 @@ import './site-polish.css'
 import './motion.css'
 // Loaded last: re-points the tokens above at a paper-and-ink palette.
 import './monochrome.css'
+import './reviews.css'
 import App from './App.tsx'
 
 document.documentElement.dataset.performance = localStorage.getItem('censorislabs-site-performance') === 'low' ? 'low' : 'full'

@@ -10,6 +10,7 @@ import Footer from './components/Footer'
 import Nav from './components/Nav'
 import RequestSoftware from './components/RequestSoftware'
 import Reviews from './components/Reviews'
+import ReviewModeration from './components/ReviewModeration'
 import Sovereignty from './components/Sovereignty'
 import TechnicalLedger from './components/TechnicalLedger'
 import { LegalDialog, LegalSection, type LegalDocId } from './components/Legal'
@@ -31,6 +32,7 @@ const TITLES: Record<string, string> = {
   '#/about': 'About me',
   '#/apps': 'Apps',
   '#/reviews': 'Reviews & comments',
+  '#/reviews/moderation': 'Review moderation',
   '#/request': 'Request software',
   '#/donate': 'Donate',
 }
@@ -57,6 +59,10 @@ export default function App() {
   // URL can be shared, but leaving it otherwise strands later routes on it.
   useEffect(() => {
     const path = window.location.pathname.replace(/\/+$/, '')
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+    if (canonical) {
+      canonical.href = `https://www.censorislabs.online${path === '/donate' ? '/donate' : '/'}`
+    }
     if (route === '#/donate' && path !== '/donate') {
       window.history.replaceState(null, '', '/donate')
     } else if (route !== '#/donate' && path === '/donate') {
@@ -94,6 +100,7 @@ export default function App() {
   const isAtlasPage = route === '#/atlas'
   const isAboutPage = route === '#/about'
   const isReviewsPage = route === '#/reviews'
+  const isModerationPage = route === '#/reviews/moderation'
   const isRequestPage = route === '#/request'
   const isDonatePage = route === '#/donate'
   const isAppPage = route === '#/apps' || route.startsWith('#/apps/')
@@ -111,7 +118,7 @@ export default function App() {
       {!isGamePage && !isAtlasPage && <Nav />}
 
       <main id="main">
-        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isDonatePage ? <Donate /> : isPuffworkPage ? <div className="puff"><Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Puffwork path={puffworkPath} /></Suspense></div> : isAppPage ? <Apps appId={appId} asPage={!appId} /> : <>
+        {isGamePage ? <GamePage /> : isAtlasPage ? <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Atlas /></Suspense> : isAboutPage ? <About /> : isModerationPage ? <ReviewModeration /> : isReviewsPage ? <Reviews /> : isRequestPage ? <RequestSoftware /> : isDonatePage ? <Donate /> : isPuffworkPage ? <div className="puff"><Suspense fallback={<div className="hero-loading" aria-hidden="true" />}><Puffwork path={puffworkPath} /></Suspense></div> : isAppPage ? <Apps appId={appId} asPage={!appId} /> : <>
           <Suspense fallback={<div className="hero-loading" aria-hidden="true" />}>
             <Hero />
           </Suspense>

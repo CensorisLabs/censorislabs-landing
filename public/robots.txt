@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Large or private surfaces that do not need crawling.
+Disallow: /api/
+Disallow: /games/
+Disallow: /reading-tracker/
+Disallow: /health-privacy.html
+
+Sitemap: https://www.censorislabs.online/sitemap.xml

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { PRODUCTS } from './Apps'
 
 type Review = {
@@ -10,14 +10,74 @@ type Review = {
   createdAt: string
 }
 
+type Draft = { name: string; app: string; rating: number; body: string }
+
+type OutboxItem = Draft & { createdAt: string }
+
 type LoadState = 'loading' | 'ready' | 'empty' | 'unconfigured' | 'error'
 
 const MAX_BODY = 600
+const DRAFT_KEY = 'censorislabs-review-draft'
+const OUTBOX_KEY = 'censorislabs-review-outbox'
+const OUTBOX_LIMIT = 10
+const OUTBOX_DAYS = 30
 
 function formatDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
   return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function normalise(text: string) {
+  return text.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim()
+}
+
+function readDraft(): Draft {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return { name: '', app: 'General', rating: 0, body: '' }
+    const parsed = JSON.parse(raw) as Partial<Draft>
+    return {
+      name: typeof parsed.name === 'string' ? parsed.name.slice(0, 40) : '',
+      app: typeof parsed.app === 'string' ? parsed.app : 'General',
+      rating: typeof parsed.rating === 'number' ? parsed.rating : 0,
+      body: typeof parsed.body === 'string' ? parsed.body.slice(0, MAX_BODY) : '',
+    }
+  } catch {
+    return { name: '', app: 'General', rating: 0, body: '' }
+  }
+}
+
+function readOutbox(): OutboxItem[] {
+  try {
+    const raw = localStorage.getItem(OUTBOX_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    const cutoff = Date.now() - OUTBOX_DAYS * 24 * 60 * 60 * 1000
+    return parsed
+      .filter(
+        (item): item is OutboxItem =>
+          Boolean(item) &&
+          typeof item.name === 'string' &&
+          typeof item.body === 'string' &&
+          typeof item.app === 'string' &&
+          typeof item.rating === 'number' &&
+          typeof item.createdAt === 'string' &&
+          new Date(item.createdAt).getTime() > cutoff,
+      )
+      .slice(0, OUTBOX_LIMIT)
+  } catch {
+    return []
+  }
+}
+
+function writeOutbox(items: OutboxItem[]) {
+  try {
+    localStorage.setItem(OUTBOX_KEY, JSON.stringify(items.slice(0, OUTBOX_LIMIT)))
+  } catch {
+    /* Private browsing can refuse writes; the page still works. */
+  }
 }
 
 function Stars({ value, onSelect, label }: { value: number; onSelect?: (rating: number) => void; label: string }) {
@@ -47,16 +107,36 @@ function Stars({ value, onSelect, label }: { value: number; onSelect?: (rating: 
 }
 
 export default function Reviews() {
+  const initialDraft = useRef<Draft>(readDraft())
+  const mountedAt = useRef(Date.now())
+
   const [reviews, setReviews] = useState<Review[]>([])
   const [state, setState] = useState<LoadState>('loading')
-  const [name, setName] = useState('')
-  const [app, setApp] = useState('General')
-  const [rating, setRating] = useState(0)
-  const [body, setBody] = useState('')
+  const [name, setName] = useState(initialDraft.current.name)
+  const [app, setApp] = useState(initialDraft.current.app)
+  const [rating, setRating] = useState(initialDraft.current.rating)
+  const [body, setBody] = useState(initialDraft.current.body)
   const [honeypot, setHoneypot] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [sending, setSending] = useState(false)
+  const [outbox, setOutbox] = useState<OutboxItem[]>(readOutbox)
+  const hasDraft = Boolean(name.trim() || body.trim() || rating)
+
+  // The draft is the reader's, not the database's: it survives a reload even
+  // when the service is unreachable.
+  useEffect(() => {
+    const empty = !name.trim() && !body.trim() && !rating
+    try {
+      if (empty) {
+        localStorage.removeItem(DRAFT_KEY)
+        return
+      }
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, app, rating, body }))
+    } catch {
+      /* Private browsing can refuse writes. */
+    }
+  }, [name, app, rating, body])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -71,12 +151,23 @@ export default function Reviews() {
         const list: Review[] = Array.isArray(data.reviews) ? data.reviews : []
         setReviews(list)
         setState(list.length ? 'ready' : 'empty')
+        // A queued note that is now published leaves the local outbox.
+        if (list.length && outbox.length) {
+          const published = new Set(list.map((review) => normalise(review.body)))
+          const remaining = outbox.filter((item) => !published.has(normalise(item.body)))
+          if (remaining.length !== outbox.length) {
+            setOutbox(remaining)
+            writeOutbox(remaining)
+          }
+        }
       })
       .catch((cause) => {
         if (cause?.name === 'AbortError') return
         setState('error')
       })
     return () => controller.abort()
+    // Outbox is read once on mount on purpose; it must not refetch the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const { average, distribution } = useMemo(() => {
@@ -89,6 +180,25 @@ export default function Reviews() {
     }
     return { average: sum / reviews.length, distribution: totals }
   }, [reviews])
+
+  const clearDraft = () => {
+    setName('')
+    setRating(0)
+    setBody('')
+    setError('')
+    setNotice('')
+    try {
+      localStorage.removeItem(DRAFT_KEY)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const removeFromOutbox = (index: number) => {
+    const next = outbox.filter((_, position) => position !== index)
+    setOutbox(next)
+    writeOutbox(next)
+  }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -107,23 +217,42 @@ export default function Reviews() {
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({ name: trimmedName, app, rating, body: trimmedBody, website: honeypot }),
+        body: JSON.stringify({
+          name: trimmedName,
+          app,
+          rating,
+          body: trimmedBody,
+          website: honeypot,
+          elapsed: Date.now() - mountedAt.current,
+        }),
       })
       const data = await response.json().catch(() => null)
       if (response.status === 503) {
-        setError('Reviews are not open yet — the review service is still being connected.')
+        setError('Reviews are not open yet — the service is still being connected. Your draft is saved on this device.')
         return
       }
       if (!response.ok) {
-        setError(data?.error || 'That review could not be sent. Try again in a moment.')
+        setError(data?.error || 'That review could not be sent. Your draft is saved on this device.')
         return
       }
+
+      const queued: OutboxItem = {
+        name: trimmedName,
+        app,
+        rating,
+        body: trimmedBody,
+        createdAt: new Date().toISOString(),
+      }
+      const nextOutbox = [queued, ...outbox].slice(0, OUTBOX_LIMIT)
+      setOutbox(nextOutbox)
+      writeOutbox(nextOutbox)
+
       setName('')
       setRating(0)
       setBody('')
       setNotice('Thank you — your note is queued and appears here once it has been read.')
     } catch {
-      setError('Could not reach the review service. Check your connection and try again.')
+      setError('Could not reach the review service. Your draft is saved on this device; try again in a moment.')
     } finally {
       setSending(false)
     }
@@ -236,13 +365,23 @@ export default function Reviews() {
               </button>
             </div>
 
+            <div className="review-form__draft">
+              <span>{hasDraft ? 'Draft saved on this device' : 'Nothing typed yet'}</span>
+              {hasDraft && (
+                <button className="review-form__clear" type="button" onClick={clearDraft}>
+                  Clear draft
+                </button>
+              )}
+            </div>
+
             <p className="review-form__status" role="status" aria-live="polite">
               {error || notice}
             </p>
 
             <p className="review-form__privacy">
               Your name, the app, the stars and the words are sent to CensorisLabs and read
-              before publishing. No account, no email, no IP address is kept.
+              before publishing. No account, no email, no IP address is kept. The draft stays in
+              this browser until you clear it.
             </p>
           </form>
 
@@ -286,6 +425,38 @@ export default function Reviews() {
               </div>
             )}
 
+            {outbox.length > 0 && (
+              <div className="reviews-outbox">
+                <p className="reviews-outbox__head">
+                  Your notes · kept on this device until they are published
+                </p>
+                {outbox.map((item, index) => (
+                  <article className="review-card review-card--queued" key={`${item.createdAt}-${index}`}>
+                    <header>
+                      <div>
+                        <h3>{item.name}</h3>
+                        <p className="review-card__meta">
+                          {item.app} · {formatDate(item.createdAt)}
+                        </p>
+                      </div>
+                      <Stars value={item.rating} label={`${item.rating} out of 5`} />
+                    </header>
+                    <p className="review-card__body">{item.body}</p>
+                    <div className="review-card__actions">
+                      <span className="review-card__badge">Awaiting review</span>
+                      <button
+                        className="review-form__clear"
+                        type="button"
+                        onClick={() => removeFromOutbox(index)}
+                      >
+                        Discard copy
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
             {reviews.map((review) => (
               <article className="review-card" key={review.id} data-tilt>
                 <header>
@@ -304,8 +475,9 @@ export default function Reviews() {
         </div>
 
         <p className="reviews-note">
-          Reviews are stored on CensorisLabs servers only after approval, with no account and no
-          tracking. To have a note removed, write to hello@censorislabs.online.
+          Published reviews are stored by CensorisLabs with no account and no tracking; your draft
+          and any waiting copy live in this browser only. To have a published note removed, write
+          to hello@censorislabs.online.
         </p>
       </div>
     </section>

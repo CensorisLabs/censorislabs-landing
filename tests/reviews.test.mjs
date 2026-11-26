@@ -4,8 +4,9 @@ import { test } from 'node:test'
 import { ObjectId } from 'mongodb'
 
 import { createReviewStore, LIMITS, validateReview } from '../server/reviewsStore.mjs'
-import reviewsHandler from '../api/reviews.mjs'
-import moderationHandler from '../api/reviews-moderation.mjs'
+import { isDuplicate, submittedTooFast } from '../server/guards.mjs'
+import reviewsHandler, { createReviewsHandler } from '../api/reviews.mjs'
+import moderationHandler, { createModerationHandler } from '../api/reviews-moderation.mjs'
 
 /** A collection-shaped object: enough for the store's query surface. */
 function fakeCollection() {
@@ -169,6 +170,117 @@ test('the API rejects unsupported methods before touching storage', async () => 
 
   if (previous === undefined) delete process.env.MONGODB_URI
   else process.env.MONGODB_URI = previous
+})
+
+function wired() {
+  const collection = fakeCollection()
+  const handler = createReviewsHandler({
+    getCollection: async () => collection,
+    configured: () => true,
+  })
+  const moderation = createModerationHandler({
+    getCollection: async () => collection,
+    configured: () => true,
+    getToken: () => 'secret-token',
+  })
+  return { collection, handler, moderation }
+}
+
+const admin = { authorization: 'Bearer secret-token' }
+
+async function call(handler, options) {
+  const res = mockRes()
+  await handler(mockReq(options), res)
+  return res
+}
+
+test('a submitted review stays private until the owner publishes it', async () => {
+  const { handler, moderation } = wired()
+
+  const submitted = await call(handler, {
+    method: 'POST',
+    body: { ...valid, elapsed: 9000 },
+    headers: { 'x-forwarded-for': '203.0.113.7' },
+  })
+  assert.equal(submitted.statusCode, 202)
+  assert.equal(submitted.body.status, 'pending')
+
+  const publicList = await call(handler, {}) 
+  assert.deepEqual(publicList.body.reviews, [])
+
+  const queue = await call(moderation, { headers: admin })
+  assert.equal(queue.statusCode, 200)
+  assert.equal(queue.body.pending.length, 1)
+  assert.equal(queue.body.approved.length, 0)
+
+  const approved = await call(moderation, {
+    method: 'POST',
+    body: { id: queue.body.pending[0].id, action: 'approve' },
+    headers: admin,
+  })
+  assert.equal(approved.statusCode, 200)
+
+  const after = await call(handler, {})
+  assert.equal(after.body.reviews.length, 1)
+  assert.equal(after.body.reviews[0].name, valid.name)
+  assert.equal(after.body.reviews[0].body, valid.body)
+})
+
+test('honeypot, too-fast posts and duplicates never reach the queue', async () => {
+  const { handler, collection } = wired()
+
+  const trapped = await call(handler, {
+    method: 'POST',
+    body: { ...valid, elapsed: 9000, website: 'https://spam.example' },
+  })
+  assert.equal(trapped.statusCode, 202)
+
+  const tooFast = await call(handler, { method: 'POST', body: { ...valid, elapsed: 400 } })
+  assert.equal(tooFast.statusCode, 202)
+
+  assert.equal(collection.docs.length, 0)
+
+  const first = await call(handler, { method: 'POST', body: { ...valid, elapsed: 9000 } })
+  assert.equal(first.statusCode, 202)
+  const repeat = await call(handler, {
+    method: 'POST',
+    body: { ...valid, name: '  Ayesha K ', elapsed: 9000 },
+  })
+  assert.equal(repeat.statusCode, 202)
+  assert.equal(collection.docs.length, 1)
+})
+
+test('moderation refuses a wrong or missing token', async () => {
+  const { moderation } = wired()
+  const wrong = await call(moderation, { headers: { authorization: 'Bearer guess' } })
+  assert.equal(wrong.statusCode, 401)
+  const missing = await call(moderation, {})
+  assert.equal(missing.statusCode, 401)
+  const partial = await call(moderation, { headers: { authorization: 'Bearer secret-toke' } })
+  assert.equal(partial.statusCode, 401)
+})
+
+test('one connection can only post five notes per window', async () => {
+  const { handler } = wired()
+  const headers = { 'x-forwarded-for': '198.51.100.4' }
+  const statuses = []
+  for (let index = 0; index < 6; index += 1) {
+    const res = await call(handler, {
+      method: 'POST',
+      headers,
+      body: { ...valid, body: `A distinct note number ${index} about the tracker.`, elapsed: 9000 },
+    })
+    statuses.push(res.statusCode)
+  }
+  assert.deepEqual(statuses, [202, 202, 202, 202, 202, 429])
+})
+
+test('the spam guards are explicit about their rules', () => {
+  assert.equal(submittedTooFast({ elapsed: 100 }), true)
+  assert.equal(submittedTooFast({ elapsed: 5000 }), false)
+  assert.equal(submittedTooFast({}), false)
+  assert.equal(isDuplicate(valid, [{ ...valid, body: valid.body.toUpperCase() }]), true)
+  assert.equal(isDuplicate(valid, [{ ...valid, name: 'Someone else' }]), false)
 })
 
 test('the pending queue is capped so spam cannot grow without bound', async () => {

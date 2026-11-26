@@ -350,6 +350,36 @@ textarea::placeholder {
   box-shadow: none;
 }
 
+/* The front page says plainly what the site is: an AI-assisted build, labelled
+   as such, with the claims still held to the same standard. */
+.hero__tag--slop {
+  border-color: #17130f;
+  background: #17130f;
+  color: #f7f4ee;
+  transform: rotate(-2deg);
+}
+
+.hero__slop {
+  display: inline-block;
+  max-width: 46ch;
+  margin-top: 18px;
+  padding: 10px 14px 11px;
+  border: 2px solid rgba(23, 19, 15, 0.78);
+  background: rgba(255, 255, 255, 0.66);
+  color: #3a342d;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transform: rotate(-1.2deg);
+}
+
+.hero__slop strong {
+  color: #17130f;
+  font-weight: 600;
+}
+
 .spark {
   background: rgba(23, 19, 15, 0.35);
 }

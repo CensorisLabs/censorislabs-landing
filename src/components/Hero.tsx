@@ -390,6 +390,7 @@ export default function Hero() {
             </span>
             <span className="hero__tag">Karachi · PK</span>
             <span className="hero__tag">Est. 2024</span>
+            <span className="hero__tag hero__tag--slop">Vibe-coded slop</span>
           </div>
 
           <h1 className="hero__title">CensorisLabs</h1>
@@ -397,6 +398,12 @@ export default function Hero() {
           <p className="hero__sub">
             Night-built software that keeps your life on your own device. Zero telemetry,
             no accounts, no rented intelligence — just tools that work with the network off.
+          </p>
+
+          <p className="hero__slop">
+            <strong>Vibe-coded slop, shipped anyway.</strong> An AI typed most of this; a
+            human argued with it about the claims. The commits are vibes, the apps still
+            work with the network off.
           </p>
 
           <div className="hero__actions">

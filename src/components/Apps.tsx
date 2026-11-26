@@ -12,6 +12,25 @@ const MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 function ProductCard({ product }: { product: Product }) {
   return <article className="suite-card"><div className="suite-card__top"><span className="suite-card__kind">{product.kind}</span><span className="suite-card__badge">Free · every feature included</span></div><h3>{product.name}</h3><p>{product.description}</p><a className="suite-card__link" href={`/apps/${product.id}`}>View app and downloads <span aria-hidden="true">↗</span></a></article>
 }
+// Both the download card and the release notes mount on the same page; one
+// shared request keeps that to a single read of the snapshot.
+let releaseRequest: Promise<Release> | null = null
+function loadRelease(): Promise<Release> {
+  if (!releaseRequest) {
+    // The build writes this snapshot from the latest GitHub release; visitors
+    // never touch api.github.com, so a shared network's anonymous quota cannot
+    // turn every download button into an error state.
+    releaseRequest = fetch('/releases.json', { cache: 'no-cache' }).then((response) => {
+      if (!response.ok) throw new Error(`Release snapshot returned ${response.status}`)
+      return response.json() as Promise<Release>
+    }).catch((error) => {
+      releaseRequest = null
+      throw error
+    })
+  }
+  return releaseRequest
+}
+
 function useRelease(appId?: string) {
   const [release, setRelease] = useState<ReleaseAsset[] | null>(null)
   const [tag, setTag] = useState('')
@@ -21,11 +40,7 @@ function useRelease(appId?: string) {
     if (!appId) return
     let alive = true
     setState('loading')
-    // The build writes this snapshot from the latest GitHub release; visitors
-    // never touch api.github.com, so a shared network's anonymous quota cannot
-    // turn every download button into an error state.
-    fetch('/releases.json', { cache: 'no-cache' })
-      .then(response => { if (!response.ok) throw new Error(`Release lookup returned ${response.status}`); return response.json() as Promise<Release> })
+    loadRelease()
       .then(data => { if (alive) { setTag(data.tag_name || ''); setRelease(Array.isArray(data.assets) ? data.assets : []); setNotes({ body: data.body || '', published: data.published_at || '' }); setState(data.assets?.length ? 'ready' : 'empty') } })
       .catch(() => { if (alive) setState('error') })
     return () => { alive = false }

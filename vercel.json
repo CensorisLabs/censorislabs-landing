@@ -1,4 +1,5 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     { "source": "/apps", "destination": "/index.html" },
     { "source": "/apps/:path*", "destination": "/index.html" },

@@ -391,9 +391,8 @@ textarea::placeholder {
   filter: grayscale(1);
 }
 
-/* The globe and the game are immersive canvases: keep their own layouts,
-   but strip colour so they belong to the same black-and-white world. */
-.atlas-page,
+/* The globe is drawn in ink on paper now, so it needs no colour filter. The
+   game keeps its own art inside the frame and is stripped of colour instead. */
 .frontier-page {
   filter: grayscale(1);
 }

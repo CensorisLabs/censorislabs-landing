@@ -151,9 +151,10 @@ function polityColor(name: string, alpha: number, lightness = 49) {
   let hash = 2166136261
   for (const char of name) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
   const value = hash >>> 0
-  const hue = value % 360
-  const saturation = 50 + ((value >>> 8) % 18)
-  return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`
+  // Paper and ink: polities differ by tone, never by hue, so the globe reads
+  // as one engraved plate instead of a second colour scheme.
+  const tone = Math.min(88, Math.max(18, lightness + ((value >>> 8) % 14) - 7))
+  return `hsla(0, 0%, ${tone}%, ${alpha})`
 }
 
 function unwrapRing(ring: GeoRing, reference?: number) {
@@ -209,9 +210,9 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
   ctx.lineJoin = 'round'
   ctx.lineCap = 'round'
   const ocean = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-  ocean.addColorStop(0, '#fbf8fd')
-  ocean.addColorStop(0.5, '#f4eff8')
-  ocean.addColorStop(1, '#fffafe')
+  ocean.addColorStop(0, '#fbf8f1')
+  ocean.addColorStop(0.5, '#f5f1e8')
+  ocean.addColorStop(1, '#fffdf8')
   ctx.fillStyle = ocean
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
@@ -224,7 +225,7 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
       const [x, y] = xy([lon, lat])
       if (lon === -180) ctx.moveTo(x, y); else ctx.lineTo(x, y)
     }
-    ctx.strokeStyle = lat === 0 ? 'rgba(121, 82, 146, .2)' : 'rgba(121, 82, 146, .08)'
+    ctx.strokeStyle = lat === 0 ? 'rgba(23, 19, 15, .2)' : 'rgba(23, 19, 15, .08)'
     ctx.stroke()
   }
   for (let lon = -165; lon <= 180; lon += gridStep) {
@@ -233,26 +234,26 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
       const [x, y] = xy([lon, lat])
       if (lat === -89) ctx.moveTo(x, y); else ctx.lineTo(x, y)
     }
-    ctx.strokeStyle = lon === 0 ? 'rgba(121, 82, 146, .2)' : 'rgba(121, 82, 146, .08)'
+    ctx.strokeStyle = lon === 0 ? 'rgba(23, 19, 15, .2)' : 'rgba(23, 19, 15, .08)'
     ctx.stroke()
   }
 
   // Keep present-day land outlines subtle and global; stronger land/ocean
   // contrast makes coasts readable without leaking current borders into past eras.
-  countries.forEach(feature => drawFeature(ctx, feature, '#d7c9e1', 'transparent', 0, canvas.width, canvas.height))
+  countries.forEach(feature => drawFeature(ctx, feature, '#ded4c0', 'transparent', 0, canvas.width, canvas.height))
   // High-detail views keep a faint modern geography reference in unmapped
   // areas. Historical polities are painted over this layer, so their borders
   // remain authoritative wherever the source has coverage.
-  if (highDetail && year < 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(83, 52, 104, .30)', .55 * lineScale, canvas.width, canvas.height))
+  if (highDetail && year < 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(23, 19, 15, .28)', .55 * lineScale, canvas.width, canvas.height))
   historical.forEach(feature => {
     drawFeature(ctx, feature, polityColor(feature.properties.name, .86, 55), polityColor(feature.properties.name, .92, 36), 1.2 * lineScale, canvas.width, canvas.height)
     if (highDetail) drawFeature(ctx, feature, 'transparent', 'rgba(255, 255, 255, .16)', .55 * lineScale, canvas.width, canvas.height)
   })
-  if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(107, 77, 123, .68)', .8 * lineScale, canvas.width, canvas.height))
-  selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(255, 92, 138, .25)', 'rgba(206, 47, 108, .98)', 3 * lineScale, canvas.width, canvas.height))
+  if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(23, 19, 15, .6)', .8 * lineScale, canvas.width, canvas.height))
+  selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(23, 19, 15, .25)', '#17130f', 3 * lineScale, canvas.width, canvas.height))
   if (selectedCountry && year >= 2022) {
     const selected = countries.find(feature => feature.properties.name === selectedCountry)
-    if (selected) drawFeature(ctx, selected, 'rgba(192, 132, 252, .2)', 'rgba(142, 72, 190, .95)', 2.8 * lineScale, canvas.width, canvas.height)
+    if (selected) drawFeature(ctx, selected, 'rgba(23, 19, 15, .2)', 'rgba(142, 72, 190, .95)', 2.8 * lineScale, canvas.width, canvas.height)
   }
 
   const texture = new THREE.CanvasTexture(canvas)
@@ -347,7 +348,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   const [zoomBand, setZoomBand] = useState(zoomBandForDistance(DEFAULT_GLOBE_DISTANCE))
   const [gazetteer, setGazetteer] = useState<{ cities: GazetteerCity[]; landmarks: GazetteerLandmark[] }>({ cities: [], landmarks: [] })
   const [gazetteerLoaded, setGazetteerLoaded] = useState(false)
-  const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#d29aff', transparent: true, opacity: 0.75 }), [])
+  const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#5b544a', transparent: true, opacity: 0.75 }), [])
   // Keep the grouped war footprints during playback, but suspend tens of
   // thousands of individual clickable dots until the viewer pauses.
   const visibleWarMarkers = isPlaying ? EMPTY_WARS : warMarkers
@@ -366,7 +367,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       marker.scale.setScalar(radius)
       marker.updateMatrix()
       mesh.setMatrixAt(index, marker.matrix)
-      const markerColor = war.id === selectedWarId ? '#6d248c' : `${war.source}:${war.war || war.title}` === selectedWarKey ? '#a83b86' : war.source.startsWith('UCDP') ? '#dc4b76' : '#ef8a42'
+      const markerColor = war.id === selectedWarId ? '#17130f' : `${war.source}:${war.war || war.title}` === selectedWarKey ? '#17130f' : war.source.startsWith('UCDP') ? '#4a443c' : '#7c7367'
       mesh.setColorAt(index, color.set(markerColor))
     })
     mesh.instanceMatrix.needsUpdate = true
@@ -435,7 +436,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       marker.scale.set(size, size * 0.78, 1)
       marker.updateMatrix()
       mesh.setMatrixAt(index, marker.matrix)
-      color.set(selected ? '#a83b86' : region.source.startsWith('UCDP') ? '#dc4b76' : '#ef8a42')
+      color.set(selected ? '#17130f' : region.source.startsWith('UCDP') ? '#17130f' : '#7c7367')
       mesh.setColorAt(index, color)
     })
     mesh.instanceMatrix.needsUpdate = true
@@ -645,8 +646,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   return <>
     <ambientLight intensity={0.85} />
     <directionalLight position={[-3, 3, 4]} intensity={1.25} color="#ffffff" />
-    <pointLight position={[3, -2, -2]} intensity={0.7} color="#a855f7" />
-    <mesh scale={1.075}><sphereGeometry args={[1.65, 96, 96]} /><meshBasicMaterial color="#a855f7" transparent opacity={0.09} side={THREE.BackSide} /></mesh>
+    <pointLight position={[3, -2, -2]} intensity={0.7} color="#17130f" />
+    <mesh scale={1.075}><sphereGeometry args={[1.65, 96, 96]} /><meshBasicMaterial color="#17130f" transparent opacity={0.09} side={THREE.BackSide} /></mesh>
     <group ref={world}>
       <mesh onClick={event => {
         if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
@@ -661,11 +662,11 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.68, 0.006, 5, 240]} />
-        <meshBasicMaterial color="#c084fc" transparent opacity={0.5} />
+        <meshBasicMaterial color="#17130f" transparent opacity={0.5} />
       </mesh>
       {selectedPoint && <mesh position={latLon(selectedPoint.lat, selectedPoint.lon, 1.635)}>
         <sphereGeometry args={[0.028, 16, 12]} />
-        <meshBasicMaterial color="#ff5c8a" />
+        <meshBasicMaterial color="#7c7367" />
       </mesh>}
       <primitive object={warRegionMesh} onClick={event => {
         if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
@@ -685,7 +686,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       {routes && routeObjects.map((line, index) => <primitive object={line} key={`route-${index}`} />)}
       {labels && events.filter(event => event.year <= year).map(event => <mesh key={event.id} position={latLon(event.lat, event.lon, 1.625)}>
         <sphereGeometry args={[event.id === 'present' ? 0.026 : 0.018, 12, 10]} />
-        <meshBasicMaterial color={event.category === 'Ideas' ? '#ff86b2' : '#d2a7ff'} />
+        <meshBasicMaterial color={event.category === 'Ideas' ? '#5b544a' : '#4a443c'} />
       </mesh>)}
     </group>
     <Stars />
@@ -711,7 +712,7 @@ function Stars() {
     return stars
   }, [])
   useEffect(() => () => geometry.dispose(), [geometry])
-  return <points geometry={geometry}><pointsMaterial color="#d9c3ff" size={0.016} transparent opacity={0.67} sizeAttenuation depthWrite={false} /></points>
+  return <points geometry={geometry}><pointsMaterial color="#5b544a" size={0.016} transparent opacity={0.67} sizeAttenuation depthWrite={false} /></points>
 }
 
 function largestFeatureArea(feature: AtlasFeature<CountryProperties>) {
@@ -732,7 +733,7 @@ function GlobeTextLabel({ label, scale, kind = 'country' }: { label: GlobeLabel;
     context.lineWidth = isCountry ? 7 : 6
     context.strokeStyle = 'rgba(255,255,255,.98)'
     context.strokeText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
-    context.fillStyle = isCountry ? '#5c3378' : kind === 'landmark' ? '#80500f' : '#9a2e68'
+    context.fillStyle = isCountry ? '#17130f' : kind === 'landmark' ? '#7c7367' : '#5b544a'
     context.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
     const map = new THREE.CanvasTexture(canvas)
     map.colorSpace = THREE.SRGBColorSpace

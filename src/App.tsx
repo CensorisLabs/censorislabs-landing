@@ -5,7 +5,6 @@ import Apps, { PRODUCTS } from './components/Apps'
 import GamePage from './components/GamePage'
 import About from './components/About'
 import Donate from './components/Donate'
-import Cursor from './components/Cursor'
 import Footer from './components/Footer'
 import Nav from './components/Nav'
 import RequestSoftware from './components/RequestSoftware'
@@ -175,7 +174,6 @@ export default function App() {
         Skip to content
       </a>
 
-      {!isGamePage && !isAtlasPage && <Cursor />}
       {!isGamePage && !isAtlasPage && <Nav />}
 
       <main id="main">

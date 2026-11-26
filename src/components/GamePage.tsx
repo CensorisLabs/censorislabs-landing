@@ -1,23 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './GamePage.css'
 
-const SITE_THEMES = ['obsidian', 'amethyst', 'ocean', 'ember'] as const
-type SiteTheme = (typeof SITE_THEMES)[number]
-
-function getSiteTheme(): SiteTheme {
-  try {
-    const saved = localStorage.getItem('censorislabs-site-theme')
-    const theme = saved === 'imperial' ? 'obsidian' : saved === 'violet' ? 'amethyst' : saved
-    return SITE_THEMES.includes(theme as SiteTheme) ? theme as SiteTheme : 'obsidian'
-  } catch {
-    return 'obsidian'
-  }
-}
-
 export default function GamePage() {
-  const theme = getSiteTheme()
   const [gameVersion] = useState(() => Date.now().toString(36))
-  useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
 
   return (
     <section className="frontier-page" aria-label="Chronicle Frontier browser game">
@@ -34,7 +19,7 @@ export default function GamePage() {
       </header>
       <iframe
         className="frontier-page__game"
-        src={'/games/chronicle/?siteTheme=' + theme + '&v=' + gameVersion}
+        src={'/games/chronicle/?v=' + gameVersion}
         title="Chronicle Frontier, an original browser FPS"
         allow="fullscreen; gamepad; pointer-lock"
         allowFullScreen

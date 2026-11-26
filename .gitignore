@@ -38,3 +38,8 @@ apps/*/tsconfig*.tsbuildinfo
 
 # Local source archives used to generate atlas assets
 .work/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

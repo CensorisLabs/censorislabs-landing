@@ -244,14 +244,17 @@ function drawFeature(ctx: CanvasRenderingContext2D, feature: AtlasFeature<unknow
   }
 }
 
-function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historical: AtlasFeature<HistoryProperties>[], selectedCountry: string | undefined, selectedAuthorities: AtlasFeature<HistoryProperties>[], year: number, maxAnisotropy: number, textureWidth: number) {
+function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historical: AtlasFeature<HistoryProperties>[], selectedCountry: string | undefined, selectedAuthorities: AtlasFeature<HistoryProperties>[], year: number, maxAnisotropy: number, textureWidth: number, lineFactor = 1) {
   const canvas = document.createElement('canvas')
   // 4K keeps coastlines, small polities and border lines readable when the
   // camera moves close to the surface. The texture is rebuilt only when the
   // selected snapshot changes, not on every orbit frame.
   canvas.width = textureWidth
   canvas.height = textureWidth / 2
-  const lineScale = canvas.width / 2048
+  // Line widths are painted in texture pixels, so a texture that looks right
+  // from space turns into heavy ink when the camera reaches the surface. Close
+  // views are rebuilt with thinner strokes instead of trying to serve both.
+  const lineScale = canvas.width / 2048 * lineFactor
   const highDetail = textureWidth >= 4096
   const ctx = canvas.getContext('2d')!
   ctx.lineJoin = 'round'
@@ -393,16 +396,11 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   // Playback changes the map every few hundred milliseconds, so it keeps a
   // mid-resolution texture; a paused view gets the sharpest one the GPU takes.
   const textureWidth = isPlaying ? 4096 : detailTextureWidth
-  const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year, maxAnisotropy, textureWidth), [countries, historical, selectedAuthorities, selectedCountry, year, maxAnisotropy, textureWidth])
   useEffect(() => {
     gl.domElement.setAttribute('role', 'img')
     gl.domElement.setAttribute('aria-label', `Interactive globe showing the political map for ${formatYear(year)}. Use the year controls or the arrow keys to move through time, and the journey list to follow a route.`)
   }, [gl, year])
 
-  useEffect(() => {
-    gl.domElement.dataset.atlasTextureWidth = String(textureWidth)
-    gl.domElement.dataset.atlasDetail = textureWidth >= 4096 ? 'high' : 'playback'
-  }, [gl, textureWidth])
   // Start on Europe, Africa and western Asia, where the historical coverage is
   // densest, instead of hiding most recorded polities around the far side.
   const spin = useRef({ x: 0.12, y: -Math.PI / 2 })
@@ -415,6 +413,22 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   const suppressClickUntil = useRef(0)
   const distance = useRef(initialDistance)
   const [zoomBand, setZoomBand] = useState(zoomBandForDistance(initialDistance))
+  // Repainting the texture costs a second or two, so the close-up line weight
+  // is only switched in once the camera has settled at that range. Otherwise a
+  // single zoom gesture would stop the main thread twice on the way down.
+  const [settledBand, setSettledBand] = useState(zoomBand)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSettledBand(zoomBand), 260)
+    return () => window.clearTimeout(timer)
+  }, [zoomBand])
+  const lineFactor = settledBand === 2 ? 0.35 : 1
+  const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year, maxAnisotropy, textureWidth, lineFactor), [countries, historical, selectedAuthorities, selectedCountry, lineFactor, year, maxAnisotropy, textureWidth])
+  useEffect(() => {
+    gl.domElement.dataset.atlasDistance = initialDistance.toFixed(2)
+    gl.domElement.dataset.atlasLineFactor = String(lineFactor)
+    gl.domElement.dataset.atlasTextureWidth = String(textureWidth)
+    gl.domElement.dataset.atlasDetail = textureWidth >= 4096 ? 'high' : 'playback'
+  }, [gl, lineFactor, textureWidth])
   // Label density follows the actual camera distance inside the close band, so
   // zooming right in makes room for many more city names.
   const [viewDistance, setViewDistance] = useState(initialDistance)
@@ -729,6 +743,7 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
     camera.position.z = THREE.MathUtils.damp(camera.position.z, distance.current, 5, delta)
     if (Math.abs(camera.position.z - reportedDistance.current) > 0.04) {
       reportedDistance.current = camera.position.z
+      gl.domElement.dataset.atlasDistance = camera.position.z.toFixed(2)
       onViewDistance(camera.position.z)
       if (zoomBand === 2) setViewDistance(camera.position.z)
     }

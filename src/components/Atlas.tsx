@@ -38,7 +38,9 @@ const EMPTY_COUNTRIES: AtlasFeature<CountryProperties>[] = []
 const EMPTY_HISTORY: AtlasFeature<HistoryProperties>[] = []
 const EMPTY_WARS: WarFeature[] = []
 const CENTURY_YEARS = [...Array.from({ length: 30 }, (_, index) => -3000 + index * 100), 1, ...Array.from({ length: 19 }, (_, index) => 101 + index * 100), 2022]
-const MIN_GLOBE_DISTANCE = 2.05
+// Closer than this the camera magnifies a handful of 8K texels across the
+// whole screen, which reads as blur rather than detail.
+const MIN_GLOBE_DISTANCE = 2.4
 const MAX_GLOBE_DISTANCE = 8.4
 const DEFAULT_GLOBE_DISTANCE = 5.4
 const DOUBLE_TAP_DELAY_MS = 320
@@ -106,6 +108,20 @@ const EVENTS: AtlasEvent[] = [
   { id: 'printing', year: 1455, title: 'Movable type changes European bookmaking', place: 'Mainz', category: 'Ideas', detail: 'The spread of printing reshaped how texts could be produced and circulated.', lat: 50.0, lon: 8.3 },
   { id: 'magellan', year: 1522, title: 'A circumnavigation is completed', place: 'Indian and Pacific oceans', category: 'Routes', detail: 'The expedition that began with Ferdinand Magellan returned under Juan Sebastián Elcano.', lat: -33.9, lon: 18.4 },
   { id: 'steam', year: 1769, title: 'A new era of steam power begins', place: 'Britain', category: 'Ideas', detail: 'Improved steam engines helped transform industry, transport and urban life.', lat: 53.5, lon: -2.2 },
+  { id: 'indus', year: -2600, title: 'Planned cities appear in the Indus valley', place: 'Mohenjo-daro and Harappa', category: 'Civilizations', detail: 'Grid streets, covered drains and standardised bricks show urban planning across a wide region.', lat: 27.33, lon: 68.14 },
+  { id: 'anyang', year: -1250, title: 'Shang kings rule from Anyang', place: 'Yellow River valley', category: 'Civilizations', detail: 'Bronze casting and the earliest Chinese writing come from the Shang capital region.', lat: 36.1, lon: 114.3 },
+  { id: 'olympia', year: -776, title: 'The first recorded Olympic victors', place: 'Olympia, Greece', category: 'People', detail: 'A victor list begins here, though the sanctuary and its games were already old.', lat: 37.64, lon: 21.63 },
+  { id: 'persepolis', year: -518, title: 'Persepolis becomes an Achaemenid capital', place: 'Fars, Iran', category: 'Civilizations', detail: 'Darius I began a palace complex that drew tribute and craftspeople from across the empire.', lat: 29.94, lon: 52.89 },
+  { id: 'paper', year: 105, title: 'Papermaking reaches the Han court', place: 'Luoyang', category: 'Ideas', detail: 'Cai Lun is credited with refining a papermaking process; coarser paper already existed.', lat: 34.62, lon: 112.45 },
+  { id: 'changan', year: 700, title: 'Chang’an becomes the largest city on earth', place: 'Tang China', category: 'Civilizations', detail: 'A grid of walled wards housed a million people and traders from across Asia.', lat: 34.27, lon: 108.9 },
+  { id: 'vinland', year: 1000, title: 'Norse sailors reach North America', place: 'L’Anse aux Meadows', category: 'Routes', detail: 'A short-lived camp in Newfoundland is the only confirmed Norse site outside Greenland.', lat: 51.6, lon: -55.53 },
+  { id: 'tenochtitlan', year: 1325, title: 'Tenochtitlan is founded on an island', place: 'Lake Texcoco', category: 'Civilizations', detail: 'Causeways and floating gardens turned a marsh island into the Aztec capital.', lat: 19.43, lon: -99.13 },
+  { id: 'zimbabwe', year: 1350, title: 'Great Zimbabwe’s stone walls rise', place: 'Southern Africa', category: 'Civilizations', detail: 'Mortarless granite walls enclosed a royal centre trading gold and ivory to the coast.', lat: -20.27, lon: 30.93 },
+  { id: 'principia', year: 1687, title: 'Newton publishes the Principia', place: 'London', category: 'Ideas', detail: 'Edmond Halley paid for the printing of a book that set out laws of motion and gravitation.', lat: 51.51, lon: -0.13 },
+  { id: 'underground', year: 1863, title: 'The first underground railway opens', place: 'London', category: 'Routes', detail: 'Steam trains ran in shallow tunnels dug by cut-and-cover beneath the Edgware Road.', lat: 51.52, lon: -0.16 },
+  { id: 'kittyhawk', year: 1903, title: 'A powered aeroplane flies at Kitty Hawk', place: 'North Carolina', category: 'Ideas', detail: 'The Wright brothers made four flights that morning; the longest lasted under a minute.', lat: 36.02, lon: -75.67 },
+  { id: 'arpanet', year: 1969, title: 'The first ARPANET message is sent', place: 'UCLA to Stanford', category: 'Routes', detail: 'The link dropped after two letters, but the network that became the internet was running.', lat: 34.07, lon: -118.44 },
+  { id: 'web', year: 1991, title: 'The first website goes live', place: 'CERN, Geneva', category: 'Ideas', detail: 'Berners-Lee published a page explaining the web from a NeXT computer at CERN.', lat: 46.23, lon: 6.05 },
   { id: 'present', year: 2022, title: 'One connected, changing world', place: 'Earth', category: 'People', detail: 'Explore the eras, journeys and ideas that shape a shared planetary story.', lat: 0, lon: 0 },
 ]
 
@@ -132,10 +148,19 @@ function ringArea(ring: GeoRing) {
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) area += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1]
   return area / 2
 }
-function spacedLabels(candidates: GlobeLabel[], maxLabels: number, separationDegrees: number) {
+function labelWidth(name: string, kind: LabelKind, scale: number) {
+  const isCountry = kind === 'country'
+  const maxWidth = isCountry ? 0.82 : 0.6
+  return Math.min(maxWidth, Math.max(0.2, name.length * (isCountry ? 0.018 : 0.016))) * scale
+}
+// The globe radius is 1.6 world units, so one world unit spans 360 / (2π·1.6)
+// degrees of surface.
+const DEGREES_PER_WORLD_UNIT = 360 / (2 * Math.PI * 1.6)
+function spacedLabels(candidates: GlobeLabel[], maxLabels: number, separationDegrees: number, widthOf?: (label: GlobeLabel) => number) {
   const result: GlobeLabel[] = []
+  const halfWidth = (label: GlobeLabel) => widthOf ? widthOf(label) * DEGREES_PER_WORLD_UNIT * 0.4 : 0
   for (const label of candidates.sort((a, b) => b.area - a.area)) {
-    const nearby = result.some(other => labelsWithin(label, other, separationDegrees))
+    const nearby = result.some(other => labelsWithin(label, other, Math.max(separationDegrees, halfWidth(label) + halfWidth(other))))
     if (!nearby) result.push(label)
     if (result.length >= maxLabels) break
   }
@@ -241,13 +266,16 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
 
   // Keep present-day land outlines subtle and global; stronger land/ocean
   // contrast makes coasts readable without leaking current borders into past eras.
-  countries.forEach(feature => drawFeature(ctx, feature, '#ded4c0', 'transparent', 0, canvas.width, canvas.height))
+  // A soft offset shadow gives land a little relief, then a real coastline
+  // stroke keeps every small island legible instead of a flat colour wash.
+  countries.forEach(feature => drawFeature(ctx, feature, 'rgba(23, 19, 15, .07)', 'transparent', 0, canvas.width, canvas.height))
+  countries.forEach(feature => drawFeature(ctx, feature, '#e6dcc6', 'rgba(23, 19, 15, .45)', 0.62 * lineScale, canvas.width, canvas.height))
   // High-detail views keep a faint modern geography reference in unmapped
   // areas. Historical polities are painted over this layer, so their borders
   // remain authoritative wherever the source has coverage.
   if (highDetail && year < 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(23, 19, 15, .28)', .55 * lineScale, canvas.width, canvas.height))
   historical.forEach(feature => {
-    drawFeature(ctx, feature, polityColor(feature.properties.name, .86, 55), polityColor(feature.properties.name, .92, 36), 1.2 * lineScale, canvas.width, canvas.height)
+    drawFeature(ctx, feature, polityColor(feature.properties.name, .82, 52), polityColor(feature.properties.name, .95, 30), 0.6 * lineScale, canvas.width, canvas.height)
     if (highDetail) drawFeature(ctx, feature, 'transparent', 'rgba(255, 255, 255, .16)', .55 * lineScale, canvas.width, canvas.height)
   })
   if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(23, 19, 15, .6)', .8 * lineScale, canvas.width, canvas.height))
@@ -328,8 +356,13 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   // Playback favours a fast 2K redraw; the paused view uses the largest
   // practical texture the GPU supports, up to 8K, for close-up coastlines and
   // small polity borders. Lower-memory devices stay at 4K.
-  const detailTextureWidth = Math.min(8192, gl.capabilities.maxTextureSize, deviceMemory >= 8 ? 8192 : 4096)
-  const textureWidth = isPlaying ? 2048 : detailTextureWidth
+  // Phones and tablets keep 4K: an 8K canvas plus its mip chain is ~180 MB of
+  // GPU memory, which is not worth the detail on a small screen.
+  const lowPowerDevice = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 700
+  const detailTextureWidth = Math.min(8192, gl.capabilities.maxTextureSize, deviceMemory >= 4 && !lowPowerDevice ? 8192 : 4096)
+  // Playback changes the map every few hundred milliseconds, so it keeps a
+  // mid-resolution texture; a paused view gets the sharpest one the GPU takes.
+  const textureWidth = isPlaying ? 4096 : detailTextureWidth
   const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year, maxAnisotropy, textureWidth), [countries, historical, selectedAuthorities, selectedCountry, year, maxAnisotropy, textureWidth])
   useEffect(() => {
     gl.domElement.dataset.atlasTextureWidth = String(textureWidth)
@@ -347,6 +380,10 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   const suppressClickUntil = useRef(0)
   const distance = useRef(DEFAULT_GLOBE_DISTANCE)
   const [zoomBand, setZoomBand] = useState(zoomBandForDistance(DEFAULT_GLOBE_DISTANCE))
+  // Label density follows the actual camera distance inside the close band, so
+  // zooming right in makes room for many more city names.
+  const [viewDistance, setViewDistance] = useState(DEFAULT_GLOBE_DISTANCE)
+  const reportedDistance = useRef(DEFAULT_GLOBE_DISTANCE)
   const [gazetteer, setGazetteer] = useState<{ cities: GazetteerCity[]; landmarks: GazetteerLandmark[] }>({ cities: [], landmarks: [] })
   const [gazetteerLoaded, setGazetteerLoaded] = useState(false)
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#5b544a', transparent: true, opacity: 0.75 }), [])
@@ -365,7 +402,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       const isUcdp = war.source.startsWith('UCDP')
       const magnitude = Math.min(isUcdp ? 0.003 : 0.005, Math.log10((war.eventCount ?? 1) + 1) * (isUcdp ? 0.0009 : 0.0014))
       const radius = ((isUcdp ? 0.0065 : 0.014) + magnitude) * (war.id === selectedWarId || `${war.source}:${war.war || war.title}` === selectedWarKey ? 1.6 : 1)
-      marker.scale.setScalar(radius)
+      marker.scale.setScalar(radius * (zoomBand === 2 ? Math.max(0.5, viewDistance / DEFAULT_GLOBE_DISTANCE) : 1))
       marker.updateMatrix()
       mesh.setMatrixAt(index, marker.matrix)
       const markerColor = war.id === selectedWarId ? '#17130f' : `${war.source}:${war.war || war.title}` === selectedWarKey ? '#17130f' : war.source.startsWith('UCDP') ? '#4a443c' : '#7c7367'
@@ -375,8 +412,14 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     return mesh
-  }, [selectedWarId, selectedWarKey, visibleWarMarkers])
+  }, [selectedWarId, selectedWarKey, viewDistance, visibleWarMarkers, zoomBand])
   const warRegions = useMemo(() => groupWarRegions(warMarkers), [warMarkers])
+  // 0 at the far edge of the close band, 1 at the closest allowed zoom.
+  const closeProgress = zoomBand === 2 ? THREE.MathUtils.clamp((2.85 - viewDistance) / (2.85 - MIN_GLOBE_DISTANCE), 0, 1) : 0
+  // Sprites are positioned in world space, so shrinking them as the camera
+  // approaches keeps names a readable, map-like size instead of billboards.
+  const labelScale = zoomBand === 2 ? THREE.MathUtils.clamp(viewDistance / DEFAULT_GLOBE_DISTANCE, 0.45, 1) : zoomBand === 1 ? 0.8 : 1
+  const labelWidthDegrees = (label: GlobeLabel) => labelWidth(label.name, label.kind === 'city' || label.kind === 'landmark' ? label.kind : 'country', labelScale)
   const globeLabels = useMemo(() => {
     const source: GlobeLabel[] = year >= 2022
       ? countries.map(feature => ({ ...labelPoint(feature), name: feature.properties.name, area: largestFeatureArea(feature), href: `https://en.wikipedia.org/wiki/${encodeURIComponent(feature.properties.name.replaceAll(' ', '_'))}` }))
@@ -385,10 +428,11 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     source.forEach(label => { const current = largestByName.get(label.name); if (!current || label.area > current.area) largestByName.set(label.name, label) })
     // Close views get a denser label field so small countries and polities
     // become readable instead of remaining hidden behind a fixed world-view set.
-    const maxLabels = zoomBand === 2 ? (year >= 2022 ? 300 : 280) : zoomBand === 1 ? (year >= 2022 ? 240 : 200) : (year >= 2022 ? 190 : 130)
-    const separation = zoomBand === 2 ? 1.55 : zoomBand === 1 ? 3.2 : 6.4
-    return spacedLabels([...largestByName.values()], maxLabels, separation)
-  }, [countries, historical, year, zoomBand])
+    // Close zoom hands the surface over to cities, so country names thin out.
+    const maxLabels = zoomBand === 2 ? Math.round(170 - closeProgress * 80) : zoomBand === 1 ? (year >= 2022 ? 240 : 200) : (year >= 2022 ? 190 : 130)
+    const separation = zoomBand === 2 ? 1.7 + closeProgress * 0.5 : zoomBand === 1 ? 3.2 : 6.4
+    return spacedLabels([...largestByName.values()], maxLabels, separation, labelWidthDegrees)
+  }, [closeProgress, countries, historical, year, zoomBand, labelWidthDegrees])
   // The gazetteer is intentionally lazy: city and landmark labels only enter
   // the scene once the viewer reaches the closest zoom band.
   useEffect(() => {
@@ -412,16 +456,18 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       name: landmark.name, lat: landmark.lat, lon: landmark.lon,
       href: `https://www.wikidata.org/wiki/${encodeURIComponent(landmark.wikidata)}`,
       area: landmark.sitelinks, kind: 'landmark' as const,
-    })), 52, 3.1)
-    // A landmark and its host city often share a point. Landmarks win that
-    // collision because they are the more specific close-zoom label.
-    const cities = spacedLabels(gazetteer.cities.map(city => ({
-      name: city.name, lat: city.lat, lon: city.lon,
-      href: `https://www.geonames.org/${city.geonameid}`,
-      area: city.population, kind: 'city' as const,
-    })), 112, 2.15).filter(city => !landmarks.some(landmark => labelsWithin(city, landmark, 1.35)))
-    return { cities, landmarks }
-  }, [gazetteer, labels, zoomBand])
+    })), 60 + Math.round(closeProgress * 30), 0.9, labelWidthDegrees)
+    return { cities: [] as GlobeLabel[], landmarks }
+  }, [closeProgress, gazetteer.landmarks, labels, labelWidthDegrees, zoomBand])
+
+  // City names are chosen from what is actually on screen, not from a global
+  // top-N list: otherwise a close view of one region keeps the names of cities
+  // on the far side of the planet.
+  const cityPool = useMemo(() => gazetteer.cities.map(city => ({ city, point: latLon(city.lat, city.lon, 1) })), [gazetteer.cities])
+  const [cityLabels, setCityLabels] = useState<GlobeLabel[]>([])
+  const lastCityLabelAt = useRef(0)
+  const cityLabelSignature = useRef('')
+  useEffect(() => { gl.domElement.dataset.atlasCityLabels = String(cityLabels.length) }, [cityLabels, gl])
   const warRegionMesh = useMemo(() => {
     const geometry = new THREE.CircleGeometry(1, 24)
     const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
@@ -431,7 +477,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     warRegions.forEach((region, index) => {
       const normal = latLon(region.lat, region.lon, 1).normalize()
       const selected = `${region.source}:${region.name}` === selectedWarKey
-      const size = Math.min(0.075, 0.028 + Math.log2(region.count + 1) * 0.006) * (selected ? 1.25 : 1)
+      const size = Math.min(0.075, 0.028 + Math.log2(region.count + 1) * 0.006) * (selected ? 1.25 : 1) * (zoomBand === 2 ? Math.max(0.42, viewDistance / DEFAULT_GLOBE_DISTANCE) : 1)
       marker.position.copy(normal.clone().multiplyScalar(1.608))
       marker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal)
       marker.scale.set(size, size * 0.78, 1)
@@ -444,7 +490,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     return mesh
-  }, [selectedWarKey, warRegions])
+  }, [selectedWarKey, viewDistance, warRegions, zoomBand])
 
   useEffect(() => () => texture.dispose(), [texture])
   useEffect(() => () => {
@@ -641,7 +687,38 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       world.current.rotation.y = THREE.MathUtils.damp(world.current.rotation.y, spin.current.y, 6, delta)
     }
     camera.position.z = THREE.MathUtils.damp(camera.position.z, distance.current, 5, delta)
+    if (zoomBand === 2 && Math.abs(camera.position.z - reportedDistance.current) > 0.03) {
+      reportedDistance.current = camera.position.z
+      setViewDistance(camera.position.z)
+    }
     camera.lookAt(0, 0, 0)
+
+    // Re-declutter city names against the current view a few times a second.
+    // The whole gazetteer is projected onto the globe once; only the part
+    // facing the camera is eligible, so panning reveals a new set of names.
+    const settled = !drag.current && Math.hypot(rotationVelocity.current.x, rotationVelocity.current.y) < 0.01
+    const now = performance.now()
+    if (zoomBand === 2 && labels && settled && world.current && cityPool.length && now - lastCityLabelAt.current > 380) {
+      lastCityLabelAt.current = now
+      const cameraLocal = camera.position.clone().applyQuaternion(world.current.quaternion.clone().invert()).normalize()
+      const horizon = 1.6 / Math.max(1.6, camera.position.length()) - 0.04
+      const scale = THREE.MathUtils.clamp(camera.position.length() / DEFAULT_GLOBE_DISTANCE, 0.45, 1)
+      const visible: GlobeLabel[] = []
+      for (const entry of cityPool) {
+        if (entry.point.dot(cameraLocal) < horizon) continue
+        visible.push({
+          name: entry.city.name, lat: entry.city.lat, lon: entry.city.lon,
+          href: `https://www.geonames.org/${entry.city.geonameid}`,
+          area: entry.city.population, kind: 'city',
+        })
+      }
+      const next = spacedLabels(visible, 280, 0.25, label => labelWidth(label.name, 'city', scale))
+      const signature = next.map(label => `${label.name}@${label.lat.toFixed(2)},${label.lon.toFixed(2)}`).join('|')
+      if (signature !== cityLabelSignature.current) {
+        cityLabelSignature.current = signature
+        setCityLabels(next)
+      }
+    }
   })
 
   return <>
@@ -681,9 +758,10 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
         const feature = typeof event.instanceId === 'number' ? warMarkers[event.instanceId] : undefined
         if (feature) onSelectWar(feature)
       }} />}
-      {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} scale={zoomBand === 2 ? 0.62 : zoomBand === 1 ? 0.8 : 1} />)}
-      {closeZoomLabels.cities.map(label => <GlobeTextLabel key={`city-${label.name}-${label.href}`} label={label} scale={0.62} kind="city" />)}
-      {closeZoomLabels.landmarks.map(label => <GlobeTextLabel key={`landmark-${label.name}-${label.href}`} label={label} scale={0.62} kind="landmark" />)}
+      {labels && zoomBand === 2 && gazetteer.cities.length > 0 && <CityDots cities={gazetteer.cities} />}
+      {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} scale={labelScale} />)}
+      {cityLabels.map(label => <GlobeTextLabel key={`city-${label.href}`} label={label} scale={labelScale} kind="city" />)}
+      {closeZoomLabels.landmarks.map(label => <GlobeTextLabel key={`landmark-${label.name}-${label.href}`} label={label} scale={labelScale} kind="landmark" />)}
       {routes && routeObjects.map((line, index) => <primitive object={line} key={`route-${index}`} />)}
       {labels && events.filter(event => event.year <= year).map(event => <mesh key={event.id} position={latLon(event.lat, event.lon, 1.625)}>
         <sphereGeometry args={[event.id === 'present' ? 0.026 : 0.018, 12, 10]} />
@@ -720,21 +798,41 @@ function largestFeatureArea(feature: AtlasFeature<CountryProperties>) {
   return Math.max(0, ...polygonsOf(feature.geometry).map(polygon => Math.abs(ringArea(unwrapRing(polygon[0] ?? [])))))
 }
 
+function CityDots({ cities }: { cities: GazetteerCity[] }) {
+  const object = useMemo(() => {
+    // One dot per gazetteer city, so places whose names lose the collision
+    // pass are still visibly there when the camera is close.
+    const geometry = new THREE.SphereGeometry(0.0022, 6, 5)
+    const material = new THREE.MeshBasicMaterial({ color: '#4a443c', transparent: true, opacity: 0.62, depthWrite: false })
+    const mesh = new THREE.InstancedMesh(geometry, material, cities.length)
+    const marker = new THREE.Object3D()
+    cities.forEach((city, index) => {
+      marker.position.copy(latLon(city.lat, city.lon, 1.637))
+      marker.updateMatrix()
+      mesh.setMatrixAt(index, marker.matrix)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    return mesh
+  }, [cities])
+  useEffect(() => () => { object.geometry.dispose(); (object.material as THREE.Material).dispose() }, [object])
+  return <primitive object={object} />
+}
+
 function GlobeTextLabel({ label, scale, kind = 'country' }: { label: GlobeLabel; scale: number; kind?: LabelKind }) {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas')
     const isCountry = kind === 'country'
-    canvas.width = isCountry ? 768 : 512
-    canvas.height = isCountry ? 96 : 72
+    canvas.width = isCountry ? 1024 : 640
+    canvas.height = isCountry ? 128 : 88
     const context = canvas.getContext('2d')!
     const text = kind === 'landmark' ? `◆ ${label.name}` : label.name
-    context.font = isCountry ? '700 52px Inter, Arial, sans-serif' : kind === 'landmark' ? 'italic 600 38px Georgia, serif' : '700 40px Inter, Arial, sans-serif'
+    context.font = isCountry ? '700 66px Inter, Arial, sans-serif' : kind === 'landmark' ? 'italic 600 46px Georgia, serif' : '700 48px Inter, Arial, sans-serif'
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.lineWidth = isCountry ? 7 : 6
-    context.strokeStyle = 'rgba(255,255,255,.98)'
+    context.lineWidth = isCountry ? 7 : 7
+    context.strokeStyle = 'rgba(255,255,255,.96)'
     context.strokeText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
-    context.fillStyle = isCountry ? '#17130f' : kind === 'landmark' ? '#7c7367' : '#5b544a'
+    context.fillStyle = isCountry ? '#17130f' : kind === 'landmark' ? '#6f6659' : '#3d372f'
     context.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
     const map = new THREE.CanvasTexture(canvas)
     map.colorSpace = THREE.SRGBColorSpace
@@ -742,8 +840,7 @@ function GlobeTextLabel({ label, scale, kind = 'country' }: { label: GlobeLabel;
   }, [kind, label.name])
   const material = useMemo(() => new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: true, depthWrite: false, toneMapped: false }), [texture])
   useEffect(() => () => { texture.dispose(); material.dispose() }, [material, texture])
-  const maxWidth = kind === 'country' ? 0.82 : 0.6
-  const width = Math.min(maxWidth, Math.max(0.2, label.name.length * (kind === 'country' ? 0.018 : 0.016))) * scale
+  const width = labelWidth(label.name, kind, scale)
   return <sprite position={latLon(label.lat, label.lon, kind === 'country' ? 1.635 : 1.64)} scale={[width, (kind === 'country' ? 0.08 : 0.058) * scale, 1]} material={material} onClick={event => { event.stopPropagation(); window.open(label.href, '_blank', 'noopener,noreferrer') }} />
 }
 

@@ -219,6 +219,23 @@ test('the atlas announces the year and steps it from the keyboard', async ({ pag
   await expect(announcer, 'the change is announced').toHaveText(/Atlas at 1,610 AD/)
 })
 
+test('the atlas turns the globe with shift and the arrow keys', async ({ page }) => {
+  test.setTimeout(60_000)
+  await openAndAudit(page, '/atlas?year=1600&lat=10&lon=30', 25_000)
+
+  const canvas = page.locator('canvas')
+  await canvas.focus()
+  await expect(page.locator('.atlas-keyboard-hint'), 'focusing the globe explains the keys').toHaveAttribute('aria-hidden', 'false')
+
+  const before = await canvas.getAttribute('data-atlas-longitude')
+  await page.keyboard.down('Shift')
+  for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
+  await page.keyboard.up('Shift')
+
+  await expect(canvas, 'the globe turns with shift and the arrow keys').not.toHaveAttribute('data-atlas-longitude', String(before))
+  await expect(page.locator('.atlas-timeline-head strong'), 'the year stays put while turning').toHaveText('1,600 AD')
+})
+
 test('the atlas shows an almanac fact for the era on screen', async ({ page }) => {
   // The globe loads compressed map data and renders a 3D scene; it is the
   // slowest page in the suite and needs more than the default budget.

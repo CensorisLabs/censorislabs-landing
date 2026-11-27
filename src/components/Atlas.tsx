@@ -48,6 +48,7 @@ const DOUBLE_TAP_DISTANCE_PX = 28
 const DOUBLE_TAP_ZOOM_STEP = 1.1
 const CLOSE_ZOOM_HINT_KEY = 'censorislabs-atlas-close-zoom-hint'
 type ZoomCommand = { nonce: number; kind: 'in' | 'out' | 'reset' }
+type RotateCommand = { nonce: number; dx: number; dy: number }
 function zoomBandForDistance(distance: number) {
   return distance < 2.85 ? 2 : distance < 4.2 ? 1 : 0
 }
@@ -357,7 +358,7 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, focusPoint, selectedWarId, selectedWarKey, year, zoomCommand, initialDistance, onSelectLocation, onSelectWar, onGestureLearned, onCloseZoom, onViewDistance }: {
+function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, focusPoint, selectedWarId, selectedWarKey, year, zoomCommand, rotateCommand, initialDistance, onKeyboardFocus, onSelectLocation, onSelectWar, onGestureLearned, onCloseZoom, onViewDistance }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
   journeys: Journey[]
@@ -375,6 +376,8 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   selectedWarKey?: string
   year: number
   zoomCommand: ZoomCommand | null
+  rotateCommand: RotateCommand | null
+  onKeyboardFocus: (focused: boolean) => void
   onSelectLocation: (point: MapPoint) => void
   onSelectWar: (war: WarFeature) => void
   onGestureLearned: () => void
@@ -398,7 +401,8 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   const textureWidth = isPlaying ? 4096 : detailTextureWidth
   useEffect(() => {
     gl.domElement.setAttribute('role', 'img')
-    gl.domElement.setAttribute('aria-label', `Interactive globe showing the political map for ${formatYear(year)}. Use the year controls or the arrow keys to move through time, and the journey list to follow a route.`)
+    gl.domElement.tabIndex = 0
+    gl.domElement.setAttribute('aria-label', `Interactive globe showing the political map for ${formatYear(year)}. Use the year controls or the arrow keys to move through time, hold shift with the arrow keys to turn the globe, and use the journey list to follow a route.`)
   }, [gl, year])
 
   // Start on Europe, Africa and western Asia, where the historical coverage is
@@ -676,6 +680,26 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
     }
     setZoomBand(zoomBandForDistance(distance.current))
   }, [zoomCommand])
+
+  useEffect(() => {
+    if (!rotateCommand || rotateCommand.nonce === 0) return
+    spin.current.y += rotateCommand.dx
+    spin.current.x = THREE.MathUtils.clamp(spin.current.x + rotateCommand.dy, -1, 1)
+    rotationVelocity.current = { x: 0, y: 0 }
+    gl.domElement.dataset.atlasLongitude = spin.current.y.toFixed(3)
+  }, [rotateCommand])
+
+  useEffect(() => {
+    const element = gl.domElement
+    const onFocus = () => onKeyboardFocus(true)
+    const onBlur = () => onKeyboardFocus(false)
+    element.addEventListener('focus', onFocus)
+    element.addEventListener('blur', onBlur)
+    return () => {
+      element.removeEventListener('focus', onFocus)
+      element.removeEventListener('blur', onBlur)
+    }
+  }, [gl, onKeyboardFocus])
 
   const closeZoomReached = useRef(false)
   useEffect(() => {
@@ -1017,6 +1041,8 @@ export default function Atlas() {
   const [gestureHintLearned, setGestureHintLearned] = useState(false)
   const [closeZoomHintVisible, setCloseZoomHintVisible] = useState(false)
   const [zoomCommand, setZoomCommand] = useState<ZoomCommand>({ nonce: 0, kind: 'reset' })
+  const [rotateCommand, setRotateCommand] = useState<RotateCommand>({ nonce: 0, dx: 0, dy: 0 })
+  const [keyboardFocus, setKeyboardFocus] = useState(false)
   const dismissGestureHint = useCallback(() => setGestureHintLearned(true), [])
   const writeViewUrl = useCallback(() => {
     const params = new URLSearchParams(window.location.search)
@@ -1143,6 +1169,15 @@ export default function Atlas() {
       if (!typing && (event.key === '+' || event.key === '=')) { event.preventDefault(); requestZoom('in') }
       if (!typing && (event.key === '-' || event.key === '_')) { event.preventDefault(); requestZoom('out') }
       if (!typing && event.key === '0') { event.preventDefault(); requestZoom('reset') }
+      if (!typing && event.shiftKey && event.key.startsWith('Arrow')) {
+        event.preventDefault()
+        const step = Math.PI / 18
+        requestRotate(
+          event.key === 'ArrowLeft' ? step : event.key === 'ArrowRight' ? -step : 0,
+          event.key === 'ArrowUp' ? step / 2 : event.key === 'ArrowDown' ? -step / 2 : 0,
+        )
+        return
+      }
       if (!typing && event.key === 'ArrowLeft') { event.preventDefault(); setYear(current => shiftYear(current, -10)); setPlaying(false) }
       if (!typing && event.key === 'ArrowRight') { event.preventDefault(); setYear(current => shiftYear(current, 10)); setPlaying(false) }
       if (!typing && (event.key === ']' || event.key === '.')) {
@@ -1305,6 +1340,9 @@ export default function Atlas() {
     else if (offset + button.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = offset + button.offsetHeight - list.clientHeight
   }, [selectedJourney])
 
+  function requestRotate(dx: number, dy: number) {
+    setRotateCommand(command => ({ nonce: command.nonce + 1, dx, dy }))
+  }
   function requestZoom(kind: ZoomCommand['kind']) {
     setZoomCommand(current => ({ nonce: current.nonce + 1, kind }))
   }
@@ -1332,12 +1370,17 @@ export default function Atlas() {
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
     <Canvas className="atlas-canvas" dpr={[1, 2]} style={{ touchAction: 'none' }} camera={{ position: [0, 0, initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE], fov: 39 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} journeys={routes ? activeJourneys : []} selectedJourneyId={selectedJourney ?? undefined} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} focusPoint={journeyFocus ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} initialDistance={initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE} onViewDistance={distance => { globeDistance.current = distance; scheduleUrlWrite() }} />
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} journeys={routes ? activeJourneys : []} selectedJourneyId={selectedJourney ?? undefined} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} focusPoint={journeyFocus ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} rotateCommand={rotateCommand} onKeyboardFocus={setKeyboardFocus} onSelectLocation={point => { setSelectedWar(null); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} initialDistance={initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE} onViewDistance={distance => { globeDistance.current = distance; scheduleUrlWrite() }} />
     </Canvas>
 
     <div className={`atlas-gesture-hint${gestureHintLearned ? ' is-dismissed' : ''}`} role="status" aria-hidden={gestureHintLearned}>
       <span aria-hidden="true">◎</span>
       <span><b>Pinch or double-tap</b><small>to zoom the globe</small></span>
+    </div>
+
+    <div className={`atlas-keyboard-hint${keyboardFocus ? '' : ' is-dismissed'}`} role="status" aria-hidden={!keyboardFocus}>
+      <span aria-hidden="true">⌨</span>
+      <span><b>Keyboard</b><small>shift + arrows turn · + / − zoom · arrows step years</small></span>
     </div>
 
     <div className={`atlas-close-zoom-hint${closeZoomHintVisible ? '' : ' is-dismissed'}`} role="status" aria-hidden={!closeZoomHintVisible}>
@@ -1407,7 +1450,7 @@ export default function Atlas() {
           {activeJourneys.length ? <div className="atlas-journey-list">{activeJourneys.map(journey => <button type="button" key={journey.id} data-journey={journey.id} className={journey.id === selectedJourney ? 'is-selected' : ''} aria-pressed={journey.id === selectedJourney} onClick={() => selectJourney(journey.id === selectedJourney ? null : journey.id)}><strong>{journey.name}</strong><small>{formatYear(journey.start)} — {formatYear(journey.end)}</small></button>)}</div> : <p className="atlas-journey-empty">No recorded journey in this year. Move the timeline to bring routes back.</p>}
         </div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place labels</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label><div className="atlas-close-zoom"><span><i className="layer-dot layer-dot--city" />Cities</span><span><i className="layer-dot layer-dot--landmark" />Landmarks</span><small>Close zoom · <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">GeoNames</a> + <a href="https://www.wikidata.org/" target="_blank" rel="noreferrer">Wikidata</a></small></div></div>
-        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span><span>ARROW KEYS STEP YEARS · [ AND ] STEP ROUTES · ESC CLEARS</span></div>
+        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span><span>ARROW KEYS STEP YEARS · SHIFT + ARROWS TURN THE GLOBE · [ AND ] STEP ROUTES · ESC CLEARS</span></div>
       </>}
     </aside>
 

@@ -17,8 +17,8 @@ export default function Footer({ onOpenLegal }: FooterProps) {
               <span className="brand__name">CENSORISLABS</span>
             </a>
             <p>
-              An independent software house building local-first systems for
-              people who would rather own their data than rent it back.
+              Local-first software for people who would rather own their data
+              than rent it back.
             </p>
           </div>
 

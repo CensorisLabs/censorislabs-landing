@@ -117,7 +117,7 @@ export default function App() {
         : route.startsWith('#/puffwork/')
           ? humaniseSlug(route.slice('#/puffwork/'.length))
           : TITLES[route]
-    document.title = title ? `${title} · CensorisLabs` : 'CensorisLabs — Independent Software House'
+    document.title = title ? `${title} · CensorisLabs` : 'CensorisLabs — local-first software'
 
     const description = product
       ? `${product.name} — ${product.kind}. ${product.description}`

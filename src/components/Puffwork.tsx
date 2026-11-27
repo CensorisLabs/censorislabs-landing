@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type PointerEvent } from 'react'
+import { useId, useMemo, useState, type CSSProperties, type PointerEvent } from 'react'
 
 import {
   ASSETS,
@@ -24,7 +24,10 @@ import './Puffwork.css'
 type Status = '' | 'copied' | 'failed'
 
 function Art({ asset, variant = 'card' }: { asset: PuffAsset; variant?: string }) {
-  const svg = useMemo(() => puffSvg(asset, `${variant}-${asset.slug}`), [asset, variant])
+  // Several copies of one pack render together (grid, bundle stacks, hero), so
+  // the SVG gradient and filter ids need to be unique per instance.
+  const instance = useId().replace(/:/g, '')
+  const svg = useMemo(() => puffSvg(asset, `${variant}-${asset.slug}-${instance}`), [asset, variant, instance])
   return (
     <div
       className={`puff-art puff-art--${variant}`}

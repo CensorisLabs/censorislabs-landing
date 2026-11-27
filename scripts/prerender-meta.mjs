@@ -22,7 +22,7 @@ const titleOf = (name) => `${name} · CensorisLabs`
 const pages = [
   {
     path: '/',
-    title: 'CensorisLabs — Independent Software House',
+    title: 'CensorisLabs — local-first software',
     description:
       'CensorisLabs builds zero-telemetry, local-first software: a free suite of everyday apps for money, health, reading and more, plus Censoris and Vesper. No accounts, no tracking, no cloud.',
   },

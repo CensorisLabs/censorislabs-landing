@@ -385,11 +385,6 @@ export default function Hero() {
 
         <div className="hero__copy">
           <div className="hero__tags">
-            <span className="hero__tag hero__tag--live">
-              <i aria-hidden="true" /> Independent software house
-            </span>
-            <span className="hero__tag">Karachi · PK</span>
-            <span className="hero__tag">Est. 2024</span>
             <span className="hero__tag hero__tag--slop">Vibe-coded slop</span>
           </div>
 

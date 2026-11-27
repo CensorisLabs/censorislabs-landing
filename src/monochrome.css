@@ -267,6 +267,30 @@ textarea::placeholder {
   color: #8d8477;
 }
 
+/* The motion layer styles .field controls as dark glass, which outranks the
+   bare element rule above; match its specificity so forms stay on paper. */
+.field input,
+.field select,
+.field textarea {
+  border: 1px solid rgba(23, 19, 15, 0.18);
+  background: #fff;
+  color: #17130f;
+  box-shadow: none;
+}
+
+.field input::placeholder,
+.field select::placeholder,
+.field textarea::placeholder {
+  color: #8d8477;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: rgba(23, 19, 15, 0.55);
+  box-shadow: 0 0 0 3px rgba(23, 19, 15, 0.06);
+}
+
 /* decorative layers */
 .grain {
   opacity: 0.03;
@@ -421,6 +445,19 @@ textarea::placeholder {
 
 .footer__base {
   color: #7c7367;
+}
+
+/* Legal document buttons were still the motion layer's dark glass. */
+.legal__doc-btn,
+.legal__doc-btn:hover {
+  border-color: rgba(23, 19, 15, 0.16);
+  background: #fff;
+  box-shadow: none;
+}
+
+.legal__doc-btn:hover {
+  border-color: rgba(23, 19, 15, 0.4);
+  background: #fffdf8;
 }
 
 /* Panels that hard-code the old aubergine glass instead of a token. */

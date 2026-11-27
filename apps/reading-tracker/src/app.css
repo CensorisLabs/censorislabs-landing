@@ -91,3 +91,97 @@ body{background:radial-gradient(ellipse at 12% -18%,rgba(214,174,104,.07),transp
 .session-meta .text-link{font-size:9px;white-space:nowrap}
 .agenda-session .session-meta{justify-self:end}
 @media(max-width:640px){.recovery-banner{flex-direction:column;gap:10px}.recovery-banner .button-row{justify-content:flex-start}}
+
+/* ============================================================
+   Paper and ink: the Reading Tracker now matches censorislabs.online
+   rather than the old charcoal-and-gold house theme.
+   ============================================================ */
+:root{color-scheme:light;--bg:#f7f4ee;--surface:#fffdf8;--surface2:#f2ecdf;--surface3:#e9e2d4;--ink:#17130f;--muted:#5b544a;--faint:#7c7367;--line:rgba(23,19,15,.16);--line-soft:rgba(23,19,15,.1);--glass-line:rgba(23,19,15,.15);--marble:#17130f;--palladium:#4f483f;--gold:#17130f;--green:#4a443c;--bronze:#4a443c;--violet:#17130f;--void-raised:#fffdf8;--gradient-accent:linear-gradient(120deg,#17130f,#5b544a);background:var(--bg);color:var(--ink)}
+html,body{background-color:#f7f4ee}
+body{background-image:radial-gradient(ellipse at 14% -18%,rgba(23,19,15,.05),transparent 45%),radial-gradient(ellipse at 92% 5%,rgba(23,19,15,.04),transparent 40%),linear-gradient(180deg,#f7f4ee,#f7f4ee 48%,#f3eee3);color:var(--ink)}
+.topbar{background:rgba(247,244,238,.94);border-bottom-color:rgba(23,19,15,.14)}
+.brand{color:#17130f}.brand small{color:#7c7367}
+.brand-symbol{border:0;border-radius:6px;background:#17130f;color:#f7f4ee;font:700 19px Cinzel,Georgia,serif;box-shadow:none}
+.privacy-pill,.local-label{color:#5b544a}.privacy-pill i{background:#17130f;box-shadow:none}
+.local-label{border-color:rgba(23,19,15,.18)}.local-label b{color:#17130f}
+.eyebrow{color:#17130f}
+.app-heading h1{color:#17130f}.app-heading h1 em{color:#5b544a}
+.main-nav{border-bottom-color:rgba(23,19,15,.14)}
+.nav-tab{color:#7c7367}.nav-tab:hover{color:#17130f}.nav-tab--active{color:#17130f;border-bottom-color:#17130f}
+.panel,.stat-card{border:1px solid rgba(23,19,15,.13);border-radius:14px;background:#fffdf8;box-shadow:0 14px 38px rgba(38,28,18,.06)}
+.panel h3,.welcome-row h2,.page-intro h2,.dialog-head h2{color:#17130f}
+.button{border-radius:9px}
+.button--primary{background:#17130f;color:#f7f4ee;border-color:#17130f;box-shadow:none}.button--primary:hover{background:#2b2621;color:#f7f4ee}
+.button--soft{background:#fff;border-color:rgba(23,19,15,.18);color:#17130f}.button--soft:hover{background:#f4efe5;border-color:rgba(23,19,15,.4)}
+.button--quiet{border-color:rgba(23,19,15,.18);color:#4f483f}.button--quiet:hover{border-color:#17130f;color:#17130f}
+.button--danger{background:#7d2f2a;border-color:#7d2f2a;color:#fff}
+.text-link{color:#17130f}.danger-link{color:#8b3a32}
+.icon-button{color:#5b544a}.icon-button:hover{background:#f2ecdf;border-color:rgba(23,19,15,.18);color:#17130f}
+.field{color:#5b544a}
+.field input,.field select,.field textarea,.searchbox input,.filter-row select{background:#fff;border-color:rgba(23,19,15,.18);color:#17130f}
+.field input::placeholder,.field textarea::placeholder,.searchbox input::placeholder{color:#8d8477}
+.field input:focus,.field select:focus,.field textarea:focus,.searchbox input:focus,.filter-row select:focus{border-color:rgba(23,19,15,.55);box-shadow:0 0 0 3px rgba(23,19,15,.06)}
+.searchbox{background:#fff;border-color:rgba(23,19,15,.18);color:#8d8477}
+.tag{border-color:rgba(23,19,15,.18);color:#4f483f;background:#f4efe5}
+.tag--reading{color:#17130f;border-color:rgba(23,19,15,.4);background:rgba(23,19,15,.06)}
+.tag--planning{color:#17130f;border-color:rgba(23,19,15,.3);background:rgba(23,19,15,.04)}
+.tag--finished{color:#4a443c;border-color:rgba(23,19,15,.28);background:rgba(23,19,15,.05)}
+.tag--paused,.tag--reference{color:#5b544a;border-color:rgba(23,19,15,.16);background:rgba(23,19,15,.03)}
+.tag--dnf{color:#8b3a32;border-color:rgba(23,19,15,.2);background:rgba(23,19,15,.04)}
+.rating,.rating-picker .rating--on{color:#17130f}
+.featured-book__cover,.book-cover{background:linear-gradient(145deg,#efe8da,#ded4c0 72%);border-color:rgba(23,19,15,.3);color:#17130f;box-shadow:5px 6px 12px rgba(23,19,15,.12)}
+.book-cover i{color:#4f483f}
+.today-target{border-color:rgba(23,19,15,.25);background:rgba(23,19,15,.04);color:#3a342d}.today-target strong{color:#17130f}
+.book-progress-copy b,.goal-copy b{color:#17130f}
+.progress-track{background:#e4dccd}.progress-track span{background:#17130f}
+.week-chart__bar{background:#7c7367}.week-chart__bar--today{background:#17130f;box-shadow:none}
+.plan-task__date,.agenda-check{border-color:rgba(23,19,15,.3);color:#17130f}
+.plan-task,.agenda-item,.agenda-session,.session-row,.plan-overview-row,.note-card,.quote-card{border-top-color:rgba(23,19,15,.1)}
+.calendar-cell{background:#fffdf8;color:#17130f}
+.calendar-cell:hover{background:#f4efe5;border-color:rgba(23,19,15,.3)}
+.calendar-cell--outside{background:transparent;color:#a49a89}
+.calendar-cell--active{background:#f2ecdf}
+.calendar-cell--selected{border-color:#17130f;box-shadow:inset 0 0 0 1px rgba(23,19,15,.25)}
+.calendar-cell--done{background:#efeadd}
+.calendar-dot{background:#7c7367}.calendar-dot--session{background:#17130f}
+.stats-inline div{background:#fffdf8;border-color:rgba(23,19,15,.13)}.stats-inline strong{color:#17130f}
+.timer-clock{color:#17130f;text-shadow:none}
+.note-card>div,.note-card>p,.note-content,.buddy-speech p,.history-month>span{color:#3a342d}
+.quote-card{border-left-color:#17130f}
+.quote-card blockquote,.memory-panel blockquote,.recall-quote{color:#17130f}
+.recall-quote{border-left-color:#17130f;background:#fffdf8}
+.recall-pause{border-color:rgba(23,19,15,.25);color:#17130f;background:rgba(23,19,15,.04)}
+.buddy-stage{border-color:rgba(23,19,15,.16);background:radial-gradient(ellipse at 50% 86%,#efe8da 0,#f5f1e8 42%,#fffdf8 80%)}
+.buddy-character{border-color:rgba(23,19,15,.18);background:radial-gradient(circle at 50% 42%,#f7f2e8,#e2d9c9 68%);box-shadow:0 18px 40px rgba(23,19,15,.12)}
+.buddy-art{border-color:rgba(23,19,15,.2);background:radial-gradient(circle at 40% 35%,#f4efe4,#e4dbcb 72%);box-shadow:none}
+.buddy-spark{color:#7c7367}
+.buddy-speech{border-color:rgba(23,19,15,.16);background:rgba(255,253,248,.95)}
+.widget-help,.goal-buddy,.lookup-row,.camera-box,.detail-plan,.loan-box,.tool-reminder,.flashcard{border-color:rgba(23,19,15,.14);background:#fffdf8}
+.widget-help p:not(.eyebrow),.camera-copy b,.plan-explain,.days-field legend,.loan-box>div:first-child strong{color:#3a342d}
+.camera-box video,.form-cover-preview{background:#e4dccd;border-color:rgba(23,19,15,.2)}
+.privacy-mark{border-color:rgba(23,19,15,.22);color:#17130f}
+.avatar-choice{border-color:rgba(23,19,15,.16);background:#fff}.avatar-choice--active{border-color:#17130f;background:rgba(23,19,15,.06);box-shadow:0 0 0 1px rgba(23,19,15,.18)}
+.weekday-picker span{border-color:rgba(23,19,15,.18);background:#fff;color:#5b544a}
+.weekday-picker input:checked+span{border-color:#17130f;background:#17130f;color:#f7f4ee}
+.modal-backdrop{background:rgba(23,19,15,.42)}
+.dialog{border-color:rgba(23,19,15,.16);background:#fffdf8;box-shadow:0 24px 70px rgba(23,19,15,.18)}
+.dialog-head h2{color:#17130f}
+.toast{border-color:rgba(23,19,15,.22);background:#fffdf8;color:#17130f;box-shadow:0 12px 28px rgba(23,19,15,.14)}
+.app-footer{border-top-color:rgba(23,19,15,.12);color:#7c7367}
+.book-synopsis{border-left-color:#17130f;background:rgba(23,19,15,.03);color:#3a342d}
+.metadata-line span{border-color:rgba(23,19,15,.16);color:#4f483f}
+.detail-cover{border-color:rgba(23,19,15,.2)}
+.history-bars{background:#efe8da}.history-bars i{background:linear-gradient(#5b544a,#17130f)}
+.badge-item{border-color:rgba(23,19,15,.14);color:#7c7367}
+.badge-item--earned{border-color:rgba(23,19,15,.35);color:#17130f;background:rgba(23,19,15,.03)}
+.projection-row>b,.genre-speed>b,.format-list b{color:#17130f}
+.goal-line b{color:#17130f}
+.projection-row,.genre-speed,.format-list>div,.condition-row,.card-row,.tool-row{border-top-color:rgba(23,19,15,.1)}
+.tool-summary>div,.flashcard,.tool-tag{border-color:rgba(23,19,15,.14);background:rgba(23,19,15,.03)}
+.tool-summary strong{color:#17130f}
+.tool-reminder{border-left-color:#17130f;background:rgba(23,19,15,.04)}
+.note-heading{color:#17130f}
+html,html[data-accent],html[data-accent="plum"],html[data-accent="ember"],html[data-accent="blue"],html[data-accent="violet"],html[data-accent="teal"],html[data-accent="amber"]{--gold:#17130f;--green:#4a443c;--violet:#17130f;--bronze:#4a443c;--gradient-accent:linear-gradient(120deg,#17130f,#5b544a)}
+.buddy-speech>span{color:#5b544a}
+.buddy-art img,.buddy-art>span,.buddy-character img,.buddy-character>span,.empty-state>span,.empty-inline>span{filter:grayscale(1);opacity:.9}
+.buddy-art,.buddy-character,.empty-state>span,.empty-inline>span{filter:grayscale(1)}

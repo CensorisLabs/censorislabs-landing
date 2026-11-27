@@ -390,6 +390,11 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   const textureWidth = isPlaying ? 4096 : detailTextureWidth
   const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year, maxAnisotropy, textureWidth), [countries, historical, selectedAuthorities, selectedCountry, year, maxAnisotropy, textureWidth])
   useEffect(() => {
+    gl.domElement.setAttribute('role', 'img')
+    gl.domElement.setAttribute('aria-label', `Interactive globe showing the political map for ${formatYear(year)}. Use the year controls or the arrow keys to move through time, and the journey list to follow a route.`)
+  }, [gl, year])
+
+  useEffect(() => {
     gl.domElement.dataset.atlasTextureWidth = String(textureWidth)
     gl.domElement.dataset.atlasDetail = textureWidth >= 4096 ? 'high' : 'playback'
   }, [gl, textureWidth])
@@ -969,6 +974,8 @@ export default function Atlas() {
   const viewYear = useRef(year)
   const viewPoint = useRef(selectedPoint)
   const viewJourney = useRef(selectedJourney)
+  const journeyState = useRef({ active: activeJourneys, selected: selectedJourney })
+  journeyState.current = { active: activeJourneys, selected: selectedJourney }
   const urlTimer = useRef<number | null>(null)
   const [selectedWar, setSelectedWar] = useState<WarFeature | null>(null)
   const [rulers, setRulers] = useState<DatedRuler[]>([])
@@ -1097,12 +1104,36 @@ export default function Atlas() {
         event.preventDefault()
         searchInput.current?.focus()
       }
-      if (event.key === 'Escape') setPlaying(false)
       const target = event.target as HTMLElement | null
       const typing = target?.matches('input, textarea, select, [contenteditable="true"]')
+      if (event.key === 'Escape' && !typing) {
+        setPlaying(false)
+        setSelectedJourney(null)
+        setJourneyFocus(null)
+        setSelectedPoint(null)
+        setSelectedWar(null)
+      }
       if (!typing && (event.key === '+' || event.key === '=')) { event.preventDefault(); requestZoom('in') }
       if (!typing && (event.key === '-' || event.key === '_')) { event.preventDefault(); requestZoom('out') }
       if (!typing && event.key === '0') { event.preventDefault(); requestZoom('reset') }
+      if (!typing && event.key === 'ArrowLeft') { event.preventDefault(); setYear(current => shiftYear(current, -10)); setPlaying(false) }
+      if (!typing && event.key === 'ArrowRight') { event.preventDefault(); setYear(current => shiftYear(current, 10)); setPlaying(false) }
+      if (!typing && (event.key === ']' || event.key === '.')) {
+        event.preventDefault()
+        const { active, selected } = journeyState.current
+        if (active.length) {
+          const index = active.findIndex(journey => journey.id === selected)
+          selectJourney(active[index === -1 ? 0 : (index + 1) % active.length].id)
+        }
+      }
+      if (!typing && (event.key === '[' || event.key === ',')) {
+        event.preventDefault()
+        const { active, selected } = journeyState.current
+        if (active.length) {
+          const index = active.findIndex(journey => journey.id === selected)
+          selectJourney(active[index === -1 ? active.length - 1 : (index - 1 + active.length) % active.length].id)
+        }
+      }
     }
     window.addEventListener('keydown', onShortcut)
     return () => window.removeEventListener('keydown', onShortcut)
@@ -1137,6 +1168,15 @@ export default function Atlas() {
   const selectedCountry = useMemo(() => selectedPoint && mapData ? mapData.features.find(feature => featureContainsPoint(feature, selectedPoint)) ?? null : null, [mapData, selectedPoint])
   const activeHistory = useMemo(() => territories && historyData ? historyData.features.filter(feature => feature.properties.from <= mapYear && feature.properties.to >= mapYear).sort((a, b) => b.properties.area - a.properties.area) : EMPTY_HISTORY, [historyData, mapYear, territories])
   const authorities = useMemo(() => selectedPoint && historyData ? findAuthorities(historyData.features, selectedPoint, mapYear) : [], [historyData, mapYear, selectedPoint])
+
+  const selectionSummary = selectedWar
+    ? selectedWar.properties.title || 'a recorded conflict'
+    : selectedJourneyDetail
+      ? `${selectedJourneyDetail.name} route`
+      : selectedPoint
+        ? selectedCountry?.properties.name ?? 'a place on the globe'
+        : 'no place selected'
+  const announcement = `Atlas at ${formatYear(year)}: ${selectionSummary}.`
   useEffect(() => {
     const candidates = authorities.filter(feature => /^Q\d+$/.test(feature.properties.wikidata))
     if (!selectedPoint) {
@@ -1340,7 +1380,7 @@ export default function Atlas() {
           {activeJourneys.length ? <div className="atlas-journey-list">{activeJourneys.map(journey => <button type="button" key={journey.id} data-journey={journey.id} className={journey.id === selectedJourney ? 'is-selected' : ''} aria-pressed={journey.id === selectedJourney} onClick={() => selectJourney(journey.id === selectedJourney ? null : journey.id)}><strong>{journey.name}</strong><small>{formatYear(journey.start)} — {formatYear(journey.end)}</small></button>)}</div> : <p className="atlas-journey-empty">No recorded journey in this year. Move the timeline to bring routes back.</p>}
         </div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place labels</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label><div className="atlas-close-zoom"><span><i className="layer-dot layer-dot--city" />Cities</span><span><i className="layer-dot layer-dot--landmark" />Landmarks</span><small>Close zoom · <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">GeoNames</a> + <a href="https://www.wikidata.org/" target="_blank" rel="noreferrer">Wikidata</a></small></div></div>
-        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span></div>
+        <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span><span>ARROW KEYS STEP YEARS · [ AND ] STEP ROUTES · ESC CLEARS</span></div>
       </>}
     </aside>
 
@@ -1354,6 +1394,8 @@ export default function Atlas() {
     {mapError ? <div className="atlas-data-status atlas-data-status--error">{mapError}</div> : !mapData || !historyData ? <div className="atlas-data-status">LOADING HISTORICAL BORDERS <i /></div> : !warData ? <div className="atlas-data-status">LOADING WAR RECORDS <i /></div> : null}
     {warsError && <div className="atlas-data-status atlas-data-status--error">{warsError} The historical map remains available.</div>}
 
-    <footer className="atlas-timeline"><div className="atlas-timeline-head"><div><span className="atlas-filter-label">BORDERS CHANGE BY CENTURY</span><strong>{formatYear(year)}</strong></div><button className={`atlas-play${playing ? ' is-playing' : ''}`} onClick={() => setPlaying(value => !value)} aria-label={playing ? 'Pause timeline' : 'Play timeline'}>{playing ? 'Ⅱ' : '▶'}<span>{playing ? 'Pause' : 'Play timeline'}</span></button><div className="atlas-timeline-actions"><span>51 HISTORICAL SNAPSHOTS</span><button onClick={() => { setYear(-3000); setPlaying(false) }}>Reset to start ↺</button></div></div>{almanacEra && <div className="atlas-almanac"><span className="atlas-almanac__tag">ALMANAC · {almanacEra.name.toUpperCase()}</span><p>{almanacFact}</p><button type="button" onClick={() => setAlmanacStep(step => step + 1)} aria-label={`Show another ${almanacEra.name} fact`}>Next fact ↻</button></div>}<div className="atlas-year-controls" aria-label="Move through years">{[-1000, -100, -10, -1].map(amount => <button key={amount} aria-label={`${Math.abs(amount)} year${Math.abs(amount) === 1 ? '' : 's'} earlier`} onClick={() => { setYear(current => shiftYear(current, amount)); setPlaying(false) }}>−{Math.abs(amount) === 1000 ? '1000' : Math.abs(amount) === 100 ? '100' : Math.abs(amount) === 10 ? '10' : '1'}</button>)}{[1, 10, 100, 1000].map(amount => <button key={amount} aria-label={`${amount} year${amount === 1 ? '' : 's'} later`} onClick={() => { setYear(current => shiftYear(current, amount)); setPlaying(false) }}>+{amount}</button>)}</div><div className="atlas-range-wrap"><div className="atlas-ticks"><span>3000 BC</span><span>1 AD</span><span>1000</span><span>1500</span><span>2022 AD</span></div><input aria-label="Choose a century" type="range" min="0" max={CENTURY_YEARS.length - 1} step="1" value={centuryStepForYear(year)} onChange={event => { setYear(yearAtCenturyStep(Number(event.target.value))); setPlaying(false) }} style={{ '--range-progress': `${centuryStepForYear(year) / (CENTURY_YEARS.length - 1) * 100}%` } as CSSProperties} /><div className="atlas-event-ticks" aria-hidden="true">{EVENTS.map(event => <i key={event.id} style={{ left: `${centuryStepForYear(event.year) / (CENTURY_YEARS.length - 1) * 100}%` }} />)}</div></div><div className="atlas-timeline-foot"><span>3000 BC</span><span>ONE SNAPSHOT PER CENTURY · POLITY BORDERS ARE APPROXIMATE</span><span>2022 AD</span></div></footer>
+    <p className="atlas-announcer" role="status" aria-live="polite">{announcement}</p>
+
+    <footer className="atlas-timeline"><div className="atlas-timeline-head"><div><span className="atlas-filter-label">BORDERS CHANGE BY CENTURY</span><strong>{formatYear(year)}</strong></div><button className={`atlas-play${playing ? ' is-playing' : ''}`} onClick={() => setPlaying(value => !value)} aria-label={playing ? 'Pause timeline' : 'Play timeline'}>{playing ? 'Ⅱ' : '▶'}<span>{playing ? 'Pause' : 'Play timeline'}</span></button><div className="atlas-timeline-actions"><span>51 HISTORICAL SNAPSHOTS</span><button onClick={() => { setYear(-3000); setPlaying(false) }}>Reset to start ↺</button></div></div>{almanacEra && <div className="atlas-almanac"><span className="atlas-almanac__tag">ALMANAC · {almanacEra.name.toUpperCase()}</span><p>{almanacFact}</p><button type="button" onClick={() => setAlmanacStep(step => step + 1)} aria-label={`Show another ${almanacEra.name} fact`}>Next fact ↻</button></div>}<div className="atlas-year-controls" aria-label="Move through years">{[-1000, -100, -10, -1].map(amount => <button key={amount} aria-label={`${Math.abs(amount)} year${Math.abs(amount) === 1 ? '' : 's'} earlier`} onClick={() => { setYear(current => shiftYear(current, amount)); setPlaying(false) }}>−{Math.abs(amount) === 1000 ? '1000' : Math.abs(amount) === 100 ? '100' : Math.abs(amount) === 10 ? '10' : '1'}</button>)}{[1, 10, 100, 1000].map(amount => <button key={amount} aria-label={`${amount} year${amount === 1 ? '' : 's'} later`} onClick={() => { setYear(current => shiftYear(current, amount)); setPlaying(false) }}>+{amount}</button>)}</div><div className="atlas-range-wrap"><div className="atlas-ticks"><span>3000 BC</span><span>1 AD</span><span>1000</span><span>1500</span><span>2022 AD</span></div><input aria-label="Choose a century" aria-valuetext={formatYear(year)} type="range" min="0" max={CENTURY_YEARS.length - 1} step="1" value={centuryStepForYear(year)} onChange={event => { setYear(yearAtCenturyStep(Number(event.target.value))); setPlaying(false) }} style={{ '--range-progress': `${centuryStepForYear(year) / (CENTURY_YEARS.length - 1) * 100}%` } as CSSProperties} /><div className="atlas-event-ticks" aria-hidden="true">{EVENTS.map(event => <i key={event.id} style={{ left: `${centuryStepForYear(event.year) / (CENTURY_YEARS.length - 1) * 100}%` }} />)}</div></div><div className="atlas-timeline-foot"><span>3000 BC</span><span>ONE SNAPSHOT PER CENTURY · POLITY BORDERS ARE APPROXIMATE</span><span>2022 AD</span></div></footer>
   </section>
 }

@@ -623,3 +623,16 @@
   cursor: pointer;
 }
 .atlas-journey-step button:hover { border-color: rgba(23, 19, 15, .55); }
+
+/* Screen-reader summary of the year and selection on the canvas page. */
+.atlas-announcer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

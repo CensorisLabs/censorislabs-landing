@@ -27,7 +27,7 @@ const ROUTES = [
 // A page that is still allowed to be quiet; everything else must say something.
 const MIN_TEXT = 40
 
-async function openAndAudit(page: Page, path: string) {
+async function openAndAudit(page: Page, path: string, contentTimeout = 10_000) {
   const problems: string[] = []
 
   page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`))
@@ -55,7 +55,7 @@ async function openAndAudit(page: Page, path: string) {
   // #root went empty while the HTTP status stayed 200. Text in <main> is the
   // cheapest honest signal that the app actually mounted.
   await expect
-    .poll(async () => (await main.innerText()).trim().length, { message: `content on ${path}` })
+    .poll(async () => (await main.innerText()).trim().length, { message: `content on ${path}`, timeout: contentTimeout })
     .toBeGreaterThan(MIN_TEXT)
 
   expect(await page.locator('#root > *').count(), `#root has content on ${path}`).toBeGreaterThan(0)
@@ -169,7 +169,7 @@ test('a shared atlas link restores its year, place and zoom', async ({ page }) =
   // The globe loads compressed map data and renders a 3D scene; it is the
   // slowest page in the suite and needs more than the default budget.
   test.setTimeout(60_000)
-  await openAndAudit(page, '/atlas?year=1500&lat=30.4&lon=12.6&z=3.4')
+  await openAndAudit(page, '/atlas?year=1500&lat=30.4&lon=12.6&z=3.4', 25_000)
 
   await expect(page.locator('.atlas-timeline-head strong'), 'the shared year is restored').toContainText('1,500 AD')
   const panel = page.locator('.atlas-panel--right')
@@ -182,7 +182,7 @@ test('the atlas lists the journeys that cross the chosen year', async ({ page })
   // The globe loads compressed map data and renders a 3D scene; it is the
   // slowest page in the suite and needs more than the default budget.
   test.setTimeout(60_000)
-  await openAndAudit(page, '/atlas?year=1500&lat=30.4&lon=12.6')
+  await openAndAudit(page, '/atlas?year=1500&lat=30.4&lon=12.6', 25_000)
 
   const list = page.locator('.atlas-journey-list')
   await expect(list.locator('button', { hasText: 'Hajj road from Cairo' })).toHaveCount(1)
@@ -195,7 +195,7 @@ test('the atlas lists the journeys that cross the chosen year', async ({ page })
 
 test('a shared atlas link restores its journey', async ({ page }) => {
   test.setTimeout(60_000)
-  await openAndAudit(page, '/atlas?year=1600&journey=manila-galleon')
+  await openAndAudit(page, '/atlas?year=1600&journey=manila-galleon', 25_000)
 
   const card = page.locator('.atlas-journey-card')
   await expect(card, 'the shared route is selected').toContainText('Manila galleon')
@@ -206,11 +206,24 @@ test('a shared atlas link restores its journey', async ({ page }) => {
   await expect(page, 'the address bar follows the selected route').toHaveURL(/journey=/)
 })
 
+test('the atlas announces the year and steps it from the keyboard', async ({ page }) => {
+  test.setTimeout(60_000)
+  await openAndAudit(page, '/atlas?year=1600&lat=10&lon=30', 25_000)
+
+  const announcer = page.locator('.atlas-announcer')
+  await expect(announcer, 'the current year is announced').toHaveText(/Atlas at 1,600 AD/)
+  await expect(page.locator('canvas'), 'the globe is described for assistive tech').toHaveAttribute('role', 'img')
+
+  await page.keyboard.press('ArrowRight')
+  await expect(page.locator('.atlas-timeline-head strong'), 'the arrow key advances ten years').toHaveText('1,610 AD')
+  await expect(announcer, 'the change is announced').toHaveText(/Atlas at 1,610 AD/)
+})
+
 test('the atlas shows an almanac fact for the era on screen', async ({ page }) => {
   // The globe loads compressed map data and renders a 3D scene; it is the
   // slowest page in the suite and needs more than the default budget.
   test.setTimeout(60_000)
-  await openAndAudit(page, '/atlas')
+  await openAndAudit(page, '/atlas', 25_000)
 
   const tag = page.locator('.atlas-almanac__tag')
   const fact = page.locator('.atlas-almanac p')

@@ -236,6 +236,24 @@ test('the atlas turns the globe with shift and the arrow keys', async ({ page })
   await expect(page.locator('.atlas-timeline-head strong'), 'the year stays put while turning').toHaveText('1,600 AD')
 })
 
+test('a shared atlas link keeps the angle the globe was turned to', async ({ page }) => {
+  test.setTimeout(60_000)
+  await openAndAudit(page, '/atlas?year=1600&lat=10&lon=30', 25_000)
+
+  const canvas = page.locator('canvas')
+  await canvas.focus()
+  await page.keyboard.down('Shift')
+  for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight')
+  await page.keyboard.up('Shift')
+
+  await expect(page, 'the turn is written into the address').toHaveURL(/turn=/)
+  const shared = new URL(page.url())
+  const turn = shared.searchParams.get('turn')
+
+  await page.goto(`${shared.pathname}${shared.search}`, { waitUntil: 'domcontentloaded' })
+  await expect(canvas, 'the shared angle is restored').toHaveAttribute('data-atlas-longitude', Number(turn).toFixed(3), { timeout: 25_000 })
+})
+
 test('the atlas shows an almanac fact for the era on screen', async ({ page }) => {
   // The globe loads compressed map data and renders a 3D scene; it is the
   // slowest page in the suite and needs more than the default budget.

@@ -43,6 +43,10 @@ const CENTURY_YEARS = [...Array.from({ length: 30 }, (_, index) => -3000 + index
 const MIN_GLOBE_DISTANCE = 2.4
 const MAX_GLOBE_DISTANCE = 8.4
 const DEFAULT_GLOBE_DISTANCE = 5.4
+// Opening bearing: tilted slightly toward the north, centred on Europe,
+// Africa and western Asia where the historical coverage is densest.
+const DEFAULT_TILT = 0.12
+const DEFAULT_TURN = -Math.PI / 2
 const DOUBLE_TAP_DELAY_MS = 320
 const DOUBLE_TAP_DISTANCE_PX = 28
 const DOUBLE_TAP_ZOOM_STEP = 1.1
@@ -358,7 +362,7 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, focusPoint, selectedWarId, selectedWarKey, year, zoomCommand, rotateCommand, initialDistance, onKeyboardFocus, onSelectLocation, onSelectWar, onGestureLearned, onCloseZoom, onViewDistance }: {
+function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, focusPoint, selectedWarId, selectedWarKey, year, zoomCommand, rotateCommand, initialSpin, spinRef, initialDistance, onKeyboardFocus, onRotation, onSelectLocation, onSelectWar, onGestureLearned, onCloseZoom, onViewDistance }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
   journeys: Journey[]
@@ -378,6 +382,9 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   zoomCommand: ZoomCommand | null
   rotateCommand: RotateCommand | null
   onKeyboardFocus: (focused: boolean) => void
+  initialSpin: { x: number; y: number }
+  spinRef: { current: { x: number; y: number } }
+  onRotation: (spin: { x: number; y: number }) => void
   onSelectLocation: (point: MapPoint) => void
   onSelectWar: (war: WarFeature) => void
   onGestureLearned: () => void
@@ -407,7 +414,7 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
 
   // Start on Europe, Africa and western Asia, where the historical coverage is
   // densest, instead of hiding most recorded polities around the far side.
-  const spin = useRef({ x: 0.12, y: -Math.PI / 2 })
+  const spin = useRef({ ...initialSpin })
   const drag = useRef<{ id: number; x: number; y: number; startX: number; startY: number; lastTime: number; moved: boolean } | null>(null)
   const rotationVelocity = useRef({ x: 0, y: 0 })
   const pointers = useRef(new Map<number, { x: number; y: number }>())
@@ -429,10 +436,11 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   const texture = useMemo(() => makeEarthTexture(countries, historical, selectedCountry, selectedAuthorities, year, maxAnisotropy, textureWidth, lineFactor), [countries, historical, selectedAuthorities, selectedCountry, lineFactor, year, maxAnisotropy, textureWidth])
   useEffect(() => {
     gl.domElement.dataset.atlasDistance = initialDistance.toFixed(2)
+    gl.domElement.dataset.atlasLongitude = initialSpin.y.toFixed(3)
     gl.domElement.dataset.atlasLineFactor = String(lineFactor)
     gl.domElement.dataset.atlasTextureWidth = String(textureWidth)
     gl.domElement.dataset.atlasDetail = textureWidth >= 4096 ? 'high' : 'playback'
-  }, [gl, lineFactor, textureWidth])
+  }, [gl, initialSpin, lineFactor, textureWidth])
   // Label density follows the actual camera distance inside the close band, so
   // zooming right in makes room for many more city names.
   const [viewDistance, setViewDistance] = useState(initialDistance)
@@ -631,7 +639,10 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
         return
       }
       if (finishedDrag) {
-        if (finishedDrag.moved) suppressClickUntil.current = performance.now() + 350
+        if (finishedDrag.moved) {
+          suppressClickUntil.current = performance.now() + 350
+          onRotation({ ...spin.current })
+        }
         drag.current = null
       }
       if (event.pointerType === 'mouse' || pointers.current.size > 0 || finishedDrag?.moved) {
@@ -673,8 +684,9 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
     if (!zoomCommand || zoomCommand.nonce === 0) return
     if (zoomCommand.kind === 'reset') {
       distance.current = DEFAULT_GLOBE_DISTANCE
-      spin.current = { x: 0.12, y: -Math.PI / 2 }
+      spin.current = { x: DEFAULT_TILT, y: DEFAULT_TURN }
       rotationVelocity.current = { x: 0, y: 0 }
+      onRotation({ ...spin.current })
     } else {
       distance.current = THREE.MathUtils.clamp(distance.current + (zoomCommand.kind === 'in' ? -0.7 : 0.7), MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE)
     }
@@ -687,7 +699,8 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
     spin.current.x = THREE.MathUtils.clamp(spin.current.x + rotateCommand.dy, -1, 1)
     rotationVelocity.current = { x: 0, y: 0 }
     gl.domElement.dataset.atlasLongitude = spin.current.y.toFixed(3)
-  }, [rotateCommand])
+    onRotation({ ...spin.current })
+  }, [gl, onRotation, rotateCommand])
 
   useEffect(() => {
     const element = gl.domElement
@@ -761,6 +774,8 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
           if (!lowMotion && !selectedPoint && zoomBand === 0) spin.current.y += delta * 0.035
         }
       }
+      spinRef.current.x = spin.current.x
+      spinRef.current.y = spin.current.y
       world.current.rotation.x = THREE.MathUtils.damp(world.current.rotation.x, spin.current.x, 6, delta)
       world.current.rotation.y = THREE.MathUtils.damp(world.current.rotation.y, spin.current.y, 6, delta)
     }
@@ -942,7 +957,7 @@ function wikidataYear(value?: { time?: string; precision?: number }) {
   return astronomical <= 0 ? astronomical - 1 : astronomical
 }
 
-type AtlasView = { year: number | null; lat: number | null; lon: number | null; distance: number | null; journey: string | null }
+type AtlasView = { year: number | null; lat: number | null; lon: number | null; distance: number | null; tilt: number | null; turn: number | null; journey: string | null }
 
 // A shared view carries only what is needed to rebuild it: the year, the
 // selected place and the camera distance. Everything else is derived.
@@ -951,7 +966,7 @@ function journeyMidpoint(journey: Journey): MapPoint {
 }
 
 function readAtlasView(): AtlasView {
-  const empty: AtlasView = { year: null, lat: null, lon: null, distance: null, journey: null }
+  const empty: AtlasView = { year: null, lat: null, lon: null, distance: null, tilt: null, turn: null, journey: null }
   if (typeof window === 'undefined') return empty
   const params = new URLSearchParams(window.location.search)
   const read = (key: string, min: number, max: number) => {
@@ -965,6 +980,8 @@ function readAtlasView(): AtlasView {
     lat: read('lat', -85, 85),
     lon: read('lon', -180, 180),
     distance: read('z', MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE),
+    tilt: read('tilt', -1, 1),
+    turn: read('turn', -6.3, 6.3),
     journey: JOURNEYS.some(journey => journey.id === params.get('journey')) ? params.get('journey') : null,
   }
 }
@@ -1022,6 +1039,7 @@ export default function Atlas() {
   }, [activeJourneys, selectedJourney])
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const globeDistance = useRef(initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE)
+  const globeSpin = useRef({ x: initialView.current.tilt ?? DEFAULT_TILT, y: initialView.current.turn ?? DEFAULT_TURN })
   const viewYear = useRef(year)
   const viewPoint = useRef(selectedPoint)
   const viewJourney = useRef(selectedJourney)
@@ -1054,6 +1072,10 @@ export default function Atlas() {
       params.delete('lat')
       params.delete('lon')
     }
+    if (Math.abs(globeSpin.current.x - DEFAULT_TILT) > 0.01) params.set('tilt', globeSpin.current.x.toFixed(2))
+    else params.delete('tilt')
+    if (Math.abs(globeSpin.current.y - DEFAULT_TURN) > 0.01) params.set('turn', globeSpin.current.y.toFixed(2))
+    else params.delete('turn')
     if (Math.abs(globeDistance.current - DEFAULT_GLOBE_DISTANCE) > 0.02) params.set('z', globeDistance.current.toFixed(2))
     else params.delete('z')
     if (viewJourney.current) params.set('journey', viewJourney.current)
@@ -1067,6 +1089,11 @@ export default function Atlas() {
     if (urlTimer.current !== null) window.clearTimeout(urlTimer.current)
     urlTimer.current = window.setTimeout(writeViewUrl, 350)
   }, [writeViewUrl])
+
+  const handleRotation = useCallback((spin: { x: number; y: number }) => {
+    globeSpin.current = spin
+    scheduleUrlWrite()
+  }, [scheduleUrlWrite])
 
   const copyViewLink = useCallback(() => {
     if (urlTimer.current !== null) window.clearTimeout(urlTimer.current)
@@ -1370,7 +1397,7 @@ export default function Atlas() {
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
     <Canvas className="atlas-canvas" dpr={[1, 2]} style={{ touchAction: 'none' }} camera={{ position: [0, 0, initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE], fov: 39 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} journeys={routes ? activeJourneys : []} selectedJourneyId={selectedJourney ?? undefined} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} focusPoint={journeyFocus ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} rotateCommand={rotateCommand} onKeyboardFocus={setKeyboardFocus} onSelectLocation={point => { setSelectedWar(null); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} initialDistance={initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE} onViewDistance={distance => { globeDistance.current = distance; scheduleUrlWrite() }} />
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} journeys={routes ? activeJourneys : []} selectedJourneyId={selectedJourney ?? undefined} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} focusPoint={journeyFocus ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} rotateCommand={rotateCommand} initialSpin={globeSpin.current} spinRef={globeSpin} onKeyboardFocus={setKeyboardFocus} onRotation={handleRotation} onSelectLocation={point => { setSelectedWar(null); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} initialDistance={initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE} onViewDistance={distance => { globeDistance.current = distance; scheduleUrlWrite() }} />
     </Canvas>
 
     <div className={`atlas-gesture-hint${gestureHintLearned ? ' is-dismissed' : ''}`} role="status" aria-hidden={gestureHintLearned}>
@@ -1459,7 +1486,7 @@ export default function Atlas() {
       <button type="button" onClick={() => requestZoom('out')} aria-label="Zoom out" title="Zoom out">−</button>
       <button type="button" onClick={() => requestZoom('in')} aria-label="Zoom in" title="Zoom in">＋</button>
       <button type="button" className="atlas-zoom-reset" onClick={() => requestZoom('reset')} aria-label="Reset map view" title="Reset map view">RESET</button>
-      <button type="button" className="atlas-zoom-share" onClick={copyViewLink} aria-label="Copy a link to this year, place and zoom" title="Copy a link to this view">{shareState === 'copied' ? 'COPIED ✓' : shareState === 'failed' ? 'COPY FAILED' : 'SHARE'}</button>
+      <button type="button" className="atlas-zoom-share" onClick={copyViewLink} aria-label="Copy a link to this year, place, angle and zoom" title="Copy a link to this view">{shareState === 'copied' ? 'COPIED ✓' : shareState === 'failed' ? 'COPY FAILED' : 'SHARE'}</button>
     </div>
     {mapError ? <div className="atlas-data-status atlas-data-status--error">{mapError}</div> : !mapData || !historyData ? <div className="atlas-data-status">LOADING HISTORICAL BORDERS <i /></div> : !warData ? <div className="atlas-data-status">LOADING WAR RECORDS <i /></div> : null}
     {warsError && <div className="atlas-data-status atlas-data-status--error">{warsError} The historical map remains available.</div>}

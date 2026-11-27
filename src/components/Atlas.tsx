@@ -94,25 +94,25 @@ function formatWarPeriod(war: WarProperties, from: number, to: number) {
   return start === end ? formatYear(start) : `${formatYear(start)} — ${formatYear(end)}`
 }
 
-type Journey = { id: string; name: string; from: [number, number]; to: [number, number]; start: number; end: number; detail: string }
+type Journey = { id: string; name: string; fromName: string; toName: string; from: [number, number]; to: [number, number]; start: number; end: number; detail: string }
 
 // Dated trunk routes, not a complete network: each arc stands for a corridor
 // that carried goods and people for the stated span, and is hidden outside it.
 const JOURNEYS: Journey[] = [
-  { id: 'silk-road', name: 'Silk Road oases', from: [34.27, 108.9], to: [39.65, 66.96], start: -130, end: 1450, detail: 'Caravans linked Chang’an with Samarkand and the oases between them. The label marks one trunk of a network that shifted with politics and water.' },
-  { id: 'roman-grain', name: 'Rome’s grain run', from: [41.9, 12.5], to: [31.2, 29.9], start: -30, end: 400, detail: 'Egyptian grain sailed to Ostia and Rome; the same sea lanes carried oil, wine and people across the Mediterranean.' },
-  { id: 'trans-saharan', name: 'Trans-Saharan gold road', from: [16.77, -3.0], to: [31.28, -4.24], start: 1000, end: 1600, detail: 'Gold moved north and salt and books moved south through Sijilmasa and the Niger bend; Timbuktu grew as a staging point.' },
-  { id: 'monsoon', name: 'Indian Ocean monsoon route', from: [11.25, 75.78], to: [23.6, 58.6], start: 800, end: 1600, detail: 'Sailors timed crossings to the monsoon winds between Malabar, Arabia and the Persian Gulf long before European ships arrived.' },
-  { id: 'zheng-he', name: 'Zheng He’s voyages', from: [32.06, 118.8], to: [27.1, 56.5], start: 1405, end: 1433, detail: 'Ming fleets sailed from Nanjing through Southeast Asia to Hormuz and the African coast; the voyages ended with imperial policy.' },
-  { id: 'norse-atlantic', name: 'Norse North Atlantic', from: [60.39, 5.32], to: [51.6, -55.53], start: 870, end: 1050, detail: 'Settlers moved from Norway to Iceland, Greenland and a short-lived camp at L’Anse aux Meadows in Newfoundland.' },
-  { id: 'hajj', name: 'Hajj road from Cairo', from: [30.04, 31.24], to: [21.42, 39.83], start: 700, end: 1900, detail: 'Pilgrim caravans crossed Sinai and the Hejaz each year; the route also carried trade and scholarship.' },
-  { id: 'portuguese-india', name: 'Portuguese sea route to India', from: [38.71, -9.14], to: [11.25, 75.78], start: 1498, end: 1700, detail: 'Vasco da Gama’s fleet rounded the Cape and reached Calicut, opening a direct ocean link between Lisbon and Malabar.' },
-  { id: 'spanish-main', name: 'Spanish Atlantic run', from: [37.39, -5.98], to: [19.2, -96.1], start: 1520, end: 1700, detail: 'Convoys carried silver and goods between Seville and Veracruz under escort; the crossing tied American mines to European markets.' },
-  { id: 'manila-galleon', name: 'Manila galleon', from: [16.85, -99.9], to: [14.6, 120.98], start: 1565, end: 1815, detail: 'One or two ships a year crossed the Pacific between Acapulco and Manila, exchanging American silver for Asian goods.' },
-  { id: 'grand-trunk', name: 'Grand Trunk Road', from: [34.53, 69.17], to: [23.81, 90.41], start: -300, end: 1800, detail: 'The road across northern India from Kabul toward Bengal was rebuilt by successive empires and remained a main artery.' },
-  { id: 'cape-route', name: 'Cape route to Batavia', from: [-33.92, 18.42], to: [-6.2, 106.82], start: 1652, end: 1850, detail: 'Dutch ships called at Cape Town for supplies on the long run to Batavia, carrying spices, textiles and people.' },
-  { id: 'steam-atlantic', name: 'Steam across the Atlantic', from: [53.4, -3.0], to: [40.7, -74.0], start: 1840, end: 1950, detail: 'Regular steam crossings cut the Atlantic passage from weeks to days and moved mail, emigrants and freight on schedule.' },
-  { id: 'first-railroad', name: 'First transcontinental railroad', from: [41.26, -95.93], to: [38.58, -121.49], start: 1869, end: 1960, detail: 'The line joined at Promontory Summit in 1869, linking the Missouri valley to California by rail.' },
+  { id: 'silk-road', name: 'Silk Road oases', fromName: 'Chang’an', toName: 'Samarkand', from: [34.27, 108.9], to: [39.65, 66.96], start: -130, end: 1450, detail: 'Caravans linked Chang’an with Samarkand and the oases between them. The label marks one trunk of a network that shifted with politics and water.' },
+  { id: 'roman-grain', name: 'Rome’s grain run', fromName: 'Rome', toName: 'Alexandria', from: [41.9, 12.5], to: [31.2, 29.9], start: -30, end: 400, detail: 'Egyptian grain sailed to Ostia and Rome; the same sea lanes carried oil, wine and people across the Mediterranean.' },
+  { id: 'trans-saharan', name: 'Trans-Saharan gold road', fromName: 'Timbuktu', toName: 'Sijilmasa', from: [16.77, -3.0], to: [31.28, -4.24], start: 1000, end: 1600, detail: 'Gold moved north and salt and books moved south through Sijilmasa and the Niger bend; Timbuktu grew as a staging point.' },
+  { id: 'monsoon', name: 'Indian Ocean monsoon route', fromName: 'Calicut', toName: 'Muscat', from: [11.25, 75.78], to: [23.6, 58.6], start: 800, end: 1600, detail: 'Sailors timed crossings to the monsoon winds between Malabar, Arabia and the Persian Gulf long before European ships arrived.' },
+  { id: 'zheng-he', name: 'Zheng He’s voyages', fromName: 'Nanjing', toName: 'Hormuz', from: [32.06, 118.8], to: [27.1, 56.5], start: 1405, end: 1433, detail: 'Ming fleets sailed from Nanjing through Southeast Asia to Hormuz and the African coast; the voyages ended with imperial policy.' },
+  { id: 'norse-atlantic', name: 'Norse North Atlantic', fromName: 'Bergen', toName: 'L’Anse aux Meadows', from: [60.39, 5.32], to: [51.6, -55.53], start: 870, end: 1050, detail: 'Settlers moved from Norway to Iceland, Greenland and a short-lived camp at L’Anse aux Meadows in Newfoundland.' },
+  { id: 'hajj', name: 'Hajj road from Cairo', fromName: 'Cairo', toName: 'Mecca', from: [30.04, 31.24], to: [21.42, 39.83], start: 700, end: 1900, detail: 'Pilgrim caravans crossed Sinai and the Hejaz each year; the route also carried trade and scholarship.' },
+  { id: 'portuguese-india', name: 'Portuguese sea route to India', fromName: 'Lisbon', toName: 'Calicut', from: [38.71, -9.14], to: [11.25, 75.78], start: 1498, end: 1700, detail: 'Vasco da Gama’s fleet rounded the Cape and reached Calicut, opening a direct ocean link between Lisbon and Malabar.' },
+  { id: 'spanish-main', name: 'Spanish Atlantic run', fromName: 'Seville', toName: 'Veracruz', from: [37.39, -5.98], to: [19.2, -96.1], start: 1520, end: 1700, detail: 'Convoys carried silver and goods between Seville and Veracruz under escort; the crossing tied American mines to European markets.' },
+  { id: 'manila-galleon', name: 'Manila galleon', fromName: 'Acapulco', toName: 'Manila', from: [16.85, -99.9], to: [14.6, 120.98], start: 1565, end: 1815, detail: 'One or two ships a year crossed the Pacific between Acapulco and Manila, exchanging American silver for Asian goods.' },
+  { id: 'grand-trunk', name: 'Grand Trunk Road', fromName: 'Kabul', toName: 'Sonargaon', from: [34.53, 69.17], to: [23.81, 90.41], start: -300, end: 1800, detail: 'The road across northern India from Kabul toward Bengal was rebuilt by successive empires and remained a main artery.' },
+  { id: 'cape-route', name: 'Cape route to Batavia', fromName: 'Cape Town', toName: 'Batavia', from: [-33.92, 18.42], to: [-6.2, 106.82], start: 1652, end: 1850, detail: 'Dutch ships called at Cape Town for supplies on the long run to Batavia, carrying spices, textiles and people.' },
+  { id: 'steam-atlantic', name: 'Steam across the Atlantic', fromName: 'Liverpool', toName: 'New York', from: [53.4, -3.0], to: [40.7, -74.0], start: 1840, end: 1950, detail: 'Regular steam crossings cut the Atlantic passage from weeks to days and moved mail, emigrants and freight on schedule.' },
+  { id: 'first-railroad', name: 'First transcontinental railroad', fromName: 'Omaha', toName: 'Sacramento', from: [41.26, -95.93], to: [38.58, -121.49], start: 1869, end: 1960, detail: 'The line joined at Promontory Summit in 1869, linking the Missouri valley to California by rail.' },
 ]
 
 const EVENTS: AtlasEvent[] = [
@@ -886,12 +886,16 @@ function wikidataYear(value?: { time?: string; precision?: number }) {
   return astronomical <= 0 ? astronomical - 1 : astronomical
 }
 
-type AtlasView = { year: number | null; lat: number | null; lon: number | null; distance: number | null }
+type AtlasView = { year: number | null; lat: number | null; lon: number | null; distance: number | null; journey: string | null }
 
 // A shared view carries only what is needed to rebuild it: the year, the
 // selected place and the camera distance. Everything else is derived.
+function journeyMidpoint(journey: Journey): MapPoint {
+  return { lat: (journey.from[0] + journey.to[0]) / 2, lon: (journey.from[1] + journey.to[1]) / 2 }
+}
+
 function readAtlasView(): AtlasView {
-  const empty: AtlasView = { year: null, lat: null, lon: null, distance: null }
+  const empty: AtlasView = { year: null, lat: null, lon: null, distance: null, journey: null }
   if (typeof window === 'undefined') return empty
   const params = new URLSearchParams(window.location.search)
   const read = (key: string, min: number, max: number) => {
@@ -905,6 +909,7 @@ function readAtlasView(): AtlasView {
     lat: read('lat', -85, 85),
     lon: read('lon', -180, 180),
     distance: read('z', MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE),
+    journey: JOURNEYS.some(journey => journey.id === params.get('journey')) ? params.get('journey') : null,
   }
 }
 
@@ -937,8 +942,11 @@ export default function Atlas() {
   const [focus, setFocus] = useState<AtlasEvent>(EVENTS[5])
   const [playing, setPlaying] = useState(false)
   const [routes, setRoutes] = useState(true)
-  const [selectedJourney, setSelectedJourney] = useState<string | null>(null)
-  const [journeyFocus, setJourneyFocus] = useState<MapPoint | null>(null)
+  const [selectedJourney, setSelectedJourney] = useState<string | null>(initialView.current.journey)
+  const [journeyFocus, setJourneyFocus] = useState<MapPoint | null>(() => {
+    const journey = JOURNEYS.find(item => item.id === initialView.current?.journey)
+    return journey ? journeyMidpoint(journey) : null
+  })
   const [labels, setLabels] = useState(true)
   const [territories, setTerritories] = useState(true)
   const [showWarMarkers, setShowWarMarkers] = useState(true)
@@ -950,17 +958,23 @@ export default function Atlas() {
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(() => initialView.current?.lat !== null && initialView.current?.lon !== null ? { lat: initialView.current.lat, lon: initialView.current.lon } : null)
   const activeJourneys = useMemo(() => JOURNEYS.filter(journey => year >= journey.start && year <= journey.end), [year])
   const selectedJourneyDetail = activeJourneys.find(journey => journey.id === selectedJourney)
-  useEffect(() => { if (selectedJourney && !activeJourneys.some(journey => journey.id === selectedJourney)) setSelectedJourney(null) }, [activeJourneys, selectedJourney])
+  useEffect(() => {
+    if (selectedJourney && !activeJourneys.some(journey => journey.id === selectedJourney)) {
+      setSelectedJourney(null)
+      setJourneyFocus(null)
+    }
+  }, [activeJourneys, selectedJourney])
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const globeDistance = useRef(initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE)
   const viewYear = useRef(year)
   const viewPoint = useRef(selectedPoint)
+  const viewJourney = useRef(selectedJourney)
   const urlTimer = useRef<number | null>(null)
   const [selectedWar, setSelectedWar] = useState<WarFeature | null>(null)
   const [rulers, setRulers] = useState<DatedRuler[]>([])
   const [rulersStatus, setRulersStatus] = useState('')
   const [leftCollapsed, setLeftCollapsed] = useState(true)
-  const [rightCollapsed, setRightCollapsed] = useState(() => initialView.current?.lat === null || initialView.current?.lon === null)
+  const [rightCollapsed, setRightCollapsed] = useState(() => (initialView.current?.lat === null || initialView.current?.lon === null) && !initialView.current?.journey)
   const [warResultLimit, setWarResultLimit] = useState(5)
   const [warSourceFilter, setWarSourceFilter] = useState<'All' | 'HCED' | 'UCDP'>('All')
   const [conflictFilter, setConflictFilter] = useState('All')
@@ -982,6 +996,8 @@ export default function Atlas() {
     }
     if (Math.abs(globeDistance.current - DEFAULT_GLOBE_DISTANCE) > 0.02) params.set('z', globeDistance.current.toFixed(2))
     else params.delete('z')
+    if (viewJourney.current) params.set('journey', viewJourney.current)
+    else params.delete('journey')
     const search = params.toString()
     const url = `${window.location.pathname}${search ? `?${search}` : ''}${window.location.hash}`
     window.history.replaceState(null, '', url)
@@ -1006,8 +1022,9 @@ export default function Atlas() {
   useEffect(() => {
     viewYear.current = year
     viewPoint.current = selectedPoint
+    viewJourney.current = selectedJourney
     scheduleUrlWrite()
-  }, [scheduleUrlWrite, selectedPoint, year])
+  }, [scheduleUrlWrite, selectedJourney, selectedPoint, year])
   useEffect(() => () => { if (urlTimer.current !== null) window.clearTimeout(urlTimer.current) }, [])
 
   const page = useRef<HTMLElement>(null)
@@ -1195,6 +1212,32 @@ export default function Atlas() {
     }
   }, [periodEnd, periodStart, selectedWar])
 
+  function selectJourney(id: string | null) {
+    setSelectedJourney(id)
+    const journey = JOURNEYS.find(item => item.id === id)
+    setJourneyFocus(journey ? journeyMidpoint(journey) : null)
+    if (id) setRightCollapsed(false)
+  }
+
+  function stepJourney(offset: number) {
+    if (!activeJourneys.length) return
+    const index = activeJourneys.findIndex(journey => journey.id === selectedJourney)
+    const next = index === -1 ? 0 : (index + offset + activeJourneys.length) % activeJourneys.length
+    selectJourney(activeJourneys[next].id)
+  }
+
+  useEffect(() => {
+    if (!selectedJourney) return
+    // Scroll only the list, never the whole panel: scrollIntoView would drag
+    // the header out of view on small screens.
+    const list = document.querySelector<HTMLElement>('.atlas-journey-list')
+    const button = list?.querySelector<HTMLElement>(`[data-journey="${selectedJourney}"]`)
+    if (!list || !button) return
+    const offset = button.offsetTop - list.offsetTop
+    if (offset < list.scrollTop) list.scrollTop = offset
+    else if (offset + button.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = offset + button.offsetHeight - list.clientHeight
+  }, [selectedJourney])
+
   function requestZoom(kind: ZoomCommand['kind']) {
     setZoomCommand(current => ({ nonce: current.nonce + 1, kind }))
   }
@@ -1281,7 +1324,7 @@ export default function Atlas() {
           {selectedWar.properties.theatre && <p className="atlas-war-period">Theatre: {selectedWar.properties.theatre}</p>}
           <p className="atlas-data-note">Source: {selectedWar.properties.source}. These are documented locations, not a complete map of every battle or front. UCDP points use the most specific place named in the source; older event coverage is uneven.</p>
           <a className="atlas-war-source-link" href={selectedWar.properties.source.startsWith('UCDP') ? 'https://ucdp.uu.se/downloads/' : 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6ZFC0V'} target="_blank" rel="noreferrer">Open source data + methods ↗</a>
-        </div> : selectedPoint ? <div className="atlas-country-detail">
+        </div> : selectedJourneyDetail ? <div className="atlas-detail atlas-journey-card"><div className="atlas-detail-tag"><span>JOURNEY</span><span>◦ &nbsp;{formatYear(selectedJourneyDetail.start)} — {formatYear(selectedJourneyDetail.end)}</span></div><h2>{selectedJourneyDetail.name}</h2><p className="atlas-place">⌖ &nbsp;{selectedJourneyDetail.fromName} → {selectedJourneyDetail.toName}</p><p className="atlas-detail-copy">{selectedJourneyDetail.detail}</p><p className="atlas-data-note">A dated corridor, not a surveyed track: the arc joins the two endpoints and stands for the route as a whole.</p><button className="atlas-follow" onClick={() => selectJourney(null)}>Clear route <span>×</span></button></div> : selectedPoint ? <div className="atlas-country-detail">
           <div className="atlas-detail-tag"><span>PLACE SELECTED</span><span>◦ &nbsp;{selectedPoint.lat.toFixed(1)}°, {selectedPoint.lon.toFixed(1)}°</span></div>
           <h2>{selectedCountry?.properties.name ?? (mapData ? 'Open water' : 'Finding country…')}</h2>
           {selectedCountry && <p className="atlas-place">On today’s map{selectedCountry.properties.sovereign !== selectedCountry.properties.name ? ` · ${selectedCountry.properties.sovereign}` : ''}</p>}
@@ -1291,9 +1334,10 @@ export default function Atlas() {
           {rulers.length > 0 && <div className="atlas-authority-list">{rulers.map((ruler, index) => <article className="atlas-authority" key={`${ruler.id}-${ruler.role}-${ruler.polity}-${index}`}><strong>{ruler.name}</strong><small>{ruler.role} · {ruler.polity}</small><small>Recorded tenure: {formatYear(ruler.from)} — {formatYear(ruler.to)}</small><a href={`https://www.wikidata.org/wiki/${encodeURIComponent(ruler.id)}`} target="_blank" rel="noreferrer">View sourced Wikidata record ↗</a></article>)}</div>}
           <p className="atlas-data-note">{rulersStatus || 'The border source identifies polities, not rulers. Only dated and referenced leader claims are listed; missing names are a source-coverage gap, not a claim that no ruler existed.'} Wikidata records can be incomplete or disputed; compare the linked record with specialist sources.</p>
         </div> : <div className="atlas-detail"><div className="atlas-detail-tag"><span>{focus.category.toUpperCase()}</span><span>◦  STORY</span></div><h2>{focus.title}</h2><p className="atlas-place">⌖ &nbsp;{focus.place}</p><p className="atlas-detail-copy">{focus.detail}</p><button className="atlas-follow" onClick={() => setYear(focus.year)}>Explore this moment <span>↗</span></button></div>}
-        {routes && <div className="atlas-journeys"><span className="atlas-filter-label">JOURNEYS ON THIS MAP</span>
-          {activeJourneys.length ? <div className="atlas-journey-list">{activeJourneys.map(journey => <button type="button" key={journey.id} className={journey.id === selectedJourney ? 'is-selected' : ''} aria-pressed={journey.id === selectedJourney} onClick={() => { const next = journey.id === selectedJourney ? null : journey.id; setSelectedJourney(next); setJourneyFocus(next ? { lat: (journey.from[0] + journey.to[0]) / 2, lon: (journey.from[1] + journey.to[1]) / 2 } : null); if (next) setRightCollapsed(false) }}><strong>{journey.name}</strong><small>{formatYear(journey.start)} — {formatYear(journey.end)}</small></button>)}</div> : <p className="atlas-journey-empty">No recorded journey in this year. Move the timeline to bring routes back.</p>}
-          {selectedJourneyDetail && <p className="atlas-journey-detail">{selectedJourneyDetail.detail}</p>}
+        {routes && <div className="atlas-journeys"><div className="atlas-journeys-head"><span className="atlas-filter-label">JOURNEYS ON THIS MAP</span>
+          {activeJourneys.length > 1 && <div className="atlas-journey-step"><button type="button" aria-label="Previous journey" title="Previous journey" onClick={() => stepJourney(-1)}>‹</button><button type="button" aria-label="Next journey" title="Next journey" onClick={() => stepJourney(1)}>›</button></div>}
+        </div>
+          {activeJourneys.length ? <div className="atlas-journey-list">{activeJourneys.map(journey => <button type="button" key={journey.id} data-journey={journey.id} className={journey.id === selectedJourney ? 'is-selected' : ''} aria-pressed={journey.id === selectedJourney} onClick={() => selectJourney(journey.id === selectedJourney ? null : journey.id)}><strong>{journey.name}</strong><small>{formatYear(journey.start)} — {formatYear(journey.end)}</small></button>)}</div> : <p className="atlas-journey-empty">No recorded journey in this year. Move the timeline to bring routes back.</p>}
         </div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place labels</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label><div className="atlas-close-zoom"><span><i className="layer-dot layer-dot--city" />Cities</span><span><i className="layer-dot layer-dot--landmark" />Landmarks</span><small>Close zoom · <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">GeoNames</a> + <a href="https://www.wikidata.org/" target="_blank" rel="noreferrer">Wikidata</a></small></div></div>
         <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span></div>

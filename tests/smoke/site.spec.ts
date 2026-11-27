@@ -190,7 +190,20 @@ test('the atlas lists the journeys that cross the chosen year', async ({ page })
   await expect(list).not.toContainText('Manila galleon')
 
   await list.locator('button').first().click()
-  await expect(page.locator('.atlas-journey-detail'), 'selecting a journey explains it').not.toBeEmpty()
+  await expect(page.locator('.atlas-journey-card'), 'selecting a journey explains it').not.toBeEmpty()
+})
+
+test('a shared atlas link restores its journey', async ({ page }) => {
+  test.setTimeout(60_000)
+  await openAndAudit(page, '/atlas?year=1600&journey=manila-galleon')
+
+  const card = page.locator('.atlas-journey-card')
+  await expect(card, 'the shared route is selected').toContainText('Manila galleon')
+  await expect(card, 'its endpoints are shown').toContainText('Acapulco → Manila')
+
+  await page.getByRole('button', { name: 'Next journey' }).click()
+  await expect(card, 'stepping moves to the next route').not.toContainText('Manila galleon')
+  await expect(page, 'the address bar follows the selected route').toHaveURL(/journey=/)
 })
 
 test('the atlas shows an almanac fact for the era on screen', async ({ page }) => {

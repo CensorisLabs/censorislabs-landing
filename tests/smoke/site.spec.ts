@@ -164,3 +164,18 @@ test('old hash links land on the real path', async ({ page }) => {
   await expect(page).toHaveURL(/\/puffwork\/velvet-orb$/)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Velvet Orb')
 })
+
+test('the atlas shows an almanac fact for the era on screen', async ({ page }) => {
+  await openAndAudit(page, '/atlas')
+
+  const tag = page.locator('.atlas-almanac__tag')
+  const fact = page.locator('.atlas-almanac p')
+  // The atlas opens at 801 AD, which is the medieval era.
+  await expect(tag, 'the opening year sits in the medieval era').toContainText('MEDIEVAL')
+  await expect(fact, 'a fact is shown with the era label').not.toBeEmpty()
+
+  const firstFact = await fact.innerText()
+  await page.locator('.atlas-almanac button').click()
+  await expect(fact, 'another fact from the same era').not.toHaveText(firstFact)
+  await expect(tag, 'cycling facts keeps the era').toContainText('MEDIEVAL')
+})

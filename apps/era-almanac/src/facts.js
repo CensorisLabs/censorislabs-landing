@@ -2,7 +2,7 @@
 // check. No dates are invented and nothing here needs a network request.
 export const ERAS = [
   {
-    id: 'prehistory',
+    id: 'prehistory', from: -100000, to: -3001,
     name: 'Prehistory',
     span: 'before 3000 BCE',
     hook: 'Stone tools, cave walls and the first villages.',
@@ -16,7 +16,7 @@ export const ERAS = [
     ],
   },
   {
-    id: 'ancient',
+    id: 'ancient', from: -3000, to: 500,
     name: 'Ancient world',
     span: '3000 BCE – 500 CE',
     hook: 'Cities, writing, law codes and the first computers.',
@@ -30,7 +30,7 @@ export const ERAS = [
     ],
   },
   {
-    id: 'medieval',
+    id: 'medieval', from: 500, to: 1500,
     name: 'Medieval',
     span: '500 – 1500',
     hook: 'Monasteries, caravans, cathedrals and algebra.',
@@ -44,7 +44,7 @@ export const ERAS = [
     ],
   },
   {
-    id: 'early-modern',
+    id: 'early-modern', from: 1500, to: 1800,
     name: 'Early modern',
     span: '1500 – 1800',
     hook: 'Print, telescopes, voyages and new maps of the sky.',
@@ -58,7 +58,7 @@ export const ERAS = [
     ],
   },
   {
-    id: 'industrial',
+    id: 'industrial', from: 1800, to: 1914,
     name: 'Industrial',
     span: '1800 – 1914',
     hook: 'Steam, rails, telegraphs and the first programmers.',
@@ -72,7 +72,7 @@ export const ERAS = [
     ],
   },
   {
-    id: 'world-wars',
+    id: 'world-wars', from: 1914, to: 1945,
     name: 'World wars',
     span: '1914 – 1945',
     hook: 'Trenches, codebreaking and the world remade.',
@@ -86,7 +86,7 @@ export const ERAS = [
     ],
   },
   {
-    id: 'cold-war',
+    id: 'cold-war', from: 1945, to: 1991,
     name: 'Cold War',
     span: '1945 – 1991',
     hook: 'Satellites, silicon and a wall that came down.',
@@ -100,7 +100,7 @@ export const ERAS = [
     ],
   },
   {
-    id: 'digital',
+    id: 'digital', from: 1991, to: 2026,
     name: 'Digital',
     span: '1991 – today',
     hook: 'Text messages, search boxes and pocket computers.',
@@ -116,3 +116,10 @@ export const ERAS = [
 ]
 
 export const ALL_FACTS = ERAS.flatMap((era) => era.facts.map((text, index) => ({ id: era.id + "-" + index, text, eraId: era.id, eraName: era.name, span: era.span })))
+
+/** The era that contains a year, used by the atlas timeline. */
+export function eraForYear(year) {
+  const value = Number(year)
+  if (!Number.isFinite(value)) return null
+  return ERAS.find((era) => value >= era.from && value <= era.to) || null
+}

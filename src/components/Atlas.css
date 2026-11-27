@@ -520,3 +520,68 @@
   .atlas-zoom-controls { left: 10px; bottom: 143px; }
   .atlas-zoom-controls button { width: 27px; height: 27px; }
 }
+
+/* Almanac strip: one fact for the era the timeline is currently in. The text
+   comes from the Era Almanac app so the atlas and the app never disagree. */
+.atlas-almanac {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin: 6px 0 2px;
+  padding: 6px 10px;
+  border: 1px solid rgba(23, 19, 15, .16);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, .8);
+}
+
+.atlas-almanac__tag {
+  color: #17130f;
+  font: 500 7px/1.3 ui-monospace, monospace;
+  letter-spacing: .13em;
+  white-space: nowrap;
+}
+
+.atlas-almanac p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #3a342d;
+  font: 11px/1.45 Georgia, "Times New Roman", serif;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.atlas-almanac button {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: #17130f;
+  font: 500 8px/1 ui-monospace, monospace;
+  letter-spacing: .1em;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.atlas-almanac button:hover { color: #5b544a; }
+.atlas-almanac button:focus-visible { outline: 2px solid #17130f; outline-offset: 2px; }
+
+/* The strip makes the timeline ~40px taller, so the floating controls above it
+   move up by the same amount instead of sitting on top of the fact. */
+.atlas-zoom-controls { bottom: 170px; }
+.atlas-globe-caption { bottom: 180px; }
+
+@media (max-width: 700px) {
+  .atlas-almanac { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 6px 8px; }
+  .atlas-almanac__tag { grid-column: 1 / -1; }
+  .atlas-almanac p { font-size: 10px; }
+  .atlas-zoom-controls { bottom: 190px; }
+  .atlas-globe-caption { bottom: 170px; }
+  /* The strip makes the footer taller, so drop the decorative meta rows on
+     phones instead of letting them run past the bottom of the screen. */
+  .atlas-timeline-foot { display: none; }
+  .atlas-timeline-actions > span { display: none; }
+  .atlas-timeline { min-height: 0; padding-bottom: 10px; }
+}

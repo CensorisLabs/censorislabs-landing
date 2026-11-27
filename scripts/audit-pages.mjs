@@ -45,7 +45,10 @@ for (const width of [1440, 390]) {
       if (message.type() === 'error' && !/503|404 \(Not Found\)|api\/reviews/.test(message.text())) consoleErrors.push(message.text())
     }
     const onFailed = (request) => {
-      if (!/api\/reviews|github\.com/.test(request.url())) failed.push(`${request.url()} ${request.failure()?.errorText || ''}`)
+      const reason = request.failure()?.errorText || ''
+      // Requests cancelled by the next navigation belong to the previous route.
+      if (reason === 'net::ERR_ABORTED') return
+      if (!/api\/reviews|github\.com/.test(request.url())) failed.push(`${request.url()} ${reason}`)
     }
     page.on('console', onConsole)
     page.on('requestfailed', onFailed)

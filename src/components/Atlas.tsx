@@ -94,6 +94,27 @@ function formatWarPeriod(war: WarProperties, from: number, to: number) {
   return start === end ? formatYear(start) : `${formatYear(start)} — ${formatYear(end)}`
 }
 
+type Journey = { id: string; name: string; from: [number, number]; to: [number, number]; start: number; end: number; detail: string }
+
+// Dated trunk routes, not a complete network: each arc stands for a corridor
+// that carried goods and people for the stated span, and is hidden outside it.
+const JOURNEYS: Journey[] = [
+  { id: 'silk-road', name: 'Silk Road oases', from: [34.27, 108.9], to: [39.65, 66.96], start: -130, end: 1450, detail: 'Caravans linked Chang’an with Samarkand and the oases between them. The label marks one trunk of a network that shifted with politics and water.' },
+  { id: 'roman-grain', name: 'Rome’s grain run', from: [41.9, 12.5], to: [31.2, 29.9], start: -30, end: 400, detail: 'Egyptian grain sailed to Ostia and Rome; the same sea lanes carried oil, wine and people across the Mediterranean.' },
+  { id: 'trans-saharan', name: 'Trans-Saharan gold road', from: [16.77, -3.0], to: [31.28, -4.24], start: 1000, end: 1600, detail: 'Gold moved north and salt and books moved south through Sijilmasa and the Niger bend; Timbuktu grew as a staging point.' },
+  { id: 'monsoon', name: 'Indian Ocean monsoon route', from: [11.25, 75.78], to: [23.6, 58.6], start: 800, end: 1600, detail: 'Sailors timed crossings to the monsoon winds between Malabar, Arabia and the Persian Gulf long before European ships arrived.' },
+  { id: 'zheng-he', name: 'Zheng He’s voyages', from: [32.06, 118.8], to: [27.1, 56.5], start: 1405, end: 1433, detail: 'Ming fleets sailed from Nanjing through Southeast Asia to Hormuz and the African coast; the voyages ended with imperial policy.' },
+  { id: 'norse-atlantic', name: 'Norse North Atlantic', from: [60.39, 5.32], to: [51.6, -55.53], start: 870, end: 1050, detail: 'Settlers moved from Norway to Iceland, Greenland and a short-lived camp at L’Anse aux Meadows in Newfoundland.' },
+  { id: 'hajj', name: 'Hajj road from Cairo', from: [30.04, 31.24], to: [21.42, 39.83], start: 700, end: 1900, detail: 'Pilgrim caravans crossed Sinai and the Hejaz each year; the route also carried trade and scholarship.' },
+  { id: 'portuguese-india', name: 'Portuguese sea route to India', from: [38.71, -9.14], to: [11.25, 75.78], start: 1498, end: 1700, detail: 'Vasco da Gama’s fleet rounded the Cape and reached Calicut, opening a direct ocean link between Lisbon and Malabar.' },
+  { id: 'spanish-main', name: 'Spanish Atlantic run', from: [37.39, -5.98], to: [19.2, -96.1], start: 1520, end: 1700, detail: 'Convoys carried silver and goods between Seville and Veracruz under escort; the crossing tied American mines to European markets.' },
+  { id: 'manila-galleon', name: 'Manila galleon', from: [16.85, -99.9], to: [14.6, 120.98], start: 1565, end: 1815, detail: 'One or two ships a year crossed the Pacific between Acapulco and Manila, exchanging American silver for Asian goods.' },
+  { id: 'grand-trunk', name: 'Grand Trunk Road', from: [34.53, 69.17], to: [23.81, 90.41], start: -300, end: 1800, detail: 'The road across northern India from Kabul toward Bengal was rebuilt by successive empires and remained a main artery.' },
+  { id: 'cape-route', name: 'Cape route to Batavia', from: [-33.92, 18.42], to: [-6.2, 106.82], start: 1652, end: 1850, detail: 'Dutch ships called at Cape Town for supplies on the long run to Batavia, carrying spices, textiles and people.' },
+  { id: 'steam-atlantic', name: 'Steam across the Atlantic', from: [53.4, -3.0], to: [40.7, -74.0], start: 1840, end: 1950, detail: 'Regular steam crossings cut the Atlantic passage from weeks to days and moved mail, emigrants and freight on schedule.' },
+  { id: 'first-railroad', name: 'First transcontinental railroad', from: [41.26, -95.93], to: [38.58, -121.49], start: 1869, end: 1960, detail: 'The line joined at Promontory Summit in 1869, linking the Missouri valley to California by rail.' },
+]
+
 const EVENTS: AtlasEvent[] = [
   { id: 'ur', year: -3000, title: 'Cities rise beside the Tigris and Euphrates', place: 'Southern Mesopotamia', category: 'Civilizations', detail: 'Early city life took shape in a network of communities between the great rivers.', lat: 31.3, lon: 45.6 },
   { id: 'silk-road', year: -130, title: 'A route opens across Central Asia', place: 'Chang’an to the western oases', category: 'Routes', detail: 'Diplomatic journeys helped connect older regional trade routes across Eurasia.', lat: 39.9, lon: 116.4 },
@@ -328,10 +349,11 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, zoomCommand, initialDistance, onSelectLocation, onSelectWar, onGestureLearned, onCloseZoom, onViewDistance }: {
+function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, focusPoint, selectedWarId, selectedWarKey, year, zoomCommand, initialDistance, onSelectLocation, onSelectWar, onGestureLearned, onCloseZoom, onViewDistance }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
-  routes: boolean
+  journeys: Journey[]
+  selectedJourneyId?: string
   labels: boolean
   lowMotion: boolean
   isPlaying: boolean
@@ -340,6 +362,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   selectedCountry?: string
   selectedAuthorities: AtlasFeature<HistoryProperties>[]
   selectedPoint?: MapPoint
+  focusPoint?: MapPoint
   selectedWarId?: string
   selectedWarKey?: string
   year: number
@@ -388,7 +411,6 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   const reportedDistance = useRef(initialDistance)
   const [gazetteer, setGazetteer] = useState<{ cities: GazetteerCity[]; landmarks: GazetteerLandmark[] }>({ cities: [], landmarks: [] })
   const [gazetteerLoaded, setGazetteerLoaded] = useState(false)
-  const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#5b544a', transparent: true, opacity: 0.75 }), [])
   // Keep the grouped war footprints during playback, but suspend tens of
   // thousands of individual clickable dots until the viewer pauses.
   const visibleWarMarkers = isPlaying ? EMPTY_WARS : warMarkers
@@ -639,36 +661,37 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   }, [labels, onCloseZoom, zoomBand])
 
   useEffect(() => {
-    if (!selectedPoint) return
+    const target = focusPoint ?? selectedPoint
+    if (!target) return
     rotationVelocity.current = { x: 0, y: 0 }
-    const point = latLon(selectedPoint.lat, selectedPoint.lon, 1)
+    const point = latLon(target.lat, target.lon, 1)
     const targetY = Math.atan2(-point.x, point.z)
     const zAfterY = -point.x * Math.sin(targetY) + point.z * Math.cos(targetY)
     spin.current.x = Math.atan2(point.y, zAfterY)
     spin.current.y = targetY
-  }, [selectedPoint])
+  }, [focusPoint, selectedPoint])
 
-  const routeLines = useMemo(() => {
-    const endpoints: Array<{ from: [number, number]; to: [number, number]; year: number }> = [
-      { from: [31.3, 45.6], to: [39.9, 116.4], year: -130 },
-      { from: [41.9, 12.5], to: [33.3, 44.4], year: 117 },
-      { from: [16.8, -3], to: [31.2, 29.9], year: 1324 },
-      { from: [39.7, 66.9], to: [41.9, 12.5], year: 1404 },
-    ]
-    return endpoints.filter(route => route.year <= year).map(({ from: a, to: b }) => {
-      const start = latLon(a[0], a[1], 1.615)
-      const end = latLon(b[0], b[1], 1.615)
-      const points: THREE.Vector3[] = []
-      for (let i = 0; i <= 48; i++) {
-        const t = i / 48
-        const point = start.clone().lerp(end, t).normalize().multiplyScalar(1.61 + Math.sin(Math.PI * t) * 0.1)
-        points.push(point)
-      }
-      return new THREE.BufferGeometry().setFromPoints(points)
+  const routeObjects = useMemo(() => journeys.map(journey => {
+    const a = latLon(journey.from[0], journey.from[1], 1.615)
+    const b = latLon(journey.to[0], journey.to[1], 1.615)
+    const points: THREE.Vector3[] = []
+    for (let i = 0; i <= 48; i++) {
+      const t = i / 48
+      const point = a.clone().lerp(b, t).normalize().multiplyScalar(1.61 + Math.sin(Math.PI * t) * 0.1)
+      points.push(point)
+    }
+    const selected = journey.id === selectedJourneyId
+    const material = new THREE.LineBasicMaterial({ color: selected ? '#17130f' : '#7c7367', transparent: true, opacity: selected ? 1 : 0.55 })
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material)
+    line.userData.journeyId = journey.id
+    return line
+  }), [journeys, selectedJourneyId])
+  useEffect(() => () => {
+    routeObjects.forEach(line => {
+      line.geometry.dispose()
+      ;(line.material as THREE.Material).dispose()
     })
-  }, [year])
-  const routeObjects = useMemo(() => routeLines.map(line => new THREE.Line(line, routeMaterial)), [routeLines, routeMaterial])
-  useEffect(() => () => { routeLines.forEach(line => line.dispose()); routeMaterial.dispose() }, [routeLines, routeMaterial])
+  }, [routeObjects])
 
   useFrame((_, delta) => {
     if (world.current) {
@@ -767,7 +790,7 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       {labels && globeLabels.map(label => <GlobeTextLabel key={`${label.name}-${label.href}`} label={label} scale={labelScale} />)}
       {cityLabels.map(label => <GlobeTextLabel key={`city-${label.href}`} label={label} scale={labelScale} kind="city" />)}
       {closeZoomLabels.landmarks.map(label => <GlobeTextLabel key={`landmark-${label.name}-${label.href}`} label={label} scale={labelScale} kind="landmark" />)}
-      {routes && routeObjects.map((line, index) => <primitive object={line} key={`route-${index}`} />)}
+      {routeObjects.map(line => <primitive object={line} key={line.userData.journeyId} />)}
       {labels && events.filter(event => event.year <= year).map(event => <mesh key={event.id} position={latLon(event.lat, event.lon, 1.625)}>
         <sphereGeometry args={[event.id === 'present' ? 0.026 : 0.018, 12, 10]} />
         <meshBasicMaterial color={event.category === 'Ideas' ? '#5b544a' : '#4a443c'} />
@@ -914,6 +937,8 @@ export default function Atlas() {
   const [focus, setFocus] = useState<AtlasEvent>(EVENTS[5])
   const [playing, setPlaying] = useState(false)
   const [routes, setRoutes] = useState(true)
+  const [selectedJourney, setSelectedJourney] = useState<string | null>(null)
+  const [journeyFocus, setJourneyFocus] = useState<MapPoint | null>(null)
   const [labels, setLabels] = useState(true)
   const [territories, setTerritories] = useState(true)
   const [showWarMarkers, setShowWarMarkers] = useState(true)
@@ -923,6 +948,9 @@ export default function Atlas() {
   const [mapError, setMapError] = useState('')
   const [warsError, setWarsError] = useState('')
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(() => initialView.current?.lat !== null && initialView.current?.lon !== null ? { lat: initialView.current.lat, lon: initialView.current.lon } : null)
+  const activeJourneys = useMemo(() => JOURNEYS.filter(journey => year >= journey.start && year <= journey.end), [year])
+  const selectedJourneyDetail = activeJourneys.find(journey => journey.id === selectedJourney)
+  useEffect(() => { if (selectedJourney && !activeJourneys.some(journey => journey.id === selectedJourney)) setSelectedJourney(null) }, [activeJourneys, selectedJourney])
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const globeDistance = useRef(initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE)
   const viewYear = useRef(year)
@@ -1194,7 +1222,7 @@ export default function Atlas() {
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
     <Canvas className="atlas-canvas" dpr={[1, 2]} style={{ touchAction: 'none' }} camera={{ position: [0, 0, initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE], fov: 39 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} initialDistance={initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE} onViewDistance={distance => { globeDistance.current = distance; scheduleUrlWrite() }} />
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} journeys={routes ? activeJourneys : []} selectedJourneyId={selectedJourney ?? undefined} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} focusPoint={journeyFocus ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedJourney(null); setJourneyFocus(null); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} initialDistance={initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE} onViewDistance={distance => { globeDistance.current = distance; scheduleUrlWrite() }} />
     </Canvas>
 
     <div className={`atlas-gesture-hint${gestureHintLearned ? ' is-dismissed' : ''}`} role="status" aria-hidden={gestureHintLearned}>
@@ -1263,6 +1291,10 @@ export default function Atlas() {
           {rulers.length > 0 && <div className="atlas-authority-list">{rulers.map((ruler, index) => <article className="atlas-authority" key={`${ruler.id}-${ruler.role}-${ruler.polity}-${index}`}><strong>{ruler.name}</strong><small>{ruler.role} · {ruler.polity}</small><small>Recorded tenure: {formatYear(ruler.from)} — {formatYear(ruler.to)}</small><a href={`https://www.wikidata.org/wiki/${encodeURIComponent(ruler.id)}`} target="_blank" rel="noreferrer">View sourced Wikidata record ↗</a></article>)}</div>}
           <p className="atlas-data-note">{rulersStatus || 'The border source identifies polities, not rulers. Only dated and referenced leader claims are listed; missing names are a source-coverage gap, not a claim that no ruler existed.'} Wikidata records can be incomplete or disputed; compare the linked record with specialist sources.</p>
         </div> : <div className="atlas-detail"><div className="atlas-detail-tag"><span>{focus.category.toUpperCase()}</span><span>◦  STORY</span></div><h2>{focus.title}</h2><p className="atlas-place">⌖ &nbsp;{focus.place}</p><p className="atlas-detail-copy">{focus.detail}</p><button className="atlas-follow" onClick={() => setYear(focus.year)}>Explore this moment <span>↗</span></button></div>}
+        {routes && <div className="atlas-journeys"><span className="atlas-filter-label">JOURNEYS ON THIS MAP</span>
+          {activeJourneys.length ? <div className="atlas-journey-list">{activeJourneys.map(journey => <button type="button" key={journey.id} className={journey.id === selectedJourney ? 'is-selected' : ''} aria-pressed={journey.id === selectedJourney} onClick={() => { const next = journey.id === selectedJourney ? null : journey.id; setSelectedJourney(next); setJourneyFocus(next ? { lat: (journey.from[0] + journey.to[0]) / 2, lon: (journey.from[1] + journey.to[1]) / 2 } : null); if (next) setRightCollapsed(false) }}><strong>{journey.name}</strong><small>{formatYear(journey.start)} — {formatYear(journey.end)}</small></button>)}</div> : <p className="atlas-journey-empty">No recorded journey in this year. Move the timeline to bring routes back.</p>}
+          {selectedJourneyDetail && <p className="atlas-journey-detail">{selectedJourneyDetail.detail}</p>}
+        </div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place labels</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label><div className="atlas-close-zoom"><span><i className="layer-dot layer-dot--city" />Cities</span><span><i className="layer-dot layer-dot--landmark" />Landmarks</span><small>Close zoom · <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">GeoNames</a> + <a href="https://www.wikidata.org/" target="_blank" rel="noreferrer">Wikidata</a></small></div></div>
         <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span></div>
       </>}

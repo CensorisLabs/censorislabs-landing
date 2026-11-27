@@ -586,3 +586,24 @@
   .atlas-timeline-actions > span { display: none; }
   .atlas-timeline { min-height: 0; padding-bottom: 10px; }
 }
+
+/* Journeys: the routes on the globe, listed for the year on screen. */
+.atlas-journeys { display: grid; gap: 7px; margin-top: 14px; }
+.atlas-journey-list { display: grid; gap: 4px; max-height: 168px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(23, 19, 15, .3) transparent; }
+.atlas-journey-list button {
+  display: grid;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 1px solid rgba(23, 19, 15, .16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .55);
+  color: #3d372f;
+  text-align: left;
+  cursor: pointer;
+}
+.atlas-journey-list button:hover { border-color: rgba(23, 19, 15, .45); }
+.atlas-journey-list button.is-selected { border-color: #17130f; background: rgba(23, 19, 15, .08); }
+.atlas-journey-list strong { font-size: 10px; font-weight: 600; letter-spacing: .01em; }
+.atlas-journey-list small { font: 400 7px/1.3 ui-monospace, monospace; letter-spacing: .08em; color: #7c7367; }
+.atlas-journey-detail { margin: 2px 0 0; font-size: 10px; line-height: 1.5; color: #4f483f; }
+.atlas-journey-empty { margin: 0; font-size: 10px; line-height: 1.5; color: #7c7367; }

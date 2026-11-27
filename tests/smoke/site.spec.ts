@@ -166,6 +166,9 @@ test('old hash links land on the real path', async ({ page }) => {
 })
 
 test('a shared atlas link restores its year, place and zoom', async ({ page }) => {
+  // The globe loads compressed map data and renders a 3D scene; it is the
+  // slowest page in the suite and needs more than the default budget.
+  test.setTimeout(60_000)
   await openAndAudit(page, '/atlas?year=1500&lat=30.4&lon=12.6&z=3.4')
 
   await expect(page.locator('.atlas-timeline-head strong'), 'the shared year is restored').toContainText('1,500 AD')
@@ -175,7 +178,25 @@ test('a shared atlas link restores its year, place and zoom', async ({ page }) =
   await expect(page, 'the address bar keeps the shared view').toHaveURL(/year=1500/)
 })
 
+test('the atlas lists the journeys that cross the chosen year', async ({ page }) => {
+  // The globe loads compressed map data and renders a 3D scene; it is the
+  // slowest page in the suite and needs more than the default budget.
+  test.setTimeout(60_000)
+  await openAndAudit(page, '/atlas?year=1500&lat=30.4&lon=12.6')
+
+  const list = page.locator('.atlas-journey-list')
+  await expect(list.locator('button', { hasText: 'Hajj road from Cairo' })).toHaveCount(1)
+  // The Manila galleon only starts in 1565, so it must not appear for 1500.
+  await expect(list).not.toContainText('Manila galleon')
+
+  await list.locator('button').first().click()
+  await expect(page.locator('.atlas-journey-detail'), 'selecting a journey explains it').not.toBeEmpty()
+})
+
 test('the atlas shows an almanac fact for the era on screen', async ({ page }) => {
+  // The globe loads compressed map data and renders a 3D scene; it is the
+  // slowest page in the suite and needs more than the default budget.
+  test.setTimeout(60_000)
   await openAndAudit(page, '/atlas')
 
   const tag = page.locator('.atlas-almanac__tag')

@@ -604,294 +604,74 @@ html[data-performance='low'] .grain {
 }
 
 /* ============================================================
-   Night-room theme layer
-   Violet page frame, hanging keycard surfaces, themed controls.
-   Loaded after index.css so it owns these surfaces.
+   Layout carried over from the retired night-room theme
+   Geometry only: colours live in monochrome.css.
    ============================================================ */
 
-.page-frame {
-  position: fixed;
-  inset: 10px;
-  z-index: 95;
-  pointer-events: none;
-  border-radius: 26px;
-  padding: 1px;
-  background: linear-gradient(
-    150deg,
-    rgba(255, 148, 180, 0.5),
-    rgba(168, 85, 247, 0.34) 32%,
-    rgba(255, 255, 255, 0.04) 62%,
-    rgba(168, 85, 247, 0.4) 100%
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0.55;
-}
+.page-frame { position: fixed; inset: 10px; z-index: 95; pointer-events: none; border-radius: 26px; padding: 1px; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; opacity: 0.55 }
 
 /* Hanging keycard tabs on app cards, echoing the pegboard in the hero. */
 .suite-card,
 .about-app-card,
-.review-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 14px;
-  border-color: rgba(255, 255, 255, 0.12);
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.014) 58%),
-    rgba(20, 13, 30, 0.78);
-  box-shadow: 0 22px 48px rgba(4, 1, 9, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
+.review-card { position: relative; overflow: hidden; border-radius: 14px }
 
-.suite-card {
-  padding-top: 32px;
-}
+.suite-card { padding-top: 32px }
 
-.suite-card::before {
-  content: '';
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 0;
-  height: 7px;
-  border-radius: 0 0 7px 7px;
-  background: var(--card-tab, #ff4d6d);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--card-tab, #ff4d6d) 55%, transparent);
-}
+.suite-card::before { content: ''; position: absolute; left: 16px; right: 16px; top: 0; height: 7px; border-radius: 0 0 7px 7px }
 
-.suite-grid .suite-card:nth-child(5n + 1) { --card-tab: #ff4d6d; }
-.suite-grid .suite-card:nth-child(5n + 2) { --card-tab: #2dd4bf; }
-.suite-grid .suite-card:nth-child(5n + 3) { --card-tab: #4f8bff; }
-.suite-grid .suite-card:nth-child(5n + 4) { --card-tab: #a855f7; }
-.suite-grid .suite-card:nth-child(5n + 5) { --card-tab: #f5b23e; }
+.about-app-card { padding: 30px clamp(20px, 3vw, 26px) clamp(20px, 3vw, 26px) }
 
-.about-app-card {
-  padding: 30px clamp(20px, 3vw, 26px) clamp(20px, 3vw, 26px);
-}
+.about-app-card::before { content: ''; position: absolute; left: 14px; right: 14px; top: 0; height: 6px; border-radius: 0 0 6px 6px }
 
-.about-app-card::before {
-  content: '';
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 0;
-  height: 6px;
-  border-radius: 0 0 6px 6px;
-  background: var(--card-tab, #ff4d6d);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--card-tab, #ff4d6d) 45%, transparent);
-}
-
-.about-app-grid .about-app-card:nth-child(4n + 1) { --card-tab: #ff4d6d; }
-.about-app-grid .about-app-card:nth-child(4n + 2) { --card-tab: #2dd4bf; }
-.about-app-grid .about-app-card:nth-child(4n + 3) { --card-tab: #4f8bff; }
-.about-app-grid .about-app-card:nth-child(4n + 4) { --card-tab: #a855f7; }
-
-.review-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, #ff5c8a, #a855f7);
-}
-
-.suite-card:hover,
-.about-app-card:hover,
-.review-card:hover {
-  border-color: rgba(255, 92, 138, 0.4);
-  box-shadow:
-    0 28px 58px rgba(4, 1, 9, 0.55),
-    0 0 34px rgba(168, 85, 247, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
+.review-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px }
 
 /* Form controls and small buttons in the same glass language. */
 .field input,
 .field select,
-.field textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 70%),
-    rgba(14, 9, 21, 0.72);
-  color: var(--marble);
-  font: 400 14px var(--sans);
-  transition: border-color 180ms ease, box-shadow 200ms ease, background-color 180ms ease;
-}
-
-.field input::placeholder,
-.field textarea::placeholder {
-  color: #7f7192;
-}
+.field textarea { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid currentColor; font: 400 14px var(--sans); transition: border-color 180ms ease, box-shadow 200ms ease, background-color 180ms ease }
 
 .field input:focus,
 .field select:focus,
-.field textarea:focus {
-  outline: none;
-  border-color: rgba(255, 92, 138, 0.6);
-  background-color: rgba(22, 13, 32, 0.9);
-  box-shadow: 0 0 0 3px rgba(255, 92, 138, 0.14), 0 0 26px rgba(168, 85, 247, 0.18);
-}
+.field textarea:focus { outline: none }
 
-.stars__star {
-  border: 0;
-  padding: 0 2px;
-  background: none;
-  color: #5c4e6e;
-  font-size: 18px;
-  line-height: 1;
-  transition: color 160ms ease, text-shadow 160ms ease, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
+.stars__star { border: 0; padding: 0 2px; font-size: 18px; line-height: 1; transition: color 160ms ease, text-shadow 160ms ease, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1) }
 
-.stars__star--on {
-  color: #ff5c8a;
-  text-shadow: 0 0 14px rgba(255, 92, 138, 0.7);
-}
+button.stars__star:hover { transform: translateY(-2px) scale(1.1) }
 
-button.stars__star:hover {
-  color: #ffb3c8;
-  transform: translateY(-2px) scale(1.1);
-}
+.review-card__delete { border: 1px solid currentColor; border-radius: 999px; padding: 6px 13px; font: 10px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; transition: border-color 180ms ease, color 180ms ease, box-shadow 200ms ease, transform 200ms ease }
 
-.review-card__delete {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  padding: 6px 13px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--palladium);
-  font: 10px var(--mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  transition: border-color 180ms ease, color 180ms ease, box-shadow 200ms ease, transform 200ms ease;
-}
-
-.review-card__delete:hover {
-  border-color: rgba(255, 92, 138, 0.6);
-  color: #ffe3ec;
-  box-shadow: 0 0 22px rgba(255, 92, 138, 0.25);
-  transform: translateY(-1px);
-}
+.review-card__delete:hover { transform: translateY(-1px) }
 
 .nav__menu-btn,
 .dialog__close,
-.nav__appearance summary {
-  transition: border-color 180ms ease, box-shadow 200ms ease, color 180ms ease, transform 200ms ease;
-}
+.nav__appearance summary { transition: border-color 180ms ease, box-shadow 200ms ease, color 180ms ease, transform 200ms ease }
 
-.nav__menu-btn:hover,
-.dialog__close:hover,
-.nav__appearance summary:hover {
-  border-color: rgba(255, 92, 138, 0.55);
-  color: var(--marble);
-  box-shadow: 0 0 22px rgba(255, 92, 138, 0.24);
-}
-
-.legal__doc-btn {
-  border-radius: 12px;
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.06), transparent 70%),
-    rgba(18, 11, 27, 0.6);
-}
-
-.legal__doc-btn:hover {
-  border-color: rgba(255, 92, 138, 0.5);
-  background:
-    linear-gradient(150deg, rgba(255, 92, 138, 0.16), rgba(168, 85, 247, 0.08) 70%),
-    rgba(24, 14, 34, 0.7);
-  box-shadow: 0 0 26px rgba(255, 92, 138, 0.22);
-}
-
-/* The framed card look carries into panels and the pricing strip. */
-.suite-plan,
-.suite-feature-card,
-.suite-download-card,
-.legal__panel,
-.ledger-wrap {
-  border-color: rgba(255, 255, 255, 0.12);
-  background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.012) 62%),
-    rgba(19, 12, 28, 0.76);
-  box-shadow: 0 24px 54px rgba(4, 1, 9, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
+.legal__doc-btn { border-radius: 12px }
 
 html[data-performance='low'] .room__scene,
-html[data-performance='low'] .spark {
-  display: none !important;
-}
+html[data-performance='low'] .spark { display: none !important }
 
 @media (max-width: 760px) {
-  .page-frame {
-    inset: 6px;
-    border-radius: 18px;
-  }
+  .page-frame { inset: 6px; border-radius: 18px }
 }
 
 @media print {
-  .page-frame {
-    display: none !important;
-  }
+  .page-frame { display: none !important }
 }
 
 /* Censoris card: the whole panel opens the app suite, with a visible cue. */
-.product--apps .product__open {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  border-radius: inherit;
-}
+.product--apps .product__open { position: absolute; inset: 0; z-index: 3; border-radius: inherit }
 
-.product--apps .product__open:focus-visible {
-  outline: 2px solid #ff9db9;
-  outline-offset: -4px;
-}
+.product--apps .product__open:focus-visible { outline: 2px solid currentColor; outline-offset: -4px }
 
-.product__suite-copy {
-  color: #cbbfda;
-  font-size: 14px;
-  line-height: 1.7;
-  max-width: 54ch;
-  padding: 14px 16px;
-  border-left: 2px solid rgba(255, 92, 138, 0.65);
-  border-radius: 0 10px 10px 0;
-  background: linear-gradient(100deg, rgba(255, 92, 138, 0.1), rgba(168, 85, 247, 0.04));
-}
+.product__suite-copy { font-size: 14px; line-height: 1.7; max-width: 54ch; padding: 14px 16px; border-left: 2px solid currentColor; border-radius: 0 10px 10px 0 }
 
-.product__suite-link {
-  position: relative;
-  z-index: 4;
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 13px;
-  border: 1px solid rgba(255, 92, 138, 0.4);
-  border-radius: 999px;
-  color: #ffd0dd;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  background: rgba(255, 92, 138, 0.08);
-  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 220ms ease, transform 220ms ease;
-}
+.product__suite-link { position: relative; z-index: 4; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border: 1px solid currentColor; border-radius: 999px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; transition: border-color 180ms ease, background-color 180ms ease, box-shadow 220ms ease, transform 220ms ease }
 
-.product__suite-link:hover {
-  border-color: rgba(255, 92, 138, 0.85);
-  background: rgba(255, 92, 138, 0.16);
-  box-shadow: 0 0 24px rgba(255, 92, 138, 0.3);
-  transform: translateY(-1px);
-}
+.product__suite-link:hover { transform: translateY(-1px) }
 
 .product--apps .product__actions,
-.product--apps .download-note {
-  position: relative;
-  z-index: 4;
-}
-
+.product--apps .download-note { position: relative; z-index: 4 }
 
 /* ============================================================
    Software requests

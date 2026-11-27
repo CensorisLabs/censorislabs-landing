@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build"
+    "build": "vite build",
+    "publish:web": "npm run build && node ../scripts/publish-web-app.cjs era-almanac"
   },
   "devDependencies": {
     "vite": "^7.0.6"

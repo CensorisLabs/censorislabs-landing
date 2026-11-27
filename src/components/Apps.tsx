@@ -123,6 +123,9 @@ export default function Apps({ appId, asPage }: { appId?: string; asPage?: boole
   const selected = PRODUCTS.find(product => product.id === appId)
   if (appId && selected) {
     const readingTracker = selected.id === 'reading-tracker'
+    // These apps also run in the browser, so their page offers that before the
+    // installers: no download needed to try every feature.
+    const webApp = ({ 'reading-tracker': '/reading-tracker/', 'era-almanac': '/era-almanac/' } as Record<string, string>)[selected.id]
     const features = selected.free
     return <section className="section suite-page" aria-labelledby="suite-page-title"><div className="container">
       <a className="suite-back" href="/apps">← All apps</a>
@@ -131,7 +134,7 @@ export default function Apps({ appId, asPage }: { appId?: string; asPage?: boole
       <div className="suite-feature-columns suite-feature-columns--free-only">
         <article className="suite-feature-card"><p className="eyebrow">EVERYTHING IS INCLUDED</p><h2>No subscription, no account, no lockouts</h2><ul>{features.map(feature => <li key={feature}>{feature}</li>)}</ul><p className="suite-security-note">Every feature in {selected.name} is free forever. There is no Pro tier, upgrade, trial, or payment anywhere in the app.</p></article>
       </div>
-      {readingTracker && <div className="suite-download-card"><div><p className="eyebrow">OPEN IN YOUR BROWSER</p><h2>Use Reading Tracker</h2><p>Your books and notes stay in this browser on this device.</p></div><div className="suite-downloads"><a className="btn btn--outline" href="/reading-tracker/">Open Reading Tracker</a></div></div>}
+      {webApp && <div className="suite-download-card"><div><p className="eyebrow">OPEN IN YOUR BROWSER</p><h2>Use {selected.name}</h2><p>Everything runs in this browser on this device, with no account and no install.</p></div><div className="suite-downloads"><a className="btn btn--outline" href={webApp}>Open {selected.name}</a></div></div>}
       <Downloads appId={selected.id} /><ReleaseNotes appId={selected.id} /><InstallWarning androidOnly={readingTracker} />
     </div></section>
   }

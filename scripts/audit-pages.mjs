@@ -18,7 +18,7 @@ function pages(dir, base = dir) {
   const found = []
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry)
-    if (entry === 'assets' || entry === 'fonts' || entry === 'og' || entry === 'atlas' || entry === 'games' || entry === 'reading-tracker') continue
+    if (entry === 'assets' || entry === 'fonts' || entry === 'og' || entry === 'atlas' || entry === 'games' || entry === 'reading-tracker' || entry === 'era-almanac') continue
     if (statSync(full).isDirectory()) found.push(...pages(full, base))
     else if (entry.endsWith('.html')) {
       const rel = relative(base, full).replace(/\\/g, '/')

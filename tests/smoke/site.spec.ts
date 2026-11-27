@@ -165,6 +165,16 @@ test('old hash links land on the real path', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Velvet Orb')
 })
 
+test('a shared atlas link restores its year, place and zoom', async ({ page }) => {
+  await openAndAudit(page, '/atlas?year=1500&lat=30.4&lon=12.6&z=3.4')
+
+  await expect(page.locator('.atlas-timeline-head strong'), 'the shared year is restored').toContainText('1,500 AD')
+  const panel = page.locator('.atlas-panel--right')
+  await expect(panel, 'the shared place opens its details').toContainText('PLACE SELECTED')
+  await expect(panel, 'the shared coordinates are shown').toContainText('30.4°')
+  await expect(page, 'the address bar keeps the shared view').toHaveURL(/year=1500/)
+})
+
 test('the atlas shows an almanac fact for the era on screen', async ({ page }) => {
   await openAndAudit(page, '/atlas')
 

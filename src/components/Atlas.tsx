@@ -328,7 +328,7 @@ function latLon(lat: number, lon: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(-radius * Math.sin(phi) * Math.cos(theta), radius * Math.cos(phi), radius * Math.sin(phi) * Math.sin(theta))
 }
 
-function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, zoomCommand, onSelectLocation,   onSelectWar, onGestureLearned, onCloseZoom }: {
+function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, countries, historical, selectedCountry, selectedAuthorities, selectedPoint, selectedWarId, selectedWarKey, year, zoomCommand, initialDistance, onSelectLocation, onSelectWar, onGestureLearned, onCloseZoom, onViewDistance }: {
   events: AtlasEvent[]
   warMarkers: WarFeature[]
   routes: boolean
@@ -348,6 +348,8 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   onSelectWar: (war: WarFeature) => void
   onGestureLearned: () => void
   onCloseZoom: () => void
+  initialDistance: number
+  onViewDistance: (distance: number) => void
 }) {
   const world = useRef<THREE.Group>(null)
   const { gl, camera } = useThree()
@@ -378,12 +380,12 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   const lastTap = useRef<{ time: number; x: number; y: number } | null>(null)
   const doubleTapPointer = useRef<number | null>(null)
   const suppressClickUntil = useRef(0)
-  const distance = useRef(DEFAULT_GLOBE_DISTANCE)
-  const [zoomBand, setZoomBand] = useState(zoomBandForDistance(DEFAULT_GLOBE_DISTANCE))
+  const distance = useRef(initialDistance)
+  const [zoomBand, setZoomBand] = useState(zoomBandForDistance(initialDistance))
   // Label density follows the actual camera distance inside the close band, so
   // zooming right in makes room for many more city names.
-  const [viewDistance, setViewDistance] = useState(DEFAULT_GLOBE_DISTANCE)
-  const reportedDistance = useRef(DEFAULT_GLOBE_DISTANCE)
+  const [viewDistance, setViewDistance] = useState(initialDistance)
+  const reportedDistance = useRef(initialDistance)
   const [gazetteer, setGazetteer] = useState<{ cities: GazetteerCity[]; landmarks: GazetteerLandmark[] }>({ cities: [], landmarks: [] })
   const [gazetteerLoaded, setGazetteerLoaded] = useState(false)
   const routeMaterial = useMemo(() => new THREE.LineBasicMaterial({ color: '#5b544a', transparent: true, opacity: 0.75 }), [])
@@ -613,7 +615,9 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
   }, [gl, onGestureLearned])
 
   useEffect(() => {
-    if (!zoomCommand) return
+    // A shared link may start at its own distance; the initial reset command
+    // exists only to seed state, so it must not snap the camera back.
+    if (!zoomCommand || zoomCommand.nonce === 0) return
     if (zoomCommand.kind === 'reset') {
       distance.current = DEFAULT_GLOBE_DISTANCE
       spin.current = { x: 0.12, y: -Math.PI / 2 }
@@ -687,9 +691,10 @@ function Globe({ events, warMarkers, routes, labels, lowMotion, isPlaying, count
       world.current.rotation.y = THREE.MathUtils.damp(world.current.rotation.y, spin.current.y, 6, delta)
     }
     camera.position.z = THREE.MathUtils.damp(camera.position.z, distance.current, 5, delta)
-    if (zoomBand === 2 && Math.abs(camera.position.z - reportedDistance.current) > 0.03) {
+    if (Math.abs(camera.position.z - reportedDistance.current) > 0.04) {
       reportedDistance.current = camera.position.z
-      setViewDistance(camera.position.z)
+      onViewDistance(camera.position.z)
+      if (zoomBand === 2) setViewDistance(camera.position.z)
     }
     camera.lookAt(0, 0, 0)
 
@@ -858,6 +863,28 @@ function wikidataYear(value?: { time?: string; precision?: number }) {
   return astronomical <= 0 ? astronomical - 1 : astronomical
 }
 
+type AtlasView = { year: number | null; lat: number | null; lon: number | null; distance: number | null }
+
+// A shared view carries only what is needed to rebuild it: the year, the
+// selected place and the camera distance. Everything else is derived.
+function readAtlasView(): AtlasView {
+  const empty: AtlasView = { year: null, lat: null, lon: null, distance: null }
+  if (typeof window === 'undefined') return empty
+  const params = new URLSearchParams(window.location.search)
+  const read = (key: string, min: number, max: number) => {
+    const raw = params.get(key)
+    if (raw === null || raw.trim() === '') return null
+    const value = Number(raw)
+    return Number.isFinite(value) ? THREE.MathUtils.clamp(value, min, max) : null
+  }
+  return {
+    year: read('year', -2999, 2022),
+    lat: read('lat', -85, 85),
+    lon: read('lon', -180, 180),
+    distance: read('z', MIN_GLOBE_DISTANCE, MAX_GLOBE_DISTANCE),
+  }
+}
+
 async function loadCompressedAtlasData<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(path, { signal, cache: 'no-cache' })
   if (!response.ok) throw new Error(`Map data request failed (${response.status})`)
@@ -872,7 +899,9 @@ async function loadCompressedAtlasData<T>(path: string, signal: AbortSignal): Pr
 }
 
 export default function Atlas() {
-  const [year, setYear] = useState(801)
+  const initialView = useRef<AtlasView | null>(null)
+  if (!initialView.current) initialView.current = readAtlasView()
+  const [year, setYear] = useState(initialView.current.year ?? 801)
   // One almanac fact for the selected era, cycled by hand. The index resets
   // whenever the timeline moves into a different era.
   const [almanacStep, setAlmanacStep] = useState(0)
@@ -893,12 +922,17 @@ export default function Atlas() {
   const [warData, setWarData] = useState<AtlasWarData | null>(null)
   const [mapError, setMapError] = useState('')
   const [warsError, setWarsError] = useState('')
-  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null)
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(() => initialView.current?.lat !== null && initialView.current?.lon !== null ? { lat: initialView.current.lat, lon: initialView.current.lon } : null)
+  const [shareState, setShareState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const globeDistance = useRef(initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE)
+  const viewYear = useRef(year)
+  const viewPoint = useRef(selectedPoint)
+  const urlTimer = useRef<number | null>(null)
   const [selectedWar, setSelectedWar] = useState<WarFeature | null>(null)
   const [rulers, setRulers] = useState<DatedRuler[]>([])
   const [rulersStatus, setRulersStatus] = useState('')
   const [leftCollapsed, setLeftCollapsed] = useState(true)
-  const [rightCollapsed, setRightCollapsed] = useState(true)
+  const [rightCollapsed, setRightCollapsed] = useState(() => initialView.current?.lat === null || initialView.current?.lon === null)
   const [warResultLimit, setWarResultLimit] = useState(5)
   const [warSourceFilter, setWarSourceFilter] = useState<'All' | 'HCED' | 'UCDP'>('All')
   const [conflictFilter, setConflictFilter] = useState('All')
@@ -908,6 +942,46 @@ export default function Atlas() {
   const [closeZoomHintVisible, setCloseZoomHintVisible] = useState(false)
   const [zoomCommand, setZoomCommand] = useState<ZoomCommand>({ nonce: 0, kind: 'reset' })
   const dismissGestureHint = useCallback(() => setGestureHintLearned(true), [])
+  const writeViewUrl = useCallback(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('year', String(viewYear.current))
+    if (viewPoint.current) {
+      params.set('lat', viewPoint.current.lat.toFixed(2))
+      params.set('lon', viewPoint.current.lon.toFixed(2))
+    } else {
+      params.delete('lat')
+      params.delete('lon')
+    }
+    if (Math.abs(globeDistance.current - DEFAULT_GLOBE_DISTANCE) > 0.02) params.set('z', globeDistance.current.toFixed(2))
+    else params.delete('z')
+    const search = params.toString()
+    const url = `${window.location.pathname}${search ? `?${search}` : ''}${window.location.hash}`
+    window.history.replaceState(null, '', url)
+  }, [])
+
+  const scheduleUrlWrite = useCallback(() => {
+    if (urlTimer.current !== null) window.clearTimeout(urlTimer.current)
+    urlTimer.current = window.setTimeout(writeViewUrl, 350)
+  }, [writeViewUrl])
+
+  const copyViewLink = useCallback(() => {
+    if (urlTimer.current !== null) window.clearTimeout(urlTimer.current)
+    writeViewUrl()
+    const url = window.location.href
+    const markCopied = () => {
+      setShareState('copied')
+      window.setTimeout(() => setShareState('idle'), 2200)
+    }
+    navigator.clipboard?.writeText(url).then(markCopied).catch(() => setShareState('failed'))
+  }, [writeViewUrl])
+
+  useEffect(() => {
+    viewYear.current = year
+    viewPoint.current = selectedPoint
+    scheduleUrlWrite()
+  }, [scheduleUrlWrite, selectedPoint, year])
+  useEffect(() => () => { if (urlTimer.current !== null) window.clearTimeout(urlTimer.current) }, [])
+
   const page = useRef<HTMLElement>(null)
   const searchInput = useRef<HTMLInputElement>(null)
   const rulerCache = useRef(new Map<string, DatedRuler[]>())
@@ -1119,8 +1193,8 @@ export default function Atlas() {
 
   return <section className={`atlas-page${expanded ? ' atlas-page--expanded' : ''}`} ref={page} aria-label="Interactive 3D world history atlas">
     <div className="atlas-ambient" aria-hidden="true" />
-    <Canvas className="atlas-canvas" dpr={[1, 2]} style={{ touchAction: 'none' }} camera={{ position: [0, 0, DEFAULT_GLOBE_DISTANCE], fov: 39 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
-      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} />
+    <Canvas className="atlas-canvas" dpr={[1, 2]} style={{ touchAction: 'none' }} camera={{ position: [0, 0, initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE], fov: 39 }} gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}>
+      <Globe events={EVENTS} warMarkers={showWarMarkers ? activeWars : EMPTY_WARS} routes={routes} labels={labels} lowMotion={lowMotion} isPlaying={playing} countries={mapData?.features ?? EMPTY_COUNTRIES} historical={activeHistory} selectedCountry={selectedCountry?.properties.name} selectedAuthorities={authorities.slice(0, 1)} selectedPoint={selectedPoint ?? undefined} selectedWarId={selectedWar?.properties.id} selectedWarKey={selectedWar ? `${selectedWar.properties.source}:${selectedWar.properties.war || selectedWar.properties.title}` : undefined} year={mapYear} zoomCommand={zoomCommand} onSelectLocation={point => { setSelectedWar(null); setSelectedPoint(point); setLeftCollapsed(true); setRightCollapsed(false) }} onSelectWar={war => { setSelectedWar(war); setSelectedPoint({ lat: war.properties.lat, lon: war.properties.lon }); setLeftCollapsed(true); setRightCollapsed(false) }} onGestureLearned={dismissGestureHint} onCloseZoom={showCloseZoomHint} initialDistance={initialView.current.distance ?? DEFAULT_GLOBE_DISTANCE} onViewDistance={distance => { globeDistance.current = distance; scheduleUrlWrite() }} />
     </Canvas>
 
     <div className={`atlas-gesture-hint${gestureHintLearned ? ' is-dismissed' : ''}`} role="status" aria-hidden={gestureHintLearned}>
@@ -1199,6 +1273,7 @@ export default function Atlas() {
       <button type="button" onClick={() => requestZoom('out')} aria-label="Zoom out" title="Zoom out">−</button>
       <button type="button" onClick={() => requestZoom('in')} aria-label="Zoom in" title="Zoom in">＋</button>
       <button type="button" className="atlas-zoom-reset" onClick={() => requestZoom('reset')} aria-label="Reset map view" title="Reset map view">RESET</button>
+      <button type="button" className="atlas-zoom-share" onClick={copyViewLink} aria-label="Copy a link to this year, place and zoom" title="Copy a link to this view">{shareState === 'copied' ? 'COPIED ✓' : shareState === 'failed' ? 'COPY FAILED' : 'SHARE'}</button>
     </div>
     {mapError ? <div className="atlas-data-status atlas-data-status--error">{mapError}</div> : !mapData || !historyData ? <div className="atlas-data-status">LOADING HISTORICAL BORDERS <i /></div> : !warData ? <div className="atlas-data-status">LOADING WAR RECORDS <i /></div> : null}
     {warsError && <div className="atlas-data-status atlas-data-status--error">{warsError} The historical map remains available.</div>}

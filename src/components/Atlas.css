@@ -503,7 +503,8 @@
   transform: translateY(-1px);
 }
 
-.atlas-zoom-controls .atlas-zoom-reset {
+.atlas-zoom-controls .atlas-zoom-reset,
+.atlas-zoom-controls .atlas-zoom-share {
   width: auto;
   padding: 0 10px;
   border-radius: 999px;

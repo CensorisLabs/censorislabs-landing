@@ -295,12 +295,17 @@ function makeEarthTexture(countries: AtlasFeature<CountryProperties>[], historic
   // areas. Historical polities are painted over this layer, so their borders
   // remain authoritative wherever the source has coverage.
   if (highDetail && year < 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(23, 19, 15, .28)', .55 * lineScale, canvas.width, canvas.height))
+  // The modern snapshot is already fully covered by its own borders, so its
+  // states get a light wash; past centuries keep the darker engraved polities.
+  const modern = year >= 2022
   historical.forEach(feature => {
-    drawFeature(ctx, feature, polityColor(feature.properties.name, .82, 52), polityColor(feature.properties.name, .95, 30), 0.6 * lineScale, canvas.width, canvas.height)
+    const fill = modern ? polityColor(feature.properties.name, .3, 82) : polityColor(feature.properties.name, .82, 52)
+    const stroke = modern ? polityColor(feature.properties.name, .7, 52) : polityColor(feature.properties.name, .95, 30)
+    drawFeature(ctx, feature, fill, stroke, (modern ? 0.5 : 0.6) * lineScale, canvas.width, canvas.height)
     if (highDetail) drawFeature(ctx, feature, 'transparent', 'rgba(255, 255, 255, .16)', .55 * lineScale, canvas.width, canvas.height)
   })
   if (year >= 2022) countries.forEach(feature => drawFeature(ctx, feature, 'transparent', 'rgba(23, 19, 15, .6)', .8 * lineScale, canvas.width, canvas.height))
-  selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(23, 19, 15, .25)', '#17130f', 3 * lineScale, canvas.width, canvas.height))
+  selectedAuthorities.forEach(feature => drawFeature(ctx, feature, 'rgba(23, 19, 15, .18)', '#17130f', 1.5 * lineScale, canvas.width, canvas.height))
   if (selectedCountry && year >= 2022) {
     const selected = countries.find(feature => feature.properties.name === selectedCountry)
     if (selected) drawFeature(ctx, selected, 'rgba(23, 19, 15, .2)', 'rgba(142, 72, 190, .95)', 2.8 * lineScale, canvas.width, canvas.height)
@@ -431,7 +436,7 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
       const isUcdp = war.source.startsWith('UCDP')
       const magnitude = Math.min(isUcdp ? 0.003 : 0.005, Math.log10((war.eventCount ?? 1) + 1) * (isUcdp ? 0.0009 : 0.0014))
       const radius = ((isUcdp ? 0.0065 : 0.014) + magnitude) * (war.id === selectedWarId || `${war.source}:${war.war || war.title}` === selectedWarKey ? 1.6 : 1)
-      marker.scale.setScalar(radius * (zoomBand === 2 ? Math.max(0.5, viewDistance / DEFAULT_GLOBE_DISTANCE) : 1))
+      marker.scale.setScalar(radius * (zoomBand === 2 ? Math.max(0.28, viewDistance / DEFAULT_GLOBE_DISTANCE) : 1))
       marker.updateMatrix()
       mesh.setMatrixAt(index, marker.matrix)
       const markerColor = war.id === selectedWarId ? '#17130f' : `${war.source}:${war.war || war.title}` === selectedWarKey ? '#17130f' : war.source.startsWith('UCDP') ? '#4a443c' : '#7c7367'
@@ -448,6 +453,9 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   // Sprites are positioned in world space, so shrinking them as the camera
   // approaches keeps names a readable, map-like size instead of billboards.
   const labelScale = zoomBand === 2 ? THREE.MathUtils.clamp(viewDistance / DEFAULT_GLOBE_DISTANCE, 0.45, 1) : zoomBand === 1 ? 0.8 : 1
+  // The selected-place dot is world sized, so it would grow into a boulder at
+  // close range; keep it roughly constant on screen instead.
+  const markerScale = zoomBand === 2 ? THREE.MathUtils.clamp(viewDistance / DEFAULT_GLOBE_DISTANCE, 0.4, 1) : 1
   const labelWidthDegrees = (label: GlobeLabel) => labelWidth(label.name, label.kind === 'city' || label.kind === 'landmark' ? label.kind : 'country', labelScale)
   const globeLabels = useMemo(() => {
     const source: GlobeLabel[] = year >= 2022
@@ -498,8 +506,8 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   const cityLabelSignature = useRef('')
   useEffect(() => { gl.domElement.dataset.atlasCityLabels = String(cityLabels.length) }, [cityLabels, gl])
   const warRegionMesh = useMemo(() => {
-    const geometry = new THREE.CircleGeometry(1, 24)
-    const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
+    const geometry = new THREE.CircleGeometry(1, 28)
+    const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
     const mesh = new THREE.InstancedMesh(geometry, material, warRegions.length)
     const marker = new THREE.Object3D()
     const color = new THREE.Color()
@@ -745,7 +753,11 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
           area: entry.city.population, kind: 'city',
         })
       }
-      const next = spacedLabels(visible, 280, 0.25, label => labelWidth(label.name, 'city', scale))
+      const blocked = [...globeLabels, ...closeZoomLabels.landmarks]
+      const next = spacedLabels(visible, 280, 0.25, label => labelWidth(label.name, 'city', scale)).filter(city => {
+        const cityHalf = labelWidth(city.name, 'city', scale) * DEGREES_PER_WORLD_UNIT * 0.4
+        return !blocked.some(other => labelsWithin(city, other, cityHalf + labelWidth(other.name, other.kind === 'landmark' ? 'landmark' : 'country', labelScale) * DEGREES_PER_WORLD_UNIT * 0.4))
+      })
       const signature = next.map(label => `${label.name}@${label.lat.toFixed(2)},${label.lon.toFixed(2)}`).join('|')
       if (signature !== cityLabelSignature.current) {
         cityLabelSignature.current = signature
@@ -775,16 +787,16 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
         <torusGeometry args={[1.68, 0.006, 5, 240]} />
         <meshBasicMaterial color="#17130f" transparent opacity={0.5} />
       </mesh>
-      {selectedPoint && <mesh position={latLon(selectedPoint.lat, selectedPoint.lon, 1.635)}>
+      {selectedPoint && <mesh position={latLon(selectedPoint.lat, selectedPoint.lon, 1.635)} scale={markerScale}>
         <sphereGeometry args={[0.028, 16, 12]} />
         <meshBasicMaterial color="#7c7367" />
       </mesh>}
-      <primitive object={warRegionMesh} onClick={event => {
+      {zoomBand < 2 && <primitive object={warRegionMesh} onClick={event => {
         if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
         event.stopPropagation()
         const region = typeof event.instanceId === 'number' ? warRegions[event.instanceId] : undefined
         if (region) onSelectWar(region.representative)
-      }} />
+      }} />}
       {!isPlaying && <primitive object={warMarkerMesh} onClick={event => {
         if (performance.now() < suppressClickUntil.current) { event.stopPropagation(); return }
         event.stopPropagation()
@@ -862,7 +874,7 @@ function GlobeTextLabel({ label, scale, kind = 'country' }: { label: GlobeLabel;
     context.font = isCountry ? '700 66px Inter, Arial, sans-serif' : kind === 'landmark' ? 'italic 600 46px Georgia, serif' : '700 48px Inter, Arial, sans-serif'
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.lineWidth = isCountry ? 7 : 7
+    context.lineWidth = isCountry ? 7 : 8
     context.strokeStyle = 'rgba(255,255,255,.96)'
     context.strokeText(text, canvas.width / 2, canvas.height / 2, canvas.width - 24)
     context.fillStyle = isCountry ? '#17130f' : kind === 'landmark' ? '#6f6659' : '#3d372f'

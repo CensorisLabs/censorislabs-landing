@@ -194,12 +194,15 @@ test('the atlas lists the journeys that cross the chosen year', async ({ page })
 })
 
 test('a shared atlas link restores its journey', async ({ page }) => {
-  test.setTimeout(60_000)
+  // The globe repaints an 8K map texture; under a fully parallel suite this
+  // page regularly needs more than a minute end to end.
+  test.setTimeout(90_000)
   await openAndAudit(page, '/atlas?year=1600&journey=manila-galleon', 25_000)
 
   const card = page.locator('.atlas-journey-card')
   await expect(card, 'the shared route is selected').toContainText('Manila galleon')
   await expect(card, 'its endpoints are shown').toContainText('Acapulco → Manila')
+  await expect(card, 'a route with ports says it bends through them').toContainText('bends through the main ports')
 
   await page.getByRole('button', { name: 'Next journey' }).click()
   await expect(card, 'stepping moves to the next route').not.toContainText('Manila galleon')

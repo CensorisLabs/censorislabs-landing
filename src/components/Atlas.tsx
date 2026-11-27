@@ -99,7 +99,7 @@ function formatWarPeriod(war: WarProperties, from: number, to: number) {
   return start === end ? formatYear(start) : `${formatYear(start)} — ${formatYear(end)}`
 }
 
-type Journey = { id: string; name: string; fromName: string; toName: string; from: [number, number]; to: [number, number]; start: number; end: number; detail: string }
+type Journey = { id: string; name: string; fromName: string; toName: string; from: [number, number]; to: [number, number]; via?: [number, number][]; start: number; end: number; detail: string }
 
 // Dated trunk routes, not a complete network: each arc stands for a corridor
 // that carried goods and people for the stated span, and is hidden outside it.
@@ -108,14 +108,14 @@ const JOURNEYS: Journey[] = [
   { id: 'roman-grain', name: 'Rome’s grain run', fromName: 'Rome', toName: 'Alexandria', from: [41.9, 12.5], to: [31.2, 29.9], start: -30, end: 400, detail: 'Egyptian grain sailed to Ostia and Rome; the same sea lanes carried oil, wine and people across the Mediterranean.' },
   { id: 'trans-saharan', name: 'Trans-Saharan gold road', fromName: 'Timbuktu', toName: 'Sijilmasa', from: [16.77, -3.0], to: [31.28, -4.24], start: 1000, end: 1600, detail: 'Gold moved north and salt and books moved south through Sijilmasa and the Niger bend; Timbuktu grew as a staging point.' },
   { id: 'monsoon', name: 'Indian Ocean monsoon route', fromName: 'Calicut', toName: 'Muscat', from: [11.25, 75.78], to: [23.6, 58.6], start: 800, end: 1600, detail: 'Sailors timed crossings to the monsoon winds between Malabar, Arabia and the Persian Gulf long before European ships arrived.' },
-  { id: 'zheng-he', name: 'Zheng He’s voyages', fromName: 'Nanjing', toName: 'Hormuz', from: [32.06, 118.8], to: [27.1, 56.5], start: 1405, end: 1433, detail: 'Ming fleets sailed from Nanjing through Southeast Asia to Hormuz and the African coast; the voyages ended with imperial policy.' },
-  { id: 'norse-atlantic', name: 'Norse North Atlantic', fromName: 'Bergen', toName: 'L’Anse aux Meadows', from: [60.39, 5.32], to: [51.6, -55.53], start: 870, end: 1050, detail: 'Settlers moved from Norway to Iceland, Greenland and a short-lived camp at L’Anse aux Meadows in Newfoundland.' },
-  { id: 'hajj', name: 'Hajj road from Cairo', fromName: 'Cairo', toName: 'Mecca', from: [30.04, 31.24], to: [21.42, 39.83], start: 700, end: 1900, detail: 'Pilgrim caravans crossed Sinai and the Hejaz each year; the route also carried trade and scholarship.' },
-  { id: 'portuguese-india', name: 'Portuguese sea route to India', fromName: 'Lisbon', toName: 'Calicut', from: [38.71, -9.14], to: [11.25, 75.78], start: 1498, end: 1700, detail: 'Vasco da Gama’s fleet rounded the Cape and reached Calicut, opening a direct ocean link between Lisbon and Malabar.' },
-  { id: 'spanish-main', name: 'Spanish Atlantic run', fromName: 'Seville', toName: 'Veracruz', from: [37.39, -5.98], to: [19.2, -96.1], start: 1520, end: 1700, detail: 'Convoys carried silver and goods between Seville and Veracruz under escort; the crossing tied American mines to European markets.' },
-  { id: 'manila-galleon', name: 'Manila galleon', fromName: 'Acapulco', toName: 'Manila', from: [16.85, -99.9], to: [14.6, 120.98], start: 1565, end: 1815, detail: 'One or two ships a year crossed the Pacific between Acapulco and Manila, exchanging American silver for Asian goods.' },
+  { id: 'zheng-he', name: 'Zheng He’s voyages', fromName: 'Nanjing', toName: 'Hormuz', from: [32.06, 118.8], to: [27.1, 56.5], via: [[24.9, 118.6], [2.19, 102.25], [11.25, 75.78]], start: 1405, end: 1433, detail: 'Ming fleets sailed from Nanjing through Southeast Asia to Hormuz and the African coast; the voyages ended with imperial policy.' },
+  { id: 'norse-atlantic', name: 'Norse North Atlantic', fromName: 'Bergen', toName: 'L’Anse aux Meadows', from: [60.39, 5.32], to: [51.6, -55.53], via: [[63.5, -19.0], [61.0, -45.0]], start: 870, end: 1050, detail: 'Settlers moved from Norway to Iceland, Greenland and a short-lived camp at L’Anse aux Meadows in Newfoundland.' },
+  { id: 'hajj', name: 'Hajj road from Cairo', fromName: 'Cairo', toName: 'Mecca', from: [30.04, 31.24], to: [21.42, 39.83], via: [[29.5, 33.9]], start: 700, end: 1900, detail: 'Pilgrim caravans crossed Sinai and the Hejaz each year; the route also carried trade and scholarship.' },
+  { id: 'portuguese-india', name: 'Portuguese sea route to India', fromName: 'Lisbon', toName: 'Calicut', from: [38.71, -9.14], to: [11.25, 75.78], via: [[14.9, -23.5], [-34.36, 18.47], [-15.0, 40.7], [-3.2, 40.1]], start: 1498, end: 1700, detail: 'Vasco da Gama’s fleet rounded the Cape and reached Calicut, opening a direct ocean link between Lisbon and Malabar.' },
+  { id: 'spanish-main', name: 'Spanish Atlantic run', fromName: 'Seville', toName: 'Veracruz', from: [37.39, -5.98], to: [19.2, -96.1], via: [[28.1, -15.4]], start: 1520, end: 1700, detail: 'Convoys carried silver and goods between Seville and Veracruz under escort; the crossing tied American mines to European markets.' },
+  { id: 'manila-galleon', name: 'Manila galleon', fromName: 'Acapulco', toName: 'Manila', from: [16.85, -99.9], to: [14.6, 120.98], via: [[13.44, 144.79]], start: 1565, end: 1815, detail: 'One or two ships a year crossed the Pacific between Acapulco and Manila, exchanging American silver for Asian goods.' },
   { id: 'grand-trunk', name: 'Grand Trunk Road', fromName: 'Kabul', toName: 'Sonargaon', from: [34.53, 69.17], to: [23.81, 90.41], start: -300, end: 1800, detail: 'The road across northern India from Kabul toward Bengal was rebuilt by successive empires and remained a main artery.' },
-  { id: 'cape-route', name: 'Cape route to Batavia', fromName: 'Cape Town', toName: 'Batavia', from: [-33.92, 18.42], to: [-6.2, 106.82], start: 1652, end: 1850, detail: 'Dutch ships called at Cape Town for supplies on the long run to Batavia, carrying spices, textiles and people.' },
+  { id: 'cape-route', name: 'Cape route to Batavia', fromName: 'Cape Town', toName: 'Batavia', from: [-33.92, 18.42], to: [-6.2, 106.82], via: [[-38.0, 55.0], [-30.0, 95.0]], start: 1652, end: 1850, detail: 'Dutch ships called at Cape Town for supplies on the long run to Batavia, carrying spices, textiles and people.' },
   { id: 'steam-atlantic', name: 'Steam across the Atlantic', fromName: 'Liverpool', toName: 'New York', from: [53.4, -3.0], to: [40.7, -74.0], start: 1840, end: 1950, detail: 'Regular steam crossings cut the Atlantic passage from weeks to days and moved mail, emigrants and freight on schedule.' },
   { id: 'first-railroad', name: 'First transcontinental railroad', fromName: 'Omaha', toName: 'Sacramento', from: [41.26, -95.93], to: [38.58, -121.49], start: 1869, end: 1960, detail: 'The line joined at Promontory Summit in 1869, linking the Missouri valley to California by rail.' },
 ]
@@ -736,13 +736,21 @@ function Globe({ events, warMarkers, journeys, selectedJourneyId, labels, lowMot
   }, [focusPoint, selectedPoint])
 
   const routeObjects = useMemo(() => journeys.map(journey => {
-    const a = latLon(journey.from[0], journey.from[1], 1.615)
-    const b = latLon(journey.to[0], journey.to[1], 1.615)
+    // Each leg is a great circle, so a sea route bends around the land it
+    // actually sailed past instead of cutting straight over a continent.
+    const stops: [number, number][] = [journey.from, ...(journey.via ?? []), journey.to]
+    const legs = stops.length - 1
     const points: THREE.Vector3[] = []
-    for (let i = 0; i <= 48; i++) {
-      const t = i / 48
-      const point = a.clone().lerp(b, t).normalize().multiplyScalar(1.61 + Math.sin(Math.PI * t) * 0.1)
-      points.push(point)
+    for (let leg = 0; leg < legs; leg++) {
+      const a = latLon(stops[leg][0], stops[leg][1], 1.615)
+      const b = latLon(stops[leg + 1][0], stops[leg + 1][1], 1.615)
+      const steps = 24
+      for (let i = leg === 0 ? 0 : 1; i <= steps; i++) {
+        const t = i / steps
+        const along = (leg + t) / legs
+        const point = a.clone().lerp(b, t).normalize().multiplyScalar(1.61 + Math.sin(Math.PI * along) * 0.1)
+        points.push(point)
+      }
     }
     const selected = journey.id === selectedJourneyId
     const material = new THREE.LineBasicMaterial({ color: selected ? '#17130f' : '#7c7367', transparent: true, opacity: selected ? 1 : 0.55 })
@@ -1461,7 +1469,7 @@ export default function Atlas() {
           {selectedWar.properties.theatre && <p className="atlas-war-period">Theatre: {selectedWar.properties.theatre}</p>}
           <p className="atlas-data-note">Source: {selectedWar.properties.source}. These are documented locations, not a complete map of every battle or front. UCDP points use the most specific place named in the source; older event coverage is uneven.</p>
           <a className="atlas-war-source-link" href={selectedWar.properties.source.startsWith('UCDP') ? 'https://ucdp.uu.se/downloads/' : 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6ZFC0V'} target="_blank" rel="noreferrer">Open source data + methods ↗</a>
-        </div> : selectedJourneyDetail ? <div className="atlas-detail atlas-journey-card"><div className="atlas-detail-tag"><span>JOURNEY</span><span>◦ &nbsp;{formatYear(selectedJourneyDetail.start)} — {formatYear(selectedJourneyDetail.end)}</span></div><h2>{selectedJourneyDetail.name}</h2><p className="atlas-place">⌖ &nbsp;{selectedJourneyDetail.fromName} → {selectedJourneyDetail.toName}</p><p className="atlas-detail-copy">{selectedJourneyDetail.detail}</p><p className="atlas-data-note">A dated corridor, not a surveyed track: the arc joins the two endpoints and stands for the route as a whole.</p><button className="atlas-follow" onClick={() => selectJourney(null)}>Clear route <span>×</span></button></div> : selectedPoint ? <div className="atlas-country-detail">
+        </div> : selectedJourneyDetail ? <div className="atlas-detail atlas-journey-card"><div className="atlas-detail-tag"><span>JOURNEY</span><span>◦ &nbsp;{formatYear(selectedJourneyDetail.start)} — {formatYear(selectedJourneyDetail.end)}</span></div><h2>{selectedJourneyDetail.name}</h2><p className="atlas-place">⌖ &nbsp;{selectedJourneyDetail.fromName} → {selectedJourneyDetail.toName}</p><p className="atlas-detail-copy">{selectedJourneyDetail.detail}</p><p className="atlas-data-note">{selectedJourneyDetail.via?.length ? 'A dated corridor, not a surveyed track: the arc bends through the main ports on the way and stands for the route as a whole.' : 'A dated corridor, not a surveyed track: the arc joins the two endpoints and stands for the route as a whole.'}</p><button className="atlas-follow" onClick={() => selectJourney(null)}>Clear route <span>×</span></button></div> : selectedPoint ? <div className="atlas-country-detail">
           <div className="atlas-detail-tag"><span>PLACE SELECTED</span><span>◦ &nbsp;{selectedPoint.lat.toFixed(1)}°, {selectedPoint.lon.toFixed(1)}°</span></div>
           <h2>{selectedCountry?.properties.name ?? (mapData ? 'Open water' : 'Finding country…')}</h2>
           {selectedCountry && <p className="atlas-place">On today’s map{selectedCountry.properties.sovereign !== selectedCountry.properties.name ? ` · ${selectedCountry.properties.sovereign}` : ''}</p>}

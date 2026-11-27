@@ -1,0 +1,20 @@
+/* Era Almanac: an era picker plus one fact at a time. */
+.era-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(208px,1fr));gap:10px;margin-top:16px}
+.era-card{display:grid;gap:6px;padding:15px 16px;text-align:left;border:1px solid var(--line);border-radius:10px;background:#191b20;color:var(--ink);transition:border-color .15s,background .15s,transform .15s}
+.era-card:hover{border-color:#765c48;transform:translateY(-1px)}
+.era-card[aria-pressed="true"]{border-color:var(--bronze);background:#221e1a;box-shadow:inset 0 0 0 1px #d9a25f33}
+.era-card .era-name{font-family:Georgia,serif;font-size:18px;letter-spacing:.01em}
+.era-card .era-span{font:10px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--bronze)}
+.era-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+.era-card small{color:#7f858e;font:10px "DM Mono",monospace}
+.era-deck{padding:26px}
+.era-deck .section-heading{margin-bottom:14px}
+.era-deck .pill{font-family:"DM Mono",monospace;color:var(--muted)}
+.fact-text{margin:0 0 20px;padding-left:18px;border-left:2px solid var(--bronze);font-family:Georgia,serif;font-size:clamp(19px,2.4vw,25px);line-height:1.5;color:#f0e9df;min-height:2.6em}
+.fact-text:empty{display:none}
+.saved-list{display:grid;gap:8px;margin-top:14px}
+.saved-fact{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:9px;background:#191b20}
+.saved-fact .eyebrow{grid-column:1/-1;margin:0}
+.saved-fact p:not(.eyebrow){margin:0;font-size:13px;line-height:1.65;color:#d1d5da}
+.saved-fact .btn{grid-row:2;grid-column:2;align-self:center}
+@media(max-width:560px){.era-deck{padding:18px}.era-grid{grid-template-columns:1fr}.saved-fact{grid-template-columns:1fr}.saved-fact .btn{grid-row:auto;grid-column:1;justify-self:start}}

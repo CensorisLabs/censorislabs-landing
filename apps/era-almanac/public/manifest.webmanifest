@@ -1,0 +1,17 @@
+{
+  "name": "Era Almanac — CensorisLabs",
+  "short_name": "Era Almanac",
+  "description": "Choose a period of history and draw a fun fact about it. Works offline.",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#16181c",
+  "theme_color": "#16181c",
+  "categories": ["education", "reference"],
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

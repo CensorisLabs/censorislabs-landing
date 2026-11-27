@@ -1,0 +1,118 @@
+// Hand-written facts, kept to things that are well established and easy to
+// check. No dates are invented and nothing here needs a network request.
+export const ERAS = [
+  {
+    id: 'prehistory',
+    name: 'Prehistory',
+    span: 'before 3000 BCE',
+    hook: 'Stone tools, cave walls and the first villages.',
+    facts: [
+      'The paintings at Lascaux in France are roughly 17,000 years old, made with ochre and charcoal carried deep into unlit caves.',
+      'People kept dogs long before they kept crops: a dog buried beside two humans at Bonn-Oberkassel in Germany is about 14,000 years old.',
+      'Farming was invented independently in several parts of the world, including the Fertile Crescent, China, Mesoamerica and New Guinea.',
+      'Ötzi the Iceman, who died in the Alps around 3300 BCE, carried a copper axe — metalworking was already old when he lived.',
+      'Stonehenge’s large sarsen stones came from roughly 25 km away, but its smaller bluestones were hauled from the Preseli hills in Wales.',
+      'The oldest known wooden wheel with an axle, found in the Ljubljana Marshes in Slovenia, is about 5,150 years old.',
+    ],
+  },
+  {
+    id: 'ancient',
+    name: 'Ancient world',
+    span: '3000 BCE – 500 CE',
+    hook: 'Cities, writing, law codes and the first computers.',
+    facts: [
+      'Writing began in Sumer around 3200 BCE as accounting: the first tablets record quantities of grain, beer and labour, not stories.',
+      'The Great Pyramid of Giza was built around 2560 BCE and stayed the tallest building in the world for roughly 3,800 years.',
+      'Hammurabi’s stele, carved around 1750 BCE, lists 282 case laws — a surprisingly practical document about fees, debts and damages.',
+      'Athenian democracy let adult male citizens vote, but women, enslaved people and foreigners living in Athens could not.',
+      'The Antikythera mechanism, recovered from a shipwreck, is a geared bronze device from the second century BCE that modelled the sky.',
+      'The Pantheon in Rome still has the largest unreinforced concrete dome ever built, and the mix has survived nearly two millennia.',
+    ],
+  },
+  {
+    id: 'medieval',
+    name: 'Medieval',
+    span: '500 – 1500',
+    hook: 'Monasteries, caravans, cathedrals and algebra.',
+    facts: [
+      'Algebra takes its name from al-Khwarizmi’s ninth-century Baghdad treatise on balancing and restoring quantities.',
+      'Norse sailors reached Newfoundland around 1000 CE; the remains at L’Anse aux Meadows are the only confirmed Viking site in North America.',
+      'Magna Carta was sealed in 1215 as a peace deal between a king and rebellious barons, then reissued with changes several times.',
+      'The Black Death killed somewhere between a third and half of Europe’s people in the late 1340s, reshaping wages and land for a century.',
+      'Bi Sheng printed with movable ceramic type in eleventh-century China, four centuries before Gutenberg’s metal type in Europe.',
+      'Great Zimbabwe’s walls, built between the eleventh and fifteenth centuries, were assembled from shaped granite blocks without mortar.',
+    ],
+  },
+  {
+    id: 'early-modern',
+    name: 'Early modern',
+    span: '1500 – 1800',
+    hook: 'Print, telescopes, voyages and new maps of the sky.',
+    facts: [
+      'Copernicus published his Sun-centred model in 1543, the year he died — the book was famously handed to him on his deathbed.',
+      'Galileo pointed a telescope at the sky in 1609 and found four moons orbiting Jupiter, evidence that not everything circles Earth.',
+      'Newton’s Principia appeared in 1687, written in Latin and paid for by Edmond Halley, who also gave the comet his name.',
+      'Variolation — deliberately infecting someone with mild smallpox to prevent worse — was practised in Asia and the Ottoman world long before Jenner’s 1796 vaccine.',
+      'The word “newspaper” arrived with printed weeklies in the early 1600s; the first regularly printed one is usually dated to Strasbourg in 1605.',
+      'Cook’s Endeavour voyage sailed to Tahiti in 1769 to observe the transit of Venus, then kept going and charted New Zealand and eastern Australia.',
+    ],
+  },
+  {
+    id: 'industrial',
+    name: 'Industrial',
+    span: '1800 – 1914',
+    hook: 'Steam, rails, telegraphs and the first programmers.',
+    facts: [
+      'The London Underground opened in 1863 with steam trains, and its first tunnels were dug by the cut-and-cover method just below the streets.',
+      'Ada Lovelace’s 1843 notes on the Analytical Engine included a step-by-step method for computing Bernoulli numbers — a program written for a machine that was never built.',
+      'Stephenson’s Rocket won the Rainhill trials in 1829 by being reliable rather than exotic: it used a multi-tube boiler that became the standard.',
+      'The Eiffel Tower was built for the 1889 world’s fair and was meant to be dismantled after twenty years; radio antennae saved it.',
+      'Marie Curie won Nobel Prizes in physics and chemistry — the first person to win in two different sciences.',
+      'Kodak’s Brownie camera in 1900 cost a dollar and put photography in the hands of ordinary families for the first time.',
+    ],
+  },
+  {
+    id: 'world-wars',
+    name: 'World wars',
+    span: '1914 – 1945',
+    hook: 'Trenches, codebreaking and the world remade.',
+    facts: [
+      'On Christmas 1914, soldiers along parts of the Western Front left their trenches, traded cigarettes and played football in no man’s land.',
+      'The first tanks went into battle at Flers-Courcelette in 1916; many broke down before reaching the German lines.',
+      'The 1918 influenza pandemic infected about a third of the world’s population, and it killed more people than the war itself.',
+      'Alexander Fleming noticed in 1928 that a mould cleared bacteria on a dish; turning penicillin into a medicine took Florey and Chain until the 1940s.',
+      'Codebreakers at Bletchley Park built machines to test Enigma settings, work that stayed secret for decades after the war.',
+      'D-Day on 6 June 1944 put more than 150,000 Allied troops ashore in Normandy on the first day, supported by thousands of ships and aircraft.',
+    ],
+  },
+  {
+    id: 'cold-war',
+    name: 'Cold War',
+    span: '1945 – 1991',
+    hook: 'Satellites, silicon and a wall that came down.',
+    facts: [
+      'ENIAC, completed in 1946, weighed about 27 tonnes and was programmed by rewiring it, with six women doing much of the early work.',
+      'Sputnik 1, launched in 1957, was a polished metal sphere about 58 cm across that beeped on a radio frequency anyone could hear.',
+      'Yuri Gagarin orbited Earth on 12 April 1961; Valentina Tereshkova became the first woman in space two years later.',
+      'The Apollo 11 guidance computer ran on about 4 KB of usable memory — far less than a single photo on a modern phone.',
+      'The Berlin Wall went up in 1961 and came down in 1989, after border guards opened crossings following weeks of protests.',
+      'The first message on ARPANET, in 1969, was sent between two university computers and crashed after two letters: “LO”.',
+    ],
+  },
+  {
+    id: 'digital',
+    name: 'Digital',
+    span: '1991 – today',
+    hook: 'Text messages, search boxes and pocket computers.',
+    facts: [
+      'The first text message, sent in 1992, read “Merry Christmas” and travelled from a computer to a phone on a UK network.',
+      'The first webcam watched a coffee pot at Cambridge University so researchers would not walk to an empty pot.',
+      'Wikipedia launched in 2001 and overtook professionally edited encyclopedias in article count within a few years.',
+      'The term “open source” was coined in 1998 as a deliberate rebrand of free software for business audiences.',
+      'The iPhone launched in 2007 without an app store; that arrived a year later with a few hundred apps.',
+      'GPS was built for the US military and opened to civilian use after a Korean airliner was shot down in 1983.',
+    ],
+  },
+]
+
+export const ALL_FACTS = ERAS.flatMap((era) => era.facts.map((text, index) => ({ id: era.id + "-" + index, text, eraId: era.id, eraName: era.name, span: era.span })))

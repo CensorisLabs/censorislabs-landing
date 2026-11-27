@@ -49,7 +49,7 @@ mountApp({
   eyebrow: 'PC HARDWARE · COMPATIBILITY',
   title: 'Plan a build with confidence.',
   description: 'Choose parts, enter prices from your preferred shops, and catch common socket, memory, clearance, and power mismatches before you buy.',
-  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">YOUR BUILD</p><h2>Choose components</h2><div id="part-list"></div><div class="field"><label for="build-name">Name this build</label><input id="build-name" placeholder="e.g. Studio PC" maxlength="40"></div><div class="actions"><button class="btn" id="save-build">Save this build</button><button class="btn btn--outline" id="export-build">Copy parts list</button><button class="btn btn--quiet" id="reset">Clear build</button></div><p class="status" id="save-status" aria-live="polite"></p><div id="build-library"></div></section><aside class="result-card"><span class="metric-label">ESTIMATED BUILD TOTAL</span><div class="metric" id="total">₹0</div><div class="metric-list"><div class="metric-row"><span>Estimated component draw</span><strong id="draw">—</strong></div><div class="metric-row"><span>Suggested PSU headroom</span><strong id="headroom">—</strong></div><div class="metric-row"><span>Build budget</span><strong id="budget-left">—</strong></div></div><div class="field"><label for="budget">Build budget (₹)</label><input id="budget" type="number" min="0" step="100" value="${budget || ''}" placeholder="Optional"></div><p class="notice" id="compatibility" aria-live="polite">Choose components to check the selected combination.</p></aside></div>`,
+  content: `<div class="content-grid"><section class="panel"><p class="eyebrow">YOUR BUILD</p><h2>Choose components</h2><div id="part-list"></div><div class="field"><label for="build-name">Name this build</label><input id="build-name" placeholder="e.g. Studio PC" maxlength="40"></div><div class="actions"><button class="btn" id="save-build">Save this build</button><button class="btn btn--outline" id="export-build">Copy parts list</button><button class="btn btn--quiet" id="share-build">Copy build link</button><button class="btn btn--quiet" id="reset">Clear build</button></div><p class="status" id="save-status" aria-live="polite"></p><div id="build-library"></div></section><aside class="result-card"><span class="metric-label">ESTIMATED BUILD TOTAL</span><div class="metric" id="total">₹0</div><div class="metric-list"><div class="metric-row"><span>Estimated component draw</span><strong id="draw">—</strong></div><div class="metric-row"><span>Suggested PSU headroom</span><strong id="headroom">—</strong></div><div class="metric-row"><span>Build budget</span><strong id="budget-left">—</strong></div></div><div class="field"><label for="budget">Build budget (₹)</label><input id="budget" type="number" min="0" step="100" value="${budget || ''}" placeholder="Optional"></div><p class="notice" id="compatibility" aria-live="polite">Choose components to check the selected combination.</p></aside></div>`,
 })
 
 const $ = (id) => document.getElementById(id)
@@ -77,6 +77,46 @@ function renderLibrary() {
     builds.splice(Number(button.dataset.delete), 1); writeBuilds(); renderLibrary()
   }))
 }
+
+// A shared build travels in the URL fragment, so a link never touches a server
+// and a friend opens the same parts, prices and budget without an account.
+const SHARE_PREFIX = '#b='
+const toBase64Url = (text) => btoa(String.fromCharCode(...new TextEncoder().encode(text))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+const fromBase64Url = (value) => {
+  const padded = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4)
+  const bytes = Uint8Array.from(atob(padded), (char) => char.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
+}
+function buildPayload() {
+  return { v: 1, c: categories.map(([key]) => state[key]), p: { ...priceState }, s: storageName, b: budget, n: $('build-name')?.value.trim().slice(0, 40) || '' }
+}
+function shareLink() { return `${location.origin}${location.pathname}${SHARE_PREFIX}${toBase64Url(JSON.stringify(buildPayload()))}` }
+function readShareLink() {
+  if (!location.hash.startsWith(SHARE_PREFIX)) return null
+  try {
+    const data = JSON.parse(fromBase64Url(location.hash.slice(SHARE_PREFIX.length)))
+    return data && typeof data === 'object' ? data : null
+  } catch { return null }
+}
+function applySharedBuild(data) {
+  if (!data || typeof data !== 'object') return false
+  const indices = Array.isArray(data.c) ? data.c : []
+  categories.forEach(([key], index) => {
+    const value = Number(indices[index])
+    state[key] = Number.isInteger(value) && value >= 0 && value < parts[key].length ? value : -1
+  })
+  categories.forEach(([key]) => {
+    const raw = data.p?.[key]
+    const text = raw === 0 ? '0' : typeof raw === 'string' ? raw.slice(0, 12) : ''
+    priceState[key] = /^\d{0,9}$/.test(text) ? text : ''
+  })
+  storageName = typeof data.s === 'string' && [...new Set(Object.values(parts).flat().map(part => part.name))].includes(data.s) ? data.s : ''
+  budget = Math.max(0, Math.min(100_000_000, Number(data.b) || 0))
+  $('budget').value = budget ? String(budget) : ''
+  if (typeof data.n === 'string') $('build-name').value = data.n.slice(0, 40)
+  return true
+}
+const sharedBuild = readShareLink()
 const money = (value) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`
 const selection = (key) => parts[key]?.[state[key]]
 function options(key) { return parts[key].map((part, index) => `<option value="${index}"${state[key] === index ? ' selected' : ''}>${part.name}</option>`).join('') }
@@ -127,7 +167,9 @@ function update() {
   $('compatibility').className = issues.length ? 'notice error' : 'notice'
   try { localStorage.setItem('censoris-pc-build', JSON.stringify({ ...state, prices: priceState, storageText: storageName, budget })) } catch {}
 }
+const openedSharedBuild = sharedBuild ? applySharedBuild(sharedBuild) : false
 renderList(); update(); renderLibrary()
+if (openedSharedBuild) $('save-status').textContent = 'Opened a shared build from the link.' 
 $('budget').addEventListener('input', event => { budget = Math.max(0, Number(event.currentTarget.value) || 0); update() })
 $('save-build').addEventListener('click', () => {
   const name = $('build-name').value.trim() || `Build ${builds.length + 1}`
@@ -143,5 +185,15 @@ $('export-build').addEventListener('click', async () => {
   const text = lines.join(String.fromCharCode(10))
   try { await navigator.clipboard.writeText(text); $('save-status').textContent = 'Parts list copied to the clipboard.' }
   catch { $('save-status').textContent = text }
+})
+$('share-build').addEventListener('click', async () => {
+  const link = shareLink()
+  try { history.replaceState(null, '', link) } catch { /* the copied link still works */ }
+  try {
+    await navigator.clipboard.writeText(link)
+    $('save-status').textContent = 'Build link copied. It carries the parts, prices and budget, and opens on this device.'
+  } catch {
+    $('save-status').textContent = `Copy this build link: ${link}`
+  }
 })
 $('reset').addEventListener('click', () => { if (!window.confirm('Clear this build from this device?')) return; try { localStorage.removeItem('censoris-pc-build') } catch {}; location.reload() })

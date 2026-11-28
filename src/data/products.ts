@@ -3,6 +3,8 @@
  * generator and the reviews form can read it without JSX.
  */
 
+import { ARTHASETU_HEADLINE_FEATURES } from './arthasetu-capabilities.ts'
+
 export type Product = {
   id: string
   name: string
@@ -16,7 +18,7 @@ type ReleaseAsset = { name: string; size: number; browser_download_url: string }
 type Release = { tag_name: string; assets: ReleaseAsset[]; body?: string; published_at?: string }
 
 export const PRODUCTS: Product[] = [
-  { id: 'arthasetu', name: 'ArthaSetu', kind: 'Personal finance · India', description: 'A private money workspace for Indian households: transactions, budgets, tax estimates, investments, and long-term plans.', free: ['Manual ledger with date, type and account pickers, plus month filtering', 'Duplicate transactions, split them across categories, repeat them monthly and export CSV', 'Bank statement CSV import with category suggestions and merchant rules', '50/30/20 budget', 'Unlimited local accounts', 'Basic tax estimate and JSON backup'], freeOnly: true },
+  { id: 'arthasetu', name: 'ArthaSetu', kind: 'Personal finance · India', description: 'A private money workspace for Indian households: transactions, budgets, tax estimates, investments, and long-term plans.', free: ARTHASETU_HEADLINE_FEATURES, freeOnly: true },
   { id: 'calorie-calculator', name: 'AbsoluteCal', kind: 'Health · Personal food and activity tracker', description: 'A free, device-first health tracker for meals, movement, sleep, body trends and personal health notes. Every feature is free, permanently, with no Pro tier or account.', free: ['Food diary, custom foods, recipes, templates and meal plans', 'Recently logged foods for one-tap repeat logging', 'On-device camera barcode scanning and manual nutrition entries',
     'Offline branded barcode catalogue plus a foods CSV importer',
     'Import a MyFitnessPal diary or Apple Health CSV', 'Steps, workouts, strength sets and rest timer', 'GPS walk and run tracking with an on-device route map', 'Sleep, hydration, weight, mood and health logs',

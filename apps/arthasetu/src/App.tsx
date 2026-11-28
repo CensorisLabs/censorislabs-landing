@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AdvancedPage, DebtPage, TaxCompare } from './features/advanced/Advanced.tsx'
 import { SecurityPage } from './features/security/Security.tsx'
+import { CapabilitiesPage } from './features/capabilities/Capabilities.tsx'
 import { HealthPage, type Account, type Mandate } from './features/health/Health.tsx'
 import { estimateTax, savingsRate } from './domain/finance.ts'
 import type { ParsedTransaction } from './domain/statement.ts'
@@ -10,7 +11,7 @@ import StatementImport from './features/statement/StatementImport.tsx'
 import { hashPin, PIN_KEY, readFinanceData, readFinanceDataSync, saveFinanceData, verifyPin, type FinanceData } from './domain/vault.ts'
 import { DEFAULT_PLANNING, readPlanningState, type PlanningState } from './domain/planning.ts'
 
-type Page = 'Overview' | 'Transactions' | 'Budgets' | 'Investments' | 'Financial health' | 'Tax planner' | 'Analytics & FIRE' | 'Debt planner' | 'Security'
+type Page = 'Overview' | 'Transactions' | 'Budgets' | 'Investments' | 'Financial health' | 'Tax planner' | 'Analytics & FIRE' | 'Debt planner' | 'Security' | 'What it does'
 type Tx = { id: number; merchant: string; category: string; date: string; amount: number; type: 'income' | 'expense'; account: string; recurring?: 'monthly'; recurrenceOf?: number; splits?: Array<{ category: string; amount: number }> }
 const money = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`
 function isTransaction(value: unknown): value is Tx { if (!value || typeof value !== 'object') return false; const item = value as Record<string, unknown>; return Number.isFinite(item.id) && typeof item.merchant === 'string' && typeof item.category === 'string' && typeof item.date === 'string' && Number.isFinite(item.amount) && (item.type === 'income' || item.type === 'expense') && typeof item.account === 'string' }
@@ -28,7 +29,7 @@ function getInitialMandates(): Mandate[] { const values = readFinanceDataSync()?
 function getInitialPlanning(): PlanningState { return readPlanningState(readFinanceDataSync()?.planning) }
 const categoryColor: Record<string, string> = { Home: '#526b5e', Groceries: '#d18b45', Investments: '#7564b8', Dining: '#d96758', Income: '#2e9b78', Transport: '#4f91a1', Travel: '#4f91a1', Utilities: '#8a7a45', Health: '#c0605c', Shopping: '#a06a4f', Entertainment: '#7a6a9b', Education: '#5b7f9b', Taxes: '#8b6a5a', Transfers: '#87948c', 'Daily life': '#87948c' }
 
-function Icon({ name }: { name: string }) { const icons: Record<string, string> = { grid: '▦', tx: '≡', budget: '◒', invest: '↗', health: '✦', tax: '◇', analytics: '⌁', debt: '↘', security: '▣', search: '⌕', bell: '◌', plus: '+', lock: '▣', upload: '↥', download: '↧' }; return <span className="icon" aria-hidden="true">{icons[name] || '•'}</span> }
+function Icon({ name }: { name: string }) { const icons: Record<string, string> = { grid: '▦', tx: '≡', budget: '◒', invest: '↗', health: '✦', tax: '◇', analytics: '⌁', debt: '↘', security: '▣', cap: '▤', search: '⌕', bell: '◌', plus: '+', lock: '▣', upload: '↥', download: '↧' }; return <span className="icon" aria-hidden="true">{icons[name] || '•'}</span> }
 
 export default function App() {
   const initialLedger = useMemo(readInitialTransactions, [])
@@ -58,7 +59,7 @@ export default function App() {
   const commitment = recurringCommitment(tx)
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2600) }
   const update = (next: Tx[]) => setTx(next)
-  const nav = [{ id: 'Overview' as Page, label: 'Overview', icon: 'grid' }, { id: 'Transactions' as Page, label: 'Transactions', icon: 'tx' }, { id: 'Budgets' as Page, label: 'Budgets', icon: 'budget' }, { id: 'Investments' as Page, label: 'Investments', icon: 'invest' }, { id: 'Financial health' as Page, label: 'Financial health', icon: 'health' }, { id: 'Analytics & FIRE' as Page, label: 'Analytics & FIRE', icon: 'analytics' }, { id: 'Debt planner' as Page, label: 'Debt planner', icon: 'debt' }, { id: 'Tax planner' as Page, label: 'Tax planner', icon: 'tax' }, { id: 'Security' as Page, label: 'Security', icon: 'security' }]
+  const nav = [{ id: 'Overview' as Page, label: 'Overview', icon: 'grid' }, { id: 'Transactions' as Page, label: 'Transactions', icon: 'tx' }, { id: 'Budgets' as Page, label: 'Budgets', icon: 'budget' }, { id: 'Investments' as Page, label: 'Investments', icon: 'invest' }, { id: 'Financial health' as Page, label: 'Financial health', icon: 'health' }, { id: 'Analytics & FIRE' as Page, label: 'Analytics & FIRE', icon: 'analytics' }, { id: 'Debt planner' as Page, label: 'Debt planner', icon: 'debt' }, { id: 'Tax planner' as Page, label: 'Tax planner', icon: 'tax' }, { id: 'Security' as Page, label: 'Security', icon: 'security' }, { id: 'What it does' as Page, label: 'What it does', icon: 'cap' }]
 
   useEffect(() => {
     if (isLocked) return
@@ -135,6 +136,7 @@ export default function App() {
       {page === 'Debt planner' && <><DebtPage notify={notify} planning={planning} onPlanningChange={update => setPlanning(current => ({ ...current, ...update }))} /></>}
       {page === 'Tax planner' && <TaxPlanner notify={notify} planning={planning} onPlanningChange={update => setPlanning(current => ({ ...current, tax: update }))} />}
       {page === 'Security' && <SecurityPage vaultData={{ transactions: tx, accounts, mandates, planning }} notify={notify} onSetPin={setAppPin} onDisablePin={disableAppPin} onLock={lockApp} onRestore={restoreFinanceData} />}
+      {page === 'What it does' && <CapabilitiesPage />}
       <footer><span><Icon name="lock" /> Your data never leaves this device.</span><div><button onClick={exportData}><Icon name="download" /> Export backup</button><label><Icon name="upload" /> Restore<input type="file" accept="application/json" hidden onChange={e => e.target.files?.[0] && importData(e.target.files[0])} /></label></div></footer>
     </main>
     {showAdd && <AddModal accounts={accounts} onClose={() => setShowAdd(false)} onSave={item => { if (item.type === 'expense') saveRule(item.merchant, item.category); update([{ ...item, id: nextId() }, ...tx]); setShowAdd(false); notify('Transaction saved locally') }} />}

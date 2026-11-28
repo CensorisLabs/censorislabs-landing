@@ -6,3 +6,9 @@
 .migration-banner p{margin:0;font-size:11px;line-height:1.5;color:#786845}
 .migration-banner .text-button{flex:none;color:#7a5a17}
 @media(max-width:560px){.migration-banner{align-items:flex-start;flex-direction:column;gap:8px}}
+
+/* "What it does": the capability catalogue rendered from domain/capabilities.ts */
+.capability-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.capability-list{display:grid;gap:8px;margin:14px 0 2px;padding-left:16px;font-size:12px;line-height:1.5;color:#4f6357}
+.capability-list li::marker{color:#2e9b78}
+@media(max-width:900px){.capability-grid{grid-template-columns:1fr}}

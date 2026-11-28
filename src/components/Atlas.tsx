@@ -1378,6 +1378,10 @@ export default function Atlas() {
   function requestRotate(dx: number, dy: number) {
     setRotateCommand(command => ({ nonce: command.nonce + 1, dx, dy }))
   }
+  function isPhoneViewport() {
+    return typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches
+  }
+
   function requestZoom(kind: ZoomCommand['kind']) {
     setZoomCommand(current => ({ nonce: current.nonce + 1, kind }))
   }
@@ -1430,8 +1434,12 @@ export default function Atlas() {
     </header>
 
     <aside className={`atlas-panel atlas-panel--left${leftCollapsed ? ' is-collapsed' : ''}`}>
-      <button className="atlas-collapse" onClick={() => setLeftCollapsed(value => !value)} aria-expanded={!leftCollapsed} aria-label={leftCollapsed ? 'Open stories and wars panel' : 'Collapse story panel'}>{leftCollapsed ? 'STORIES + WARS ＋' : '−'}</button>
-      {!leftCollapsed && <>
+      <button className="atlas-collapse" onClick={() => {
+        const opening = leftCollapsed
+        setLeftCollapsed(!opening)
+        if (opening && isPhoneViewport()) setRightCollapsed(true)
+      }} aria-expanded={!leftCollapsed} aria-label={leftCollapsed ? 'Open stories and wars panel' : 'Collapse story panel'}>{leftCollapsed ? 'STORIES + WARS ＋' : '−'}</button>
+      {!leftCollapsed && <div className="atlas-panel__body">
         <div className="atlas-kicker">A WORLD IN MOTION <span>STORIES + WARS</span></div>
         <h2 className="atlas-panel-title">History has<br /><em>many centers.</em></h2>
         <p className="atlas-intro">Travel across centuries, follow old routes and meet the people who connected the world.</p>
@@ -1449,12 +1457,16 @@ export default function Atlas() {
           <div className="atlas-source-legend"><span><i className="layer-dot layer-dot--battle" /> Historical battle zones</span><span><i className="layer-dot layer-dot--war" /> UCDP conflict zones</span><small>Soft footprints group nearby recorded events; edges are approximate.</small></div>
           <div className="atlas-source-links"><a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6ZFC0V" target="_blank" rel="noreferrer">Harvard dataset ↗</a><a href="https://doi.org/10.1177/00220027221119085" target="_blank" rel="noreferrer">HCED research paper ↗</a><a href="https://ucdp.uu.se/downloads/ged/ged261.pdf" target="_blank" rel="noreferrer">UCDP GED codebook ↗</a><a href="https://ucdp.uu.se/downloads/ucdpprio/ucdp-prio-acd-261.pdf" target="_blank" rel="noreferrer">UCDP/PRIO conflict codebook ↗</a></div>
         </span></div>
-      </>}
+      </div>}
     </aside>
 
     <aside className={`atlas-panel atlas-panel--right${rightCollapsed ? ' is-collapsed' : ''}`}>
-      <button className="atlas-collapse" onClick={() => setRightCollapsed(value => !value)} aria-expanded={!rightCollapsed} aria-label={rightCollapsed ? 'Open details panel' : 'Collapse details panel'}>{rightCollapsed ? (selectedWar ? `WAR · ${selectedWar.properties.title.slice(0, 14)}` : selectedCountry?.properties.name ?? 'DETAILS') + ' ＋' : '−'}</button>
-      {!rightCollapsed && <>
+      <button className="atlas-collapse" onClick={() => {
+        const opening = rightCollapsed
+        setRightCollapsed(!opening)
+        if (opening && isPhoneViewport()) setLeftCollapsed(true)
+      }} aria-expanded={!rightCollapsed} aria-label={rightCollapsed ? 'Open details panel' : 'Collapse details panel'}>{rightCollapsed ? (selectedWar ? `WAR · ${selectedWar.properties.title.slice(0, 14)}` : selectedCountry?.properties.name ?? 'DETAILS') + ' ＋' : '−'}</button>
+      {!rightCollapsed && <div className="atlas-panel__body">
         <div className="atlas-era"><span>TIME LENS</span><strong>{formatYear(year)}</strong><small>{year < -1000 ? 'EARLY CIVILIZATIONS' : year < 500 ? 'ANCIENT WORLD' : year < 1450 ? 'CONNECTED WORLDS' : year < 1800 ? 'EARLY MODERN' : 'MODERN ERA'}</small></div>
         {selectedWar ? <div className="atlas-country-detail atlas-war-detail">
           <div className="atlas-detail-tag"><span>WAR LOCATION</span><span>◦ &nbsp;{selectedWar.properties.lat.toFixed(2)}°, {selectedWar.properties.lon.toFixed(2)}°</span></div>
@@ -1486,7 +1498,7 @@ export default function Atlas() {
         </div>}
         <div className="atlas-map-layers"><span className="atlas-filter-label">MAP LAYERS</span><label><span><i className="layer-dot layer-dot--gold" />Historic polities</span><input type="checkbox" checked={territories} onChange={event => setTerritories(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--war" />Major wars + battles</span><input type="checkbox" checked={showWarMarkers} onChange={event => setShowWarMarkers(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--gold" />Journey lines</span><input type="checkbox" checked={routes} onChange={event => setRoutes(event.target.checked)} /></label><label><span><i className="layer-dot layer-dot--mint" />Place labels</span><input type="checkbox" checked={labels} onChange={event => setLabels(event.target.checked)} /></label><div className="atlas-close-zoom"><span><i className="layer-dot layer-dot--city" />Cities</span><span><i className="layer-dot layer-dot--landmark" />Landmarks</span><small>Close zoom · <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">GeoNames</a> + <a href="https://www.wikidata.org/" target="_blank" rel="noreferrer">Wikidata</a></small></div></div>
         <div className="atlas-instructions"><span>DRAG TO ROTATE</span><span>SCROLL, PINCH OR DOUBLE-TAP TO ZOOM · TAP A PLACE</span><span>ARROW KEYS STEP YEARS · SHIFT + ARROWS TURN THE GLOBE · [ AND ] STEP ROUTES · ESC CLEARS</span></div>
-      </>}
+      </div>}
     </aside>
 
     <div className="atlas-globe-caption"><span>HIGH-DETAIL COASTLINES WHEN PAUSED · 10° GRATICULE · RECORDED POLITIES COLOURED · UNMAPPED LAND NEUTRAL</span><span>{selectedWar?.properties.title ?? selectedCountry?.properties.name ?? 'TIME · PLACE · PEOPLE'}</span></div>

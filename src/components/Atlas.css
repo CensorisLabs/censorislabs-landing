@@ -698,3 +698,32 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Tablet: both drawers stay open side by side, but each becomes one scroll
+   region. Previously the story list, place/war detail and journey list each
+   scrolled inside a panel that never did, so the bottom rows were cut off in a
+   window with no scrollbar, and the panel ran underneath the timeline and the
+   floating zoom pill. */
+@media (min-width: 701px) and (max-width: 1000px) {
+  .atlas-panel {
+    bottom: 216px;
+    overflow: hidden;
+  }
+  /* The close button keeps its own row above the scrolling body, so it stays
+     reachable after the drawer is scrolled and never sits on the kicker text. */
+  .atlas-panel > .atlas-collapse { position: static; flex: 0 0 auto; align-self: flex-end; margin: 8px 0 0; }
+  .atlas-panel.is-collapsed > .atlas-collapse { margin: 0; }
+  .atlas-panel__body {
+    display: block;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(23, 19, 15, .3) transparent;
+  }
+  .atlas-panel--left { padding: 0 14px 13px; }
+  /* One scroll region: the drawer, not a window inside it. */
+  .atlas-story-list { min-height: 0; max-height: none; flex: 0 0 auto; overflow: visible; }
+  .atlas-country-detail { flex: 0 0 auto; overflow: visible; }
+  .atlas-panel__body .atlas-journey-list { max-height: none; overflow: visible; }
+}
